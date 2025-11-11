@@ -163,6 +163,26 @@ class UsageManager:
             logger.error(f"Get usage info failed: {str(e)}")
             return None
 
+    @staticmethod
+    def get_subscription_info(token: str) -> Optional[Dict]:
+        """Get user subscription information."""
+        url = f"https://www.{Config.NAME_LOWER}.com/api/user"
+        headers = Config.BASE_HEADERS.copy()
+        
+        cookie_value = f"Workos{Config.NAME_CAPITALIZE}SessionToken={token}"
+        headers.update({"Cookie": cookie_value})
+        
+        try:
+            proxies = UsageManager.get_proxy()
+            response = requests.get(url, headers=headers, timeout=10, proxies=proxies)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Get subscription info failed: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"Get subscription info failed: {str(e)}")
+            return None
 
     @staticmethod
     def reset_server_usage(translator=None) -> bool:
@@ -170,14 +190,10 @@ class UsageManager:
         Attempts to reset the server-side usage limit using the session token.
         This relies on an undocumented/reverse-engineered API endpoint.
         """
-        token = UsageManager.get_cursor_session_token(translator)
+        token = get_token()  # Use the global get_token function
         if not token:
-            # Fallback to the more general get_token() if WorkosSessionToken is not found
-            print(f"{Fore.YELLOW}{EMOJI['WARNING']} {translator.get('reset.workos_token_not_found') if translator else 'WorkosSessionToken not found. Attempting to find a general token...'}{Style.RESET_ALL}")
-            token = get_token() # Use the global get_token function
-            if not token:
-                print(f"{Fore.RED}{EMOJI['ERROR']} {translator.get('reset.no_token_available') if translator else 'Cannot perform server-side reset without a session token. Please ensure you are logged in.'}{Style.RESET_ALL}")
-                return False
+            print(f"{Fore.RED}{EMOJI['ERROR']} {translator.get('reset.no_token_available') if translator else 'Cannot perform server-side reset without a session token. Please ensure you are logged in.'}{Style.RESET_ALL}")
+            return False
 
         # Speculative API Call: This endpoint is used for trial reset
         API_URL = "https://api.cursor.com/v1/user/reset_usage_trial" 
@@ -468,7 +484,7 @@ def display_account_info(translator=None):
         email = get_email_from_sqlite(paths['sqlite_path'])
     
     # get subscription info
-    subscription_info = None
+    subscription_info = UsageManager.get_subscription_info(token)
     
     # if not found in storage and sqlite, try from subscription info
     if not email and subscription_info:
