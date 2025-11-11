@@ -10,6 +10,11 @@ import logging
 import re
 import traceback
 
+try:
+    from check_user_authorized import generate_cursor_checksum
+except ImportError:
+    generate_cursor_checksum = None
+
 # Initialize colorama
 init()
 
@@ -195,20 +200,34 @@ class UsageManager:
             print(f"{Fore.RED}{EMOJI['ERROR']} {translator.get('reset.no_token_available') if translator else 'Cannot perform server-side reset without a session token. Please ensure you are logged in.'}{Style.RESET_ALL}")
             return False
 
-        # Speculative API Call: This endpoint is used for trial reset
-        API_URL = "https://api.cursor.com/v1/user/reset_usage_trial" 
+        if not generate_cursor_checksum:
+            print(f"{Fore.RED}{EMOJI['ERROR']} {translator.get('reset.checksum_function_not_found') if translator else 'Checksum generation function not found. Cannot proceed.'}{Style.RESET_ALL}")
+            return False
 
-        headers = Config.BASE_HEADERS.copy()
-        # This reset API usually requires the token as an Authorization Bearer header
-        headers["Authorization"] = f"Bearer {token}"
+        # New API endpoint and headers based on check_user_authorized.py
+        API_URL = "https://api2.cursor.sh/aiserver.v1.DashboardService/ResetUsageTrial"
+        checksum = generate_cursor_checksum(token, translator)
 
-        print(f"\n{Fore.CYAN}{EMOJI['RESET']} {translator.get('reset.attempting_server_reset') if translator else 'Attempting server-side usage reset with session token...'}{Style.RESET_ALL}")
+        headers = {
+            'accept-encoding': 'gzip',
+            'authorization': f'Bearer {token}',
+            'connect-protocol-version': '1',
+            'content-type': 'application/proto',
+            'user-agent': 'connect-es/1.6.1',
+            'x-cursor-checksum': checksum,
+            'x-cursor-client-version': '0.48.7', # This might need updating in the future
+            'x-cursor-timezone': 'Asia/Shanghai', # This can be generalized if needed
+            'x-ghost-mode': 'false',
+            'Host': 'api2.cursor.sh'
+        }
+
+        print(f"\n{Fore.CYAN}{EMOJI['RESET']} {translator.get('reset.attempting_server_reset') if translator else 'Attempting server-side usage reset...'}{Style.RESET_ALL}")
         
         try:
-            response = requests.post(API_URL, headers=headers, proxies=UsageManager.get_proxy(), timeout=15)
+            response = requests.post(API_URL, headers=headers, data=b'', proxies=UsageManager.get_proxy(), timeout=15)
 
             if response.status_code == 200 or response.status_code == 204:
-                print(f"{Fore.GREEN}{EMOJI['SUCCESS']} {translator.get('reset.server_reset_success') if translator else 'Server usage reset request successful (Status 200/204). You MUST restart Cursor for changes to fully apply.'}{Style.RESET_ALL}")
+                print(f"{Fore.GREEN}{EMOJI['SUCCESS']} {translator.get('reset.server_reset_success') if translator else 'Server usage reset request successful. You MUST restart Cursor for changes to fully apply.'}{Style.RESET_ALL}")
                 return True
             else:
                 print(f"{Fore.RED}{EMOJI['ERROR']} {translator.get('reset.server_reset_failed') if translator else 'Server usage reset request failed.'}{Style.RESET_ALL}")
@@ -680,6 +699,7 @@ if __name__ == "__main__":
                 'reset.server_reset_failed': 'Server usage reset request failed.',
                 'reset.connection_error': 'Connection error during server reset attempt',
                 'reset.workos_token_not_found': 'WorkosSessionToken not found. Attempting to find a general token...',
+                'reset.checksum_function_not_found': 'Checksum generation function not found. Cannot proceed.',
                 'info.user_account': 'User Account Information'
             }
             msg = messages.get(key, f"<{key}>")

@@ -128,7 +128,8 @@
         "update_windows_machine_id_failed": "Update Windows Machine ID Failed: {error}",
         "update_windows_machine_guid_failed": "Update Windows Machine GUID Failed: {error}",
         "file_not_found": "File Not Found: {path}",
-        "workos_token_not_found": "WorkosSessionToken not found. Attempting to find a general token..."
+        "workos_token_not_found": "WorkosSessionToken not found. Attempting to find a general token...",
+        "checksum_function_not_found": "Checksum generation function not found. Cannot proceed."
     },
     "register": {
         "title": "Cursor Registration Tool",
