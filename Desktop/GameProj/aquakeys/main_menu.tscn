@@ -1,0 +1,580 @@
+[gd_scene load_steps=16 format=3 uid="uid://badp38hqtolur"]
+
+[ext_resource type="Script" path="res://main_menu.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dmlgfu0xr83q7" path="res://bgs/main_bg.png" id="1_06t4h"]
+[ext_resource type="FontFile" uid="uid://defjgekipi4lv" path="res://fonts/DM_Mono/DMMono-Medium.ttf" id="2_fu7sn"]
+[ext_resource type="FontFile" uid="uid://bcdgfjki1d43v" path="res://fonts/Space_Grotesk/static/SpaceGrotesk-Bold.ttf" id="3_jix8l"]
+[ext_resource type="FontFile" uid="uid://defjgekipi4lv" path="res://fonts/DM_Mono/DMMono-Medium.ttf" id="4_font"]
+[ext_resource type="FontFile" uid="uid://bcdgfjki1d43v" path="res://fonts/Space_Grotesk/static/SpaceGrotesk-Bold.ttf" id="5_title_font"]
+[ext_resource type="AudioStream" path="res://music/background_music.mp3" id="6_music"]
+[ext_resource type="AudioStream" path="res://music/button_hover.wav" id="7_hover_sound"]
+[ext_resource type="AudioStream" path="res://music/button_click.wav" id="8_click_sound"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_7vrkn"]
+texture = ExtResource("1_06t4h")
+modulate_color = Color(0.61339, 0.61339, 0.61339, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fu7sn"]
+bg_color = Color(0.763163, 0.489454, 0, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jix8l"]
+bg_color = Color(0.621037, 0.394874, 2.88785e-07, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rhts7"]
+bg_color = Color(1, 0.647059, 0, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialog"]
+bg_color = Color(0.02, 0.08, 0.18, 0.92)
+border_color = Color(0.3, 0.7, 1, 0.9)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+shadow_color = Color(0, 0.2, 0.4, 0.6)
+shadow_size = 20
+shadow_offset = Vector2(0, 8)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_close"]
+bg_color = Color(0.8, 0.2, 0.2, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_header"]
+bg_color = Color(0.15, 0.35, 0.6, 0.85)
+border_color = Color(0.4, 0.8, 1, 0.7)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+shadow_color = Color(0, 0.3, 0.5, 0.4)
+shadow_size = 15
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_section"]
+bg_color = Color(0.1, 0.18, 0.3, 0.75)
+border_color = Color(0.25, 0.6, 0.9, 0.5)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0.2, 0.4, 0.3)
+shadow_size = 12
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dev_card"]
+bg_color = Color(0.12, 0.22, 0.38, 0.85)
+border_color = Color(0.35, 0.75, 1, 0.7)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0, 0.25, 0.5, 0.4)
+shadow_size = 15
+shadow_offset = Vector2(0, 6)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_difficulty_card"]
+bg_color = Color(0.14, 0.24, 0.4, 0.88)
+border_color = Color(0.35, 0.75, 1, 0.6)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0.2, 0.4, 0.35)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
+bg_color = Color(0.25, 0.55, 0.95, 0.35)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_separator"]
+bg_color = Color(0.3, 0.7, 1, 0.6)
+shadow_color = Color(0.2, 0.6, 0.9, 0.3)
+shadow_size = 4
+shadow_offset = Vector2(0, 2)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_music")
+autoplay = true
+volume_db = -5.0
+
+[node name="UISoundPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_hover_sound")
+volume_db = -5.0
+
+[node name="UIClickSoundPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_click_sound")
+volume_db = -3.0
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_7vrkn")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -105.5
+offset_top = -31.0
+offset_right = 105.5
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 9
+
+[node name="Button" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_fu7sn")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_fu7sn")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_fu7sn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_fu7sn")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxFlat_jix8l")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_jix8l")
+theme_override_styles/normal = SubResource("StyleBoxFlat_rhts7")
+text = "PLAY"
+
+[node name="Button2" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_fu7sn")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_fu7sn")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_fu7sn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_fu7sn")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxFlat_jix8l")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_jix8l")
+theme_override_styles/normal = SubResource("StyleBoxFlat_rhts7")
+text = "Info"
+
+[node name="Button3" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_fu7sn")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_fu7sn")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_fu7sn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_fu7sn")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxFlat_jix8l")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_jix8l")
+theme_override_styles/normal = SubResource("StyleBoxFlat_rhts7")
+text = "Exit"
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -205.0
+offset_top = -256.0
+offset_right = 194.0
+offset_bottom = -153.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 10
+theme_override_fonts/font = ExtResource("3_jix8l")
+theme_override_font_sizes/font_size = 80
+text = "AQUAKEYS"
+horizontal_alignment = 1
+
+[node name="InfoDialog" type="AcceptDialog" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialog")
+title = ""
+ok_button_text = ""
+
+[node name="ScrollContainer" type="ScrollContainer" parent="InfoDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="InfoDialog/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="HeaderPanel" type="Panel" parent="InfoDialog/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_header")
+
+[node name="HeaderLabel" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/HeaderPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 20.0
+offset_top = 15.0
+offset_right = -20.0
+offset_bottom = -15.0
+theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0.2, 0.4, 0.9)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_fonts/font = ExtResource("5_title_font")
+theme_override_font_sizes/font_size = 36
+text = "ABOUT AQUAKEYS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GameInfoSection" type="Panel" parent="InfoDialog/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section")
+
+[node name="GameInfoVBox" type="VBoxContainer" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 25.0
+offset_top = 20.0
+offset_right = -25.0
+offset_bottom = -20.0
+theme_override_constants/separation = 15
+
+[node name="GameDescriptionLabel" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection/GameInfoVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 17
+text = "AQUAKEYS is a fast-paced typing survival game where you save fish by typing their words before time runs out. Each difficulty has its own predator:"
+autowrap_mode = 3
+
+[node name="Separator1" type="Panel" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection/GameInfoVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 2)
+theme_override_styles/panel = SubResource("StyleBoxFlat_separator")
+
+[node name="DifficultyLabel" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection/GameInfoVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.85, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0.15, 0.3, 0.5)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_fonts/font = ExtResource("5_title_font")
+theme_override_font_sizes/font_size = 22
+text = "Difficulty Levels:"
+autowrap_mode = 3
+
+[node name="DifficultyList" type="VBoxContainer" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection/GameInfoVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EasyLabel" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection/GameInfoVBox/DifficultyList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0, 0.2, 0, 0.4)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 17
+text = "  • Easy – Shark"
+autowrap_mode = 3
+
+[node name="MediumLabel" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection/GameInfoVBox/DifficultyList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.5, 1)
+theme_override_colors/font_shadow_color = Color(0.3, 0.2, 0, 0.4)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 17
+text = "  • Medium – Octopus"
+autowrap_mode = 3
+
+[node name="HardLabel" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection/GameInfoVBox/DifficultyList"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0.4, 0, 0, 0.4)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 17
+text = "  • Hard – Sharktopus"
+autowrap_mode = 3
+
+[node name="Separator2" type="Panel" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection/GameInfoVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 2)
+theme_override_styles/panel = SubResource("StyleBoxFlat_separator")
+
+[node name="GameplayLabel" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/GameInfoSection/GameInfoVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.98, 1, 1)
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 18
+text = "Higher difficulty means faster fish, shorter word timers, and a more aggressive predator. Type quickly to save the fish—fail, and the predator eats them!"
+autowrap_mode = 3
+
+[node name="DevelopersSection" type="Panel" parent="InfoDialog/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section")
+
+[node name="DevelopersVBox" type="VBoxContainer" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 20.0
+offset_top = 15.0
+offset_right = -20.0
+offset_bottom = -15.0
+theme_override_constants/separation = 15
+
+[node name="DevelopersTitleLabel" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.9, 1, 1)
+theme_override_fonts/font = ExtResource("5_title_font")
+theme_override_font_sizes/font_size = 22
+text = "Developed By"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="DevelopersContainer" type="HBoxContainer" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 25
+
+[node name="Developer1" type="Panel" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox/DevelopersContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_dev_card")
+
+[node name="Developer1VBox" type="VBoxContainer" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox/DevelopersContainer/Developer1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 15.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = -15.0
+theme_override_constants/separation = 12
+
+[node name="Developer1Image" type="TextureRect" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox/DevelopersContainer/Developer1/Developer1VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
+custom_minimum_size = Vector2(120, 120)
+
+[node name="Developer1Name" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox/DevelopersContainer/Developer1/Developer1VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 18
+text = "MR.JLTC"
+horizontal_alignment = 1
+
+[node name="Developer2" type="Panel" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox/DevelopersContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_dev_card")
+
+[node name="Developer2VBox" type="VBoxContainer" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox/DevelopersContainer/Developer2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 15.0
+offset_top = 15.0
+offset_right = -15.0
+offset_bottom = -15.0
+theme_override_constants/separation = 12
+
+[node name="Developer2Image" type="TextureRect" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox/DevelopersContainer/Developer2/Developer2VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
+custom_minimum_size = Vector2(120, 120)
+
+[node name="Developer2Name" type="Label" parent="InfoDialog/ScrollContainer/VBoxContainer/DevelopersSection/DevelopersVBox/DevelopersContainer/Developer2/Developer2VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("4_font")
+theme_override_font_sizes/font_size = 18
+text = "John Emmanuel"
+horizontal_alignment = 1
+
+[node name="DifficultySummaryDialog" type="AcceptDialog" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -220.0
+offset_right = 320.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+title = "Gameplay Setup"
+ok_button_text = "OK"
+
+[node name="SummaryLabel" type="RichTextLabel" parent="DifficultySummaryDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+bbcode_enabled = true
+autowrap_mode = 3
+
+[node name="DifficultyDialog" type="AcceptDialog" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -180.0
+offset_right = 250.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+title = "Choose Difficulty"
+ok_button_text = ""
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DifficultyDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 25.0
+offset_top = 25.0
+offset_right = -25.0
+offset_bottom = -25.0
+theme_override_constants/separation = 20
+
+[node name="PromptLabel" type="Label" parent="DifficultyDialog/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("5_title_font")
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "Select your preferred challenge:"
+horizontal_alignment = 1
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="DifficultyDialog/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="EasyButton" type="Button" parent="DifficultyDialog/VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Easy"
+
+[node name="MediumButton" type="Button" parent="DifficultyDialog/VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Medium"
+
+[node name="HardButton" type="Button" parent="DifficultyDialog/VBoxContainer/ButtonsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hard"

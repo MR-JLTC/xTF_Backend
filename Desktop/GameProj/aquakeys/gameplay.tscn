@@ -1,0 +1,43 @@
+[gd_scene load_steps=4 format=3 uid="uid://b57kjfuvbw20g"]
+
+[ext_resource type="Script" uid="uid://bbpypttp1nhbb" path="res://gameplay.gd" id="1_uvcjh"]
+[ext_resource type="Texture2D" uid="uid://dmlgfu0xr83q7" path="res://bgs/main_bg.png" id="2_lxb8n"]
+[ext_resource type="Texture2D" uid="uid://ct3d457svfd4q" path="res://predators/pdfShark-removebg-preview.png" id="3_oe8ih"]
+
+[node name="Gameplay" type="Node2D"]
+script = ExtResource("1_uvcjh")
+
+[node name="Background" type="TextureRect" parent="."]
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 1541.0
+offset_bottom = 1029.0
+texture = ExtResource("2_lxb8n")
+stretch_mode = 6
+
+[node name="PredatorSprite" type="Sprite2D" parent="."]
+position = Vector2(752.98914, 152.68935)
+rotation = -0.008726646
+scale = Vector2(0.5268064, 0.7286128)
+texture = ExtResource("3_oe8ih")
+
+[node name="FishContainer" type="Node2D" parent="."]
+
+[node name="FishSpawnTimer" type="Timer" parent="."]
+wait_time = 3.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="InfoPanel" type="Panel" parent="HUD"]
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 235.0
+offset_bottom = 428.0
+
+[node name="StatusLabel" type="Label" parent="HUD/InfoPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 47.0
+offset_right = 192.0
+offset_bottom = 349.0
+autowrap_mode = 3
