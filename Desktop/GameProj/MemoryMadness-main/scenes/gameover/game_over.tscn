@@ -1,7 +1,7 @@
 [gd_scene load_steps=10 format=3 uid="uid://juvf0iaoakm6"]
 
 [ext_resource type="Texture2D" uid="uid://dov1llsjkud6v" path="res://assets/ui/UIbg.png" id="1_07rgv"]
-[ext_resource type="Script" path="res://scenes/gameover/game_over.gd" id="1_b6trx"]
+[ext_resource type="Script" uid="uid://w5ijmdwlmgi0" path="res://scenes/gameover/game_over.gd" id="1_b6trx"]
 [ext_resource type="FontFile" uid="uid://bnhn27lx8rhun" path="res://assets/fonts/LuckiestGuy-Regular.ttf" id="2_2oaob"]
 [ext_resource type="LabelSettings" uid="uid://m834upvncr2m" path="res://assets/gm_32_dark.tres" id="3_feamh"]
 [ext_resource type="Texture2D" uid="uid://dfbfg6o81bnhg" path="res://assets/ui/blue_button00.png" id="4_y5nwe"]

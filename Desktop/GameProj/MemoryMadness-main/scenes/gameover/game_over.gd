@@ -10,11 +10,11 @@ func _ready():
 	pass
 
 func show_screen(moves: int, win_status: bool) -> void:
-	moves_label.text = str(moves)
 	if win_status:
 		main_status_label.text = "YOU WIN!"
 	else:
 		main_status_label.text = "GAME OVER"
+	moves_label.text = str(moves)
 	show()
 
 func _on_exit_button_pressed():
