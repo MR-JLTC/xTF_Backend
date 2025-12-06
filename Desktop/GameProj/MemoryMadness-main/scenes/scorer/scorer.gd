@@ -1,7 +1,5 @@
 extends Node
 
-class_name Scorer
-
 @onready var sound = $Sound
 @onready var reveal_timer = $RevealTimer
 
