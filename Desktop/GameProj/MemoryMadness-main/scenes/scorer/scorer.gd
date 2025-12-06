@@ -20,6 +20,9 @@ func _ready():
 func _process(_delta):
 	pass
 
+func get_moves_made() -> int:
+	return _moves_made
+
 func get_moves_made_str() -> String:
 	return str(_moves_made)
 	
