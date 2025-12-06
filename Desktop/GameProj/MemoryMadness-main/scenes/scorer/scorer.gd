@@ -48,6 +48,7 @@ func selections_are_pair() -> bool:
 
 func increment_matched_pairs(win_status: bool) -> void:
 	_pairs_made += 1
+	print("Scorer: In increment_matched_pairs - _pairs_made =", _pairs_made, ", _target_pairs =", _target_pairs)
 	if _pairs_made >= _target_pairs:
 		SignalManager.on_game_over.emit(_moves_made, win_status)
 
