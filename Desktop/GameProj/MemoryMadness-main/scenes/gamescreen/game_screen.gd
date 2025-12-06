@@ -1,6 +1,7 @@
 extends Control
 
 @export var mem_tile_scene: PackedScene
+const GameOverScene = preload("res://scenes/gameover/game_over.gd")
 
 @onready var tile_container = $HB/MC1/TileContainer
 @onready var sound = $Sound
@@ -8,7 +9,7 @@ extends Control
 @onready var moves_label = $HB/MC2/VBoxContainer/HB/MovesLabel
 @onready var pairs_label = $HB/MC2/VBoxContainer/HB2/PairsLabel
 @onready var timer_label = $HB/MC2/VBoxContainer/TimerLabel
-@onready var game_over_screen: GameOver = $GameOver # Assuming GameOver is the type of the $GameOver node
+@onready var game_over_screen: GameOverScene = $GameOver # Assuming GameOver is the type of the $GameOver node
 
 var _selected_tiles: Array[MemoryTile] = []
 var _can_select: bool = true

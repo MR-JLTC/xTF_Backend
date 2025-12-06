@@ -12,7 +12,7 @@ const LEVELS: Dictionary = {
 }
 
 const TIME_LIMITS: Dictionary = {
-	1: 180,  # 3 minutes for 2x2
+	1: 60,  # 1 minute for 2x2
 	2: 480,  # 8 minutes for 3x4
 	3: 900,  # 15 minutes for 4x4
 	4: 1500, # 25 minutes for 4x6
