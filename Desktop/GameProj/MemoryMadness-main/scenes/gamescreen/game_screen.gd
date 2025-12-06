@@ -8,12 +8,11 @@ extends Control
 @onready var moves_label = $HB/MC2/VBoxContainer/HB/MovesLabel
 @onready var pairs_label = $HB/MC2/VBoxContainer/HB2/PairsLabel
 @onready var timer_label = $HB/MC2/VBoxContainer/TimerLabel
-@onready var game_over_screen: GameOver = $GameOver
+@onready var game_over_screen: GameOver = $GameOver # Assuming GameOver is the type of the $GameOver node
 
 var _selected_tiles: Array[MemoryTile] = []
 var _can_select: bool = true
 
-# Called when the node enters the scene tree for the first time.
 func _ready():
 	SignalManager.on_level_selected.connect(on_level_selected)
 	SignalManager.timer_updated.connect(_on_timer_updated)
@@ -39,6 +38,8 @@ func _on_tile_selected_from_signal(tile: MemoryTile) -> void:
 		
 	_selected_tiles.append(tile)
 	tile.reveal(true)
+	
+	# SignalManager.on_tile_selected.emit(tile) # This signal is already emitted by the tile itself
 	
 	if _selected_tiles.size() == 2:
 		_can_select = false
