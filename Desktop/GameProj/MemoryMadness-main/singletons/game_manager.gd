@@ -36,6 +36,7 @@ func get_level_selection(level_num: int) -> Dictionary:
 	var l_data = LEVELS[level_num]
 	var num_tiles = l_data.rows * l_data.cols
 	var target_pairs = num_tiles / 2	
+	print("GameManager: Calculated target_pairs =", target_pairs)
 	
 	start_level_timer(level_num)
 	

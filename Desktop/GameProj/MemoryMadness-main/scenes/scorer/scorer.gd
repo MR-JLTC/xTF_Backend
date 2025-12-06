@@ -1,6 +1,6 @@
 extends Node
 
-@onready var reveal_timer = $RevealTimer
+var reveal_timer: Timer
 
 var _selections: Array = []
 var _target_pairs: int = 0
@@ -11,6 +11,12 @@ var _pairs_made: int = 0
 func _ready():
 	SignalManager.on_tile_selected.connect(on_tile_selected)
 	SignalManager.on_game_exit_pressed.connect(on_game_exit_pressed)
+
+	reveal_timer = Timer.new()
+	add_child(reveal_timer)
+	reveal_timer.wait_time = 1.0 # Adjust as needed
+	reveal_timer.one_shot = true
+	reveal_timer.timeout.connect(_on_reveal_timer_timeout)
 
 
 # Called every frame. '_delta' is the elapsed time since the previous frame.
@@ -31,6 +37,7 @@ func clear_new_game(target_pairs: int) -> void:
 	_pairs_made = 0
 	_moves_made = 0
 	_target_pairs = target_pairs
+	print("Scorer: Received target_pairs =", target_pairs)
 
 func selections_are_pair() -> bool:
 	return (
