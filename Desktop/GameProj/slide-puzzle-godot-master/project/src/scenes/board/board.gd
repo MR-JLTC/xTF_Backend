@@ -29,12 +29,10 @@ signal moves_updated
 func gen_board():
 	var value = 1
 	board = []
-	for r in range(size):
-		board.append([])
-		for c in range(size):
+	for r in range(_size):
 
 			# choose which is empty cell
-			if (value == size*size):
+			if (value == _size*_size):
 				board[r].append(0)
 				empty = Vector2(c, r)
 			else:
@@ -46,7 +44,7 @@ func gen_board():
 				tile.set_text(value)
 				if background_texture:
 					tile.set_sprite_texture(background_texture)
-				tile.set_sprite(value-1, size, tile_size)
+				tile.set_sprite(value-1, _size, tile_size)
 				tile.set_number_visible(number_visible)
 				tile.connect("tile_pressed", Callable(self, "_on_Tile_pressed"))
 				tile.connect("slide_completed", Callable(self, "_on_Tile_slide_completed"))
@@ -57,10 +55,10 @@ func gen_board():
 
 func is_board_solved():
 	var count = 1
-	for r in range(size):
-		for c in range(size):
+	for r in range(_size):
+		for c in range(_size):
 			if (board[r][c] != count):
-				if r == c and c == size - 1 and board[r][c] == 0:
+				if r == c and c == _size - 1 and board[r][c] == 0:
 					return true
 				else:
 					return false
@@ -69,15 +67,15 @@ func is_board_solved():
 
 func print_board():
 	print('------board------')
-	for r in range(size):
+	for r in range(_size):
 		var row = ''
-		for c in range(size):
+		for c in range(_size):
 			row += str(board[r][c]).pad_zeros(2) + ' '
 		print(row)
 
 func value_to_grid(value):
-	for r in range(size):
-		for c in range(size):
+	for r in range(_size):
+		for c in range(_size):
 			if (board[r][c] == value):
 				return Vector2(c, r)
 	return null
@@ -90,8 +88,8 @@ func get_tile_by_value(value):
 
 # testing
 func _ready():
-	tile_size = floor(get_size().x / size)
-	set_size(Vector2(tile_size*size, tile_size*size))
+	tile_size = floor(get_size().x / _size)
+	set_size(Vector2(tile_size*_size, tile_size*_size))
 	gen_board()
 
 func _on_Tile_pressed(number):
@@ -148,7 +146,7 @@ func _on_Tile_pressed(number):
 	# clicked in same column as empty
 	if tile.x == empty.x:
 		var col = []
-		for r in range(size):
+		for r in range(_size):
 			col.append(board[r][tile.x])
 
 		if dir.y == -1:
@@ -156,13 +154,13 @@ func _on_Tile_pressed(number):
 		else:
 			col = slide_column(col, -1, end.y)
 
-		for r in range(size):
+		for r in range(_size):
 			board[r][tile.x] = col[r]
 
 	# update moves
 	var moves_made = 0
-	for r in range(size):
-		for c in range(size):
+	for r in range(_size):
+		for c in range(_size):
 			if old_board[r][c] != board[r][c]:
 				moves_made += 1
 
@@ -177,10 +175,10 @@ func _on_Tile_pressed(number):
 
 func is_board_solvable(flat):
 	var parity = 0
-	var grid_width = size
+	var grid_width = _size
 	var row = 0
 	var blank_row = 0
-	for i in range(size*size):
+	for i in range(_size*_size):
 		if i % grid_width == 0:
 			row += 1
 
@@ -188,7 +186,7 @@ func is_board_solvable(flat):
 			blank_row = row
 			continue
 
-		for j in range(i+1, size*size):
+		for j in range(i+1, _size*_size):
 			if flat[i] > flat[j] and flat[j] != 0:
 				parity += 1
 
@@ -205,7 +203,7 @@ func scramble_board():
 
 	# generate a flat board with values 0 to size*size-1
 	var temp_flat_board = []
-	for i in range(size*size - 1, -1, -1):
+	for i in range(_size*_size - 1, -1, -1):
 		temp_flat_board.append(i)
 
 	# keep shuffling until it is solvable
@@ -218,9 +216,9 @@ func scramble_board():
 		temp_flat_board.shuffle()
 		is_solvable = is_board_solvable(temp_flat_board)
 	# convert flat 1d board to 2d board
-	for r in range(size):
-		for c in range(size):
-			board[r][c] = temp_flat_board[r*size + c]
+	for r in range(_size):
+		for c in range(_size):
+			board[r][c] = temp_flat_board[r*_size + c]
 			if board[r][c] != 0:
 				set_tile_position(r, c, board[r][c])
 	empty = value_to_grid(0)
@@ -229,11 +227,11 @@ func scramble_board():
 func reset_board():
 	reset_move_count()
 	board = []
-	for r in range(size):
+	for r in range(_size):
 		board.append(([]))
-		for c in range(size):
-			board[r].append(r*size + c + 1)
-			if r*size + c + 1 == size * size:
+		for c in range(_size):
+			board[r].append(r*_size + c + 1)
+			if r*_size + c + 1 == _size * _size:
 				board[r][c] = 0
 			else:
 				set_tile_position(r, c, board[r][c])
@@ -261,7 +259,7 @@ func _process(_delta):
 
 		var nr = empty.y + dir.y
 		var nc = empty.x + dir.x
-		if (nr == -1 or nc == -1 or nr >= size or nc >= size):
+		if (nr == -1 or nc == -1 or nr >= _size or nc >= _size):
 			return
 		var tile_pressed = board[nr][nc]
 		print(tile_pressed)
@@ -327,10 +325,10 @@ func set_tile_numbers(state):
 		tile.set_number_visible(state)
 
 func update_size(new_size):
-	size = int(new_size)
-	print('updating board size ', size)
+	_size = int(new_size)
+	print('updating board size ', _size)
 
-	tile_size = floor(get_size().x / size)
+	tile_size = floor(get_size().x / _size)
 	for tile in tiles:
 		tile.queue_free()
 	tiles = []
@@ -342,5 +340,4 @@ func update_background_texture(texture):
 	background_texture = texture
 	for tile in tiles:
 		tile.set_sprite_texture(texture)
-		tile.update_size(size, tile_size)
-
+		tile.update_size(_size, tile_size)
