@@ -12,7 +12,7 @@ const LEVELS: Dictionary = {
 }
 
 const TIME_LIMITS: Dictionary = {
-	1: 60,  # 1 minute for 2x2
+	1: 10,  # 1 minute for 2x2
 	2: 480,  # 8 minutes for 3x4
 	3: 900,  # 15 minutes for 4x4
 	4: 1500, # 25 minutes for 4x6
@@ -73,7 +73,7 @@ func _on_timer_timeout() -> void:
 	else:
 		_timer.stop()
 		# Game over due to timeout
-		SignalManager.game_over_timeout.emit()
+		SignalManager.game_over_timeout.emit(Scorer.get_moves_made())
 
 func _update_timer_display() -> void:
 	var minutes = floor(_time_remaining / 60)

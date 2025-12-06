@@ -7,4 +7,4 @@ signal on_selection_disabled
 signal on_tile_selected(tile: MemoryTile)
 signal on_game_over(moves: int, win_status: bool)
 signal timer_updated(time_remaining_str: String)
-signal game_over_timeout()
+signal game_over_timeout(moves: int)

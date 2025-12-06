@@ -5,7 +5,6 @@ const GameOverScene = preload("res://scenes/gameover/game_over.gd")
 
 @onready var tile_container = $HB/MC1/TileContainer
 @onready var sound = $Sound
-@onready var scorer: Scorer = $Scorer
 @onready var moves_label = $HB/MC2/VBoxContainer/HB/MovesLabel
 @onready var pairs_label = $HB/MC2/VBoxContainer/HB2/PairsLabel
 @onready var timer_label = $HB/MC2/VBoxContainer/TimerLabel
@@ -14,13 +13,13 @@ const GameOverScene = preload("res://scenes/gameover/game_over.gd")
 func _ready():
 	SignalManager.on_level_selected.connect(on_level_selected)
 	SignalManager.timer_updated.connect(_on_timer_updated)
-	SignalManager.game_over_timeout.connect(game_over_screen.show_screen.bind(scorer.get_moves_made(), false))
+	SignalManager.game_over_timeout.connect(game_over_screen.show_screen.bind(false))
 	SignalManager.on_game_over.connect(game_over_screen.show_screen)
-	SignalManager.on_tile_selected.connect(scorer.on_tile_selected)
+	SignalManager.on_tile_selected.connect(Scorer.on_tile_selected)
 
 func _process(_delta):
-	moves_label.text = scorer.get_moves_made_str()
-	pairs_label.text = scorer.get_pairs_made_str()
+	moves_label.text = Scorer.get_moves_made_str()
+	pairs_label.text = Scorer.get_pairs_made_str()
 
 func add_memory_tile(ii_dict: Dictionary, frame_image: CompressedTexture2D) -> void:
 	var new_tile = mem_tile_scene.instantiate()
@@ -36,7 +35,7 @@ func on_level_selected(level_num: int) -> void:
 	for ii_dict in level_selection.image_list:
 		add_memory_tile(ii_dict, frame_image)
 	
-	scorer.clear_new_game(level_selection.target_pairs)
+	Scorer.clear_new_game(level_selection.target_pairs)
 
 func _on_exit_button_pressed():
 	SoundManager.play_button_click(sound)
