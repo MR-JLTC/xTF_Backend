@@ -4,7 +4,6 @@ extends Control
 const GameOverScene = preload("res://scenes/gameover/game_over.gd")
 
 @onready var tile_container = $HB/MC1/TileContainer
-@onready var sound = $Sound
 @onready var moves_label = $HB/MC2/VBoxContainer/HB/MovesLabel
 @onready var pairs_label = $HB/MC2/VBoxContainer/HB2/PairsLabel
 @onready var timer_label = $HB/MC2/VBoxContainer/TimerLabel
@@ -42,7 +41,7 @@ func on_level_selected(level_num: int) -> void:
 	Scorer.clear_new_game(level_selection.target_pairs)
 
 func _on_exit_button_pressed():
-	SoundManager.play_button_click(sound)
+	SoundManager.play_button_click()
 	SignalManager.on_game_exit_pressed.emit()
 
 func _on_timer_updated(time_remaining_str: String) -> void:

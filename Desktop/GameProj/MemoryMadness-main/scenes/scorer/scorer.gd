@@ -1,6 +1,5 @@
 extends Node
 
-@onready var sound = $Sound
 @onready var reveal_timer = $RevealTimer
 
 var _selections: Array = []
@@ -49,7 +48,7 @@ func kill_tiles() -> void:
 	for s in _selections:
 		s.kill_on_success()
 	increment_matched_pairs(true) # Pass true for winning condition
-	SoundManager.play_sound(sound, SoundManager.SOUND_SUCCESS)
+	SoundManager.play_sound(SoundManager.SOUND_SUCCESS)
 
 func update_selections() -> void:
 	reveal_timer.start()
@@ -72,7 +71,7 @@ func hide_selections() -> void:
 		s.reveal(false)
 
 func on_tile_selected(tile: MemoryTile) -> void:
-	SoundManager.play_tile_click(sound)
+	SoundManager.play_tile_click()
 	check_pair_made(tile)
 
 func _on_reveal_timer_timeout():
