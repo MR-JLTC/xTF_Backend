@@ -13,9 +13,13 @@ const GameOverScene = preload("res://scenes/gameover/game_over.gd")
 func _ready():
 	SignalManager.on_level_selected.connect(on_level_selected)
 	SignalManager.timer_updated.connect(_on_timer_updated)
-	SignalManager.game_over_timeout.connect(game_over_screen.show_screen.bind(false))
+	SignalManager.game_over_timeout.connect(_on_game_over_timeout_received)
 	SignalManager.on_game_over.connect(game_over_screen.show_screen)
 	SignalManager.on_tile_selected.connect(Scorer.on_tile_selected)
+
+func _on_game_over_timeout_received(moves: int) -> void:
+	game_over_screen.show_screen(moves, false)
+
 
 func _process(_delta):
 	moves_label.text = Scorer.get_moves_made_str()
