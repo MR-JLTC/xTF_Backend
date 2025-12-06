@@ -2,7 +2,7 @@
 
 [ext_resource path="res://Fighters/FighterBase.gd" type="Script" id=1]
 
-[node name="FighterBase" type="KinematicBody2D"]
+[node name="FighterBase" type="CharacterBody2D"]
 
 input_pickable = false
 collision_layer = 1

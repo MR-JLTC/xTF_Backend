@@ -1,4 +1,4 @@
-extends KinematicBody2D
+extends CharacterBody2D
 
 const UP = Vector2(0, -1)
 const GRAVITY = 30
