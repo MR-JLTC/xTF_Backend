@@ -6,7 +6,7 @@ const SPEED = 350
 const JUMP_HEIGHT = -500
 const ATTACK_TIME = 0.15 #TODO: Decide if we're going to use frames or delta, I think the physics engine only supports delta so maybe stick with that? - AWK
 
-var velocity = Vector2()
+
 var attacking = false
 var attack_timer = 0
 var left = false
