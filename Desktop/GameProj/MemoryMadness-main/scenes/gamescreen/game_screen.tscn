@@ -90,6 +90,13 @@ text = "0 / 00"
 label_settings = ExtResource("1_tv7pg")
 horizontal_alignment = 2
 
+[node name="TimerLabel" type="Label" parent="HB/MC2/VBoxContainer"]
+layout_mode = 2
+text = "00:00"
+label_settings = ExtResource("5_1e7dh")
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Spacer" type="Control" parent="HB/MC2/VBoxContainer"]
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
