@@ -17,11 +17,11 @@ var _can_select: bool = true
 func _ready():
 	SignalManager.on_level_selected.connect(on_level_selected)
 	SignalManager.timer_updated.connect(_on_timer_updated)
-	SignalManager.game_over_timeout.connect(_on_game_over_timeout)
-	SignalManager.all_pairs_matched_success.connect(_on_all_pairs_matched_success)
+	SignalManager.game_over_timeout.connect(game_over_screen.show_screen.bind(scorer.get_moves_made(), false))
+	SignalManager.on_game_over.connect(game_over_screen.show_screen)
 	SignalManager.on_tile_selected.connect(_on_tile_selected_from_signal)
 
-func _process(delta):
+func _process(_delta):
 	moves_label.text = scorer.get_moves_made_str()
 	pairs_label.text = scorer.get_pairs_made_str()
 
@@ -44,12 +44,10 @@ func _on_tile_selected_from_signal(tile: MemoryTile) -> void:
 	
 	if _selected_tiles.size() == 2:
 		_can_select = false
-		scorer.increment_moves_made()
 		
 		if _selected_tiles[0].get_item_name() == _selected_tiles[1].get_item_name():
 			# Match
 			SoundManager.play_match_sound(sound)
-			GameManager.increment_matched_pairs()
 			_selected_tiles[0].kill_on_success()
 			_selected_tiles[1].kill_on_success()
 			_selected_tiles.clear()
@@ -81,9 +79,3 @@ func _on_exit_button_pressed():
 
 func _on_timer_updated(time_remaining_str: String) -> void:
 	timer_label.text = time_remaining_str
-
-func _on_game_over_timeout() -> void:
-	game_over_screen.show_screen(scorer.get_moves_made())
-	
-func _on_all_pairs_matched_success() -> void:
-	game_over_screen.show_screen(scorer.get_moves_made())

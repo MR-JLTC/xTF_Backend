@@ -17,14 +17,12 @@ const TIME_LIMITS: Dictionary = {
 	3: 900,  # 15 minutes for 4x4
 	4: 1500, # 25 minutes for 4x6
 	5: 2400, # 40 minutes for 5x6
-	6: 2400  # 40 minutes for 6x6 (assuming same as 5x6, adjust if needed)
+	6: 2700  # 40 minutes for 6x6 (assuming same as 5x6, adjust if needed)
 }
 
 var _timer: Timer
 var _time_remaining: int
 var _current_level_time_limit: int
-var _target_pairs: int = 0
-var _matched_pairs: int = 0
 
 func _ready():
 	_timer = Timer.new()
@@ -37,8 +35,7 @@ func _ready():
 func get_level_selection(level_num: int) -> Dictionary:
 	var l_data = LEVELS[level_num]
 	var num_tiles = l_data.rows * l_data.cols
-	_target_pairs = num_tiles / 2	
-	_matched_pairs = 0
+	var target_pairs = num_tiles / 2	
 	
 	start_level_timer(level_num)
 	
@@ -46,14 +43,14 @@ func get_level_selection(level_num: int) -> Dictionary:
 	
 	ImageManager.shuffle_images()
 	
-	for i in range(_target_pairs):
+	for i in range(target_pairs):
 		selected_level_images.append(ImageManager.get_image(i))
 		selected_level_images.append(ImageManager.get_image(i))
 	
 	selected_level_images.shuffle()
 	
 	return {
-		"target_pairs": _target_pairs,
+		"target_pairs": target_pairs,
 		"num_cols": l_data.cols,
 		"image_list": selected_level_images
 	}
@@ -83,12 +80,6 @@ func _update_timer_display() -> void:
 	var seconds = _time_remaining % 60
 	var time_str = "%02d:%02d" % [minutes, seconds]
 	SignalManager.timer_updated.emit(time_str)
-
-func increment_matched_pairs() -> void:
-	_matched_pairs += 1
-	if _matched_pairs == _target_pairs:
-		stop_level_timer()
-		SignalManager.all_pairs_matched_success.emit()
 
 func clear_nodes_of_group(g_name: String) -> void:
 	for n in get_tree().get_nodes_in_group(g_name):
