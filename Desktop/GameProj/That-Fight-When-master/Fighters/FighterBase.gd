@@ -6,7 +6,7 @@ const SPEED = 350
 const JUMP_HEIGHT = -500
 const ATTACK_TIME = 0.15 #TODO: Decide if we're going to use frames or delta, I think the physics engine only supports delta so maybe stick with that? - AWK
 
-var motion = Vector2()
+var velocity = Vector2()
 var attacking = false
 var attack_timer = 0
 var left = false
@@ -29,16 +29,16 @@ func generate_inputs(id):
 	print("Generated inputs %s for Player %s, Fighter %s" % [p_input, PLAYER_ID, name])
 	
 func _physics_process(delta):
-	motion.y += GRAVITY
+	velocity.y += GRAVITY
 	
 	if Input.is_action_pressed(p_input.right):
-		motion.x = SPEED
+		velocity.x = SPEED
 		left = false
 	elif Input.is_action_pressed(p_input.left):
-		motion.x = -SPEED
+		velocity.x = -SPEED
 		left = true
 	else:
-		motion.x = 0
+		velocity.x = 0
 	
 	if Input.is_action_pressed(p_input.attack):
 		get_node("Sprite").play("Attack")
@@ -53,7 +53,7 @@ func _physics_process(delta):
 	
 	if is_on_floor():
 		if Input.is_action_pressed(p_input.jump):
-			motion.y = JUMP_HEIGHT
+			velocity.y = JUMP_HEIGHT
 	
 	get_node("Sprite").set_flip_h(left)
-	motion = move_and_slide(motion, UP)
+	move_and_slide()
