@@ -1,6 +1,6 @@
-[gd_scene load_steps=10 format=3 uid="uid://jg6wnj4ow2ug"]
+[gd_scene load_steps=11 format=3 uid="uid://jg6wnj4ow2ug"]
 
-[ext_resource type="Script" path="res://scenes/gamescreen/game_screen.gd" id="1_lciny"]
+[ext_resource type="Script" uid="uid://db2t8xbw6q281" path="res://scenes/gamescreen/game_screen.gd" id="1_lciny"]
 [ext_resource type="LabelSettings" uid="uid://m834upvncr2m" path="res://assets/gm_32_dark.tres" id="1_tv7pg"]
 [ext_resource type="Texture2D" uid="uid://dfbfg6o81bnhg" path="res://assets/ui/blue_button00.png" id="2_c2sor"]
 [ext_resource type="PackedScene" uid="uid://boyxu7nbxp7oo" path="res://scenes/memorytile/memory_tile.tscn" id="2_hdn2m"]
