@@ -25,12 +25,7 @@ var _time_remaining: int
 var _current_level_time_limit: int
 
 func _ready():
-	_timer = Timer.new()
-	add_child(_timer)
-	_timer.wait_time = 1.0 # Update every second
-	_timer.autostart = false
-	_timer.one_shot = false
-	_timer.timeout.connect(_on_timer_timeout)
+	pass
 
 var _selected_level_num: int = 1
 
@@ -98,6 +93,13 @@ func get_level_selection(level_num: int) -> Dictionary:
 	}
 
 func start_level_timer(level_num: int) -> void:
+	_timer = Timer.new()
+	add_child(_timer)
+	_timer.wait_time = 1.0 # Update every second
+	_timer.autostart = false
+	_timer.one_shot = false
+	_timer.timeout.connect(_on_timer_timeout)
+
 	var time_limit = TIME_LIMITS.get(level_num, 0) # Default to 0 if not found
 	_current_level_time_limit = time_limit
 	_time_remaining = time_limit
@@ -111,7 +113,9 @@ func get_time_remaining() -> int:
 	return _time_remaining
 
 func stop_level_timer() -> void:
-	_timer.stop()
+	if _timer:
+		_timer.stop()
+		_timer.queue_free()
 
 func _on_timer_timeout() -> void:
 	_timer.wait_time = 1.0 # Reset to 1.0 for subsequent ticks
