@@ -1,0 +1,70 @@
+[gd_scene load_steps=6 format=3 uid="uid://ddjho2xswmmbp"]
+
+[ext_resource type="Script" uid="uid://b4vvaedcgjcw8" path="res://mainscreen/main_screen.gd" id="1_kjo4y"]
+[ext_resource type="PackedScene" uid="uid://2yd7tm7det8m" path="res://scenes/frontsprite/front_sprite.tscn" id="2_ibayk"]
+[ext_resource type="PackedScene" uid="uid://bfyapugggtaaj" path="res://scenes/levelbutton/level_button.tscn" id="2_nd4kc"]
+[ext_resource type="Texture2D" uid="uid://nfs2drwvutre" path="res://assets/images/bg2.png" id="3_3er7r"]
+[ext_resource type="LabelSettings" uid="uid://qnswtm4vvxk6" path="res://assets/GM_84_yellow.tres" id="3_gpllw"]
+
+[node name="MainScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_kjo4y")
+level_button_scene = ExtResource("2_nd4kc")
+
+[node name="VB" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Spacer2" type="Control" parent="VB"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Title" type="Label" parent="VB"]
+layout_mode = 2
+text = "Flipster"
+label_settings = ExtResource("3_gpllw")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacer3" type="Control" parent="VB"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBLevels" type="HBoxContainer" parent="VB"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 8
+
+[node name="Spacer" type="Control" parent="VB"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBSprites" type="HBoxContainer" parent="VB"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 72
+
+[node name="FrontSprite" parent="VB/HBSprites" instance=ExtResource("2_ibayk")]
+layout_mode = 2
+
+[node name="FrontSprite2" parent="VB/HBSprites" instance=ExtResource("2_ibayk")]
+layout_mode = 2
+
+[node name="FrontSprite3" parent="VB/HBSprites" instance=ExtResource("2_ibayk")]
+layout_mode = 2
+
+[node name="FrontSprite4" parent="VB/HBSprites" instance=ExtResource("2_ibayk")]
+layout_mode = 2
+
+[node name="Spacer4" type="Control" parent="VB"]
+layout_mode = 2
+size_flags_vertical = 3
