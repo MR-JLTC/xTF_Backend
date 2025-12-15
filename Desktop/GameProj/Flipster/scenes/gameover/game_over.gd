@@ -19,10 +19,12 @@ func show_screen(data: Dictionary) -> void:
 		main_status_label.text = "YOU WIN!"
 		main_status_label.modulate = Color(0, 1, 0)  # Green
 		moves_label.text = "Moves: %s | Time: %s" % [moves, time_elapsed_str]
+		SignalManager.play_win_music.emit()
 	else:
 		main_status_label.text = "GAME OVER"
 		main_status_label.modulate = Color(1, 0, 0)  # Red
 		moves_label.text = str(moves)
+		SignalManager.play_game_over_music.emit()
 	show()
 
 func _on_exit_button_pressed():
