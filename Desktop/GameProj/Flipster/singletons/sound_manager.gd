@@ -30,9 +30,13 @@ func _ready():
 	_sfx_player_2 = AudioStreamPlayer.new()
 	add_child(_sfx_player_2)
 	SignalManager.play_in_game_music.connect(_on_play_in_game_music)
+	SignalManager.play_main_menu_music.connect(_on_play_main_menu_music)
 
 func _on_play_in_game_music():
 	play_music(SOUND_IN_GAME)
+
+func _on_play_main_menu_music():
+	play_music(SOUND_MAIN_MENU)
 
 func play_music(key: String) -> void:
 	if SOUNDS.has(key) == false:

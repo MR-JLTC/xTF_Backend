@@ -9,3 +9,4 @@ signal on_game_over(moves: int, win_status: bool)
 signal timer_updated(time_remaining_str: String)
 signal game_over_timeout(moves: int)
 signal play_in_game_music
+signal play_main_menu_music
