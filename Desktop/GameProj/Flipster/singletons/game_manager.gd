@@ -118,6 +118,9 @@ func stop_level_timer() -> void:
 		_timer.queue_free()
 
 func _on_timer_timeout() -> void:
+	if not is_instance_valid(_timer):
+		return
+
 	_timer.wait_time = 1.0 # Reset to 1.0 for subsequent ticks
 	if _time_remaining > 0:
 		_time_remaining -= 1
