@@ -68,8 +68,7 @@ func get_current_level_data() -> Dictionary:
 func start_level(level_num: int, level_data: Dictionary) -> void:
 	_level_data = level_data
 	start_level_timer(level_num)
-	if level_num == 1:
-		SignalManager.play_in_game_music.emit()
+	SignalManager.play_in_game_music.emit()
 
 func get_level_selection(level_num: int) -> Dictionary:
 	var l_data = LEVELS[level_num]
@@ -79,8 +78,7 @@ func get_level_selection(level_num: int) -> Dictionary:
 	print("GameManager: Calculated target_pairs =", target_pairs)
 	
 	start_level_timer(level_num)
-	if level_num == 1:
-		SignalManager.play_in_game_music.emit()
+	SignalManager.play_in_game_music.emit()
 	
 	var selected_level_images = []
 	
