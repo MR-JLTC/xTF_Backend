@@ -1,0 +1,58 @@
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsInt, IsOptional, IsNumber } from 'class-validator';
+
+export class RegisterDto {
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(7, { message: 'Password must be at least 7 characters long' })
+  password: string;
+
+  @IsOptional()
+  @IsInt()
+  university_id?: number;
+
+  @IsOptional()
+  @IsString()
+  user_type?: 'tutor' | 'tutee' | 'admin';
+
+  @IsOptional()
+  @IsInt()
+  year_level?: number; // Change to number
+
+  @IsOptional()
+  @IsInt()
+  course_id?: number;
+
+  @IsOptional()
+  @IsString()
+  course_name?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  gcash_number?: string;
+
+  @IsOptional()
+  @IsNumber()
+  SessionRatePerHour?: number;
+}
+
+export class LoginDto {
+  @IsNotEmpty()
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+}
