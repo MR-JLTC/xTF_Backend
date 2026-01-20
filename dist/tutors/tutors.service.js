@@ -708,7 +708,7 @@ let TutorsService = class TutorsService {
         const rawQuery = await this.tutorsRepository.query(`SELECT t.*, u.user_id, u.name 
        FROM tutors t 
        JOIN users u ON t.user_id = u.user_id 
-       WHERE u.user_id = ?`, [idParam]);
+       WHERE u.user_id = $1`, [idParam]);
         console.log('[getTutorStatus] 📝 Raw DB Query Result:', rawQuery);
         let tutor;
         if (rawQuery && rawQuery.length > 0) {
@@ -1453,7 +1453,7 @@ let TutorsService = class TutorsService {
         const total_earnings = confirmedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
         const pending_earnings = pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0);
         const completedBookings = await this.bookingRequestRepository.find({
-            where: { tutor: { tutor_id: tutor.tutor_id }, status: 'confirmed' }
+            where: { tutor: { tutor_id: tutor.tutor_id }, status: 'completed' }
         });
         const total_hours = completedBookings.reduce((sum, b) => sum + Number(b.duration || 0), 0);
         const average_rating = 0;

@@ -131,7 +131,7 @@ export declare class TutorsController {
     getSubjectApplications(tutorId: string): Promise<{
         id: number;
         subject_name: string;
-        status: "pending" | "rejected" | "approved";
+        status: "pending" | "approved" | "rejected";
         admin_notes: string;
         created_at: Date;
         updated_at: Date;

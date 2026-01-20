@@ -44,7 +44,7 @@ export class TutorsService {
     @InjectRepository(Student)
     private studentRepository: Repository<Student>,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   findPendingApplications(): Promise<Tutor[]> {
     return this.tutorsRepository.find({
@@ -62,7 +62,7 @@ export class TutorsService {
   }
 
   async updateStatus(id: number, status: 'approved' | 'rejected', adminNotes?: string): Promise<Tutor> {
-    const tutor = await this.tutorsRepository.findOne({ 
+    const tutor = await this.tutorsRepository.findOne({
       where: { tutor_id: id },
       relations: ['user']
     });
@@ -71,11 +71,11 @@ export class TutorsService {
     }
 
     tutor.status = status;
-    
+
     // CRITICAL: For rejected status, ALWAYS save admin notes to tutors.admin_notes database column
     // This MUST happen - the admin rejection reason MUST be stored in the database
     let adminNotesToSave: string | null = null;
-    
+
     if (status === 'rejected') {
       // For rejected status, we MUST save admin notes if provided
       if (adminNotes !== undefined && adminNotes !== null && adminNotes.trim().length > 0) {
@@ -101,12 +101,12 @@ export class TutorsService {
       tutor.admin_notes = adminNotesToSave;
       console.log(`[TutorService] Admin notes provided for ${status}: "${adminNotesToSave || 'null'}"`);
     }
-    
+
     // CRITICAL: Save tutor entity to database FIRST - this MUST persist tutor.admin_notes to tutors.admin_notes column
     console.log(`[TutorService] BEFORE SAVE - tutor.admin_notes = "${tutor.admin_notes || 'null'}"`);
     let savedTutor = await this.tutorsRepository.save(tutor);
     console.log(`[TutorService] AFTER SAVE - savedTutor.admin_notes = "${savedTutor.admin_notes || 'null'}"`);
-    
+
     // CRITICAL: For rejected status, ALWAYS explicitly update the admin_notes column using update() method
     // This is a double-check to ensure the column is definitely updated in the database
     if (status === 'rejected') {
@@ -119,18 +119,18 @@ export class TutorsService {
         console.log(`[TutorService] Explicitly updated tutors.admin_notes column using update() method`);
         console.log(`[TutorService] Update result affected rows:`, updateResult.affected);
         console.log(`[TutorService] Value saved: "${adminNotesToSave}"`);
-        
+
         // Reload tutor from database to verify admin_notes were saved
         const reloadedTutor = await this.tutorsRepository.findOne({
           where: { tutor_id: id },
           relations: ['user']
         });
-        
+
         if (reloadedTutor) {
           console.log(`[TutorService] VERIFICATION - Reloaded tutor ${id} from database after explicit update:`);
           console.log(`[TutorService]   - Status: ${reloadedTutor.status}`);
           console.log(`[TutorService]   - Admin Notes from tutors.admin_notes column:`, reloadedTutor.admin_notes ? `"${reloadedTutor.admin_notes}"` : 'NULL');
-          
+
           if (!reloadedTutor.admin_notes || reloadedTutor.admin_notes !== adminNotesToSave) {
             console.error(`[TutorService] ERROR: Admin notes NOT saved correctly!`);
             console.error(`[TutorService] Expected: "${adminNotesToSave}"`);
@@ -138,7 +138,7 @@ export class TutorsService {
           } else {
             console.log(`[TutorService] SUCCESS: Admin notes verified in database!`);
           }
-          
+
           // Use the reloaded tutor for consistency
           savedTutor = reloadedTutor;
         }
@@ -146,23 +146,23 @@ export class TutorsService {
         console.error(`[TutorService] ERROR: Cannot update admin_notes - adminNotesToSave is null for rejected status!`);
       }
     }
-    
+
     // Final verification - log what was saved to database
     console.log(`[TutorService] FINAL VERIFICATION - Tutor ${id} in database:`);
     console.log(`[TutorService]   - Status: '${savedTutor.status}'`);
-    console.log(`[TutorService]   - Admin Notes (tutors.admin_notes column):`, 
-      savedTutor.admin_notes 
-        ? `"${savedTutor.admin_notes.substring(0, 100)}${savedTutor.admin_notes.length > 100 ? '...' : ''}"` 
+    console.log(`[TutorService]   - Admin Notes (tutors.admin_notes column):`,
+      savedTutor.admin_notes
+        ? `"${savedTutor.admin_notes.substring(0, 100)}${savedTutor.admin_notes.length > 100 ? '...' : ''}"`
         : 'NULL'
     );
-    
+
     if (status === 'approved') {
       const user = tutor.user;
       if (user) {
         // user.is_verified = true; // Removed as is_verified is no longer on User entity
         await this.usersRepository.save(user);
       }
-      
+
       // Send approval email to tutor
       try {
         await this.emailService.sendTutorApplicationApprovalEmail({
@@ -176,13 +176,13 @@ export class TutorsService {
     } else if (status === 'rejected') {
       // Send rejection email to tutor with the admin notes from database
       // Use savedTutor.admin_notes which was just saved to the database admin_notes column
-      const notesForEmail = savedTutor.admin_notes && savedTutor.admin_notes.trim().length > 0 
-        ? savedTutor.admin_notes.trim() 
+      const notesForEmail = savedTutor.admin_notes && savedTutor.admin_notes.trim().length > 0
+        ? savedTutor.admin_notes.trim()
         : undefined;
-      
+
       console.log(`[TutorService] Sending rejection email to ${(tutor.user as any)?.email}`);
       console.log(`[TutorService] Admin notes from database (admin_notes column):`, notesForEmail ? `"${notesForEmail.substring(0, 50)}${notesForEmail.length > 50 ? '...' : ''}"` : 'none');
-      
+
       try {
         await this.emailService.sendTutorApplicationRejectionEmail({
           name: (tutor.user as any)?.name || 'Tutor',
@@ -200,19 +200,19 @@ export class TutorsService {
   }
 
   async getTutorByEmail(email: string): Promise<{ tutor_id: number; user_id: number; user_type: string }> {
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { email },
       relations: ['tutor_profile', 'student_profile', 'admin_profile']
     });
-    
+
     if (!user) {
       throw new Error('User not found with this email');
     }
-    
+
     // Determine user type
     let userType = 'unknown';
     let tutorId = null;
-    
+
     if (user.tutor_profile) {
       userType = 'tutor';
       tutorId = (user.tutor_profile as any).tutor_id;
@@ -221,20 +221,20 @@ export class TutorsService {
     } else if (user.admin_profile) {
       userType = 'admin';
     }
-    
-    return { 
-      tutor_id: tutorId, 
+
+    return {
+      tutor_id: tutorId,
       user_id: user.user_id,
       user_type: userType
     };
   }
 
   async updateExistingUserToTutor(userId: number, data: { full_name?: string; university_id?: number; course_id?: number; course_name?: string; bio?: string; year_level?: number; gcash_number?: string }): Promise<{ success: true; tutor_id: number }> {
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { user_id: userId },
       relations: ['tutor_profile', 'tutor_profile.university', 'tutor_profile.course']
     });
-    
+
     if (!user) {
       throw new Error('User not found');
     }
@@ -262,16 +262,16 @@ export class TutorsService {
     if (!resolvedCourseId && data.course_name && data.course_name.trim().length > 0) {
       const uni = tutor.university || await this.universitiesRepository.findOne({ where: { university_id: tutor.university_id } });
       if (uni) {
-        const existingCourse = await this.coursesRepository.findOne({ 
-          where: { course_name: data.course_name.trim(), university: { university_id: uni.university_id } }, 
-          relations: ['university'] 
+        const existingCourse = await this.coursesRepository.findOne({
+          where: { course_name: data.course_name.trim(), university: { university_id: uni.university_id } },
+          relations: ['university']
         });
         if (existingCourse) {
           resolvedCourseId = existingCourse.course_id;
         } else {
-          const newCourse = this.coursesRepository.create({ 
-            course_name: data.course_name.trim(), 
-            university: uni 
+          const newCourse = this.coursesRepository.create({
+            course_name: data.course_name.trim(),
+            university: uni
           });
           const savedCourse = await this.coursesRepository.save(newCourse);
           resolvedCourseId = savedCourse.course_id;
@@ -301,11 +301,11 @@ export class TutorsService {
   }
 
   async updateTutor(tutorId: number, data: { full_name?: string; university_id?: number; course_id?: number; course_name?: string; bio?: string; year_level?: number; gcash_number?: string; session_rate_per_hour?: number }): Promise<{ success: true }> {
-    const tutor = await this.tutorsRepository.findOne({ 
+    const tutor = await this.tutorsRepository.findOne({
       where: { tutor_id: tutorId },
       relations: ['user', 'university', 'course']
     });
-    
+
     if (!tutor) {
       throw new Error('Tutor not found');
     }
@@ -327,16 +327,16 @@ export class TutorsService {
     if (!resolvedCourseId && data.course_name && data.course_name.trim().length > 0) {
       const uni = tutor.university || await this.universitiesRepository.findOne({ where: { university_id: tutor.university_id } });
       if (uni) {
-        const existingCourse = await this.coursesRepository.findOne({ 
-          where: { course_name: data.course_name.trim(), university: { university_id: uni.university_id } }, 
-          relations: ['university'] 
+        const existingCourse = await this.coursesRepository.findOne({
+          where: { course_name: data.course_name.trim(), university: { university_id: uni.university_id } },
+          relations: ['university']
         });
         if (existingCourse) {
           resolvedCourseId = existingCourse.course_id;
         } else {
-          const newCourse = this.coursesRepository.create({ 
-            course_name: data.course_name.trim(), 
-            university: uni 
+          const newCourse = this.coursesRepository.create({
+            course_name: data.course_name.trim(),
+            university: uni
           });
           const savedCourse = await this.coursesRepository.save(newCourse);
           resolvedCourseId = savedCourse.course_id;
@@ -387,16 +387,16 @@ export class TutorsService {
         throw new BadRequestException('Invalid university ID');
       }
     }
-    
+
     if (!resolvedCourseId && data.course_name && data.course_name.trim().length > 0 && universityEntity) {
-        const existingCourse = await this.coursesRepository.findOne({ where: { course_name: data.course_name.trim(), university: { university_id: universityEntity.university_id } }, relations: ['university'] });
-        if (existingCourse) {
-          resolvedCourseId = existingCourse.course_id;
-        } else {
-          const newCourse = this.coursesRepository.create({ course_name: data.course_name.trim(), university: universityEntity });
-          const savedCourse: Course = await this.coursesRepository.save(newCourse);
-          resolvedCourseId = savedCourse.course_id;
-        }
+      const existingCourse = await this.coursesRepository.findOne({ where: { course_name: data.course_name.trim(), university: { university_id: universityEntity.university_id } }, relations: ['university'] });
+      if (existingCourse) {
+        resolvedCourseId = existingCourse.course_id;
+      } else {
+        const newCourse = this.coursesRepository.create({ course_name: data.course_name.trim(), university: universityEntity });
+        const savedCourse: Course = await this.coursesRepository.save(newCourse);
+        resolvedCourseId = savedCourse.course_id;
+      }
     }
 
     if (resolvedCourseId) {
@@ -479,7 +479,7 @@ export class TutorsService {
     const newFilename = `userProfile_${userId}${ext}`;
     const oldPath = path.join(process.cwd(), 'tutor_documents', file.filename); // Assuming temp upload goes to tutor_documents
     const newPath = path.join(process.cwd(), 'user_profile_images', newFilename);
-    
+
     // Ensure the target directory exists
     const targetDir = path.join(process.cwd(), 'user_profile_images');
     if (!fs.existsSync(targetDir)) {
@@ -528,7 +528,7 @@ export class TutorsService {
     const newFilename = `gcashQR_${userId}${ext}`;
     const oldPath = path.join(process.cwd(), 'tutor_documents', file.filename);
     const newPath = path.join(process.cwd(), 'tutor_documents', newFilename);
-    
+
     try {
       // Rename the file
       fs.renameSync(oldPath, newPath);
@@ -591,21 +591,21 @@ export class TutorsService {
       let subject: Subject | null = null;
       if (courseEntity) {
         // Look up subject by name within the same course only
-        subject = await this.subjectRepository.findOne({ 
-          where: { 
-            subject_name: name, 
-            course: { course_id: courseEntity.course_id } as any 
-          }, 
-          relations: ['course'] 
+        subject = await this.subjectRepository.findOne({
+          where: {
+            subject_name: name,
+            course: { course_id: courseEntity.course_id } as any
+          },
+          relations: ['course']
         });
-        
+
         if (!subject) {
           // Check if a subject with this name exists in a different course or without a course
-          const existingWithDifferentCourse = await this.subjectRepository.findOne({ 
-            where: { subject_name: name }, 
-            relations: ['course'] 
+          const existingWithDifferentCourse = await this.subjectRepository.findOne({
+            where: { subject_name: name },
+            relations: ['course']
           });
-          
+
           if (existingWithDifferentCourse) {
             const existingCourseId = (existingWithDifferentCourse as any).course?.course_id;
             // If it exists in a different course, create a NEW subject for this course
@@ -613,15 +613,15 @@ export class TutorsService {
             if (existingCourseId && existingCourseId !== courseEntity.course_id) {
               console.log(`Subject "${name}" exists in course_id ${existingCourseId}, creating new subject for course_id ${courseEntity.course_id}`);
               // Create new subject for this course - same name but different course_id
-              const created = this.subjectRepository.create({ 
-                subject_name: name, 
-                course: courseEntity 
+              const created = this.subjectRepository.create({
+                subject_name: name,
+                course: courseEntity
               });
               subject = await this.subjectRepository.save(created);
               // Reload with relations to ensure course relationship is properly set
-              subject = await this.subjectRepository.findOne({ 
-                where: { subject_id: subject.subject_id }, 
-                relations: ['course'] 
+              subject = await this.subjectRepository.findOne({
+                where: { subject_id: subject.subject_id },
+                relations: ['course']
               }) || subject;
               console.log(`Created new subject "${name}" with course_id ${subject?.course?.course_id || courseEntity.course_id}, subject_id: ${subject.subject_id} (duplicate name allowed for different course)`);
             } else if (!existingCourseId) {
@@ -629,23 +629,23 @@ export class TutorsService {
               existingWithDifferentCourse.course = courseEntity;
               subject = await this.subjectRepository.save(existingWithDifferentCourse);
               // Reload with relations to ensure course relationship is properly set
-              subject = await this.subjectRepository.findOne({ 
-                where: { subject_id: subject.subject_id }, 
-                relations: ['course'] 
+              subject = await this.subjectRepository.findOne({
+                where: { subject_id: subject.subject_id },
+                relations: ['course']
               }) || subject;
               console.log(`Updated existing subject "${name}" to have course_id ${subject?.course?.course_id || courseEntity.course_id}, subject_id: ${subject.subject_id}`);
             }
           } else {
             // No existing subject found, create new subject for this course
-            const created = this.subjectRepository.create({ 
-              subject_name: name, 
-              course: courseEntity 
+            const created = this.subjectRepository.create({
+              subject_name: name,
+              course: courseEntity
             });
             subject = await this.subjectRepository.save(created);
             // Reload with relations to ensure course relationship is properly set
-            subject = await this.subjectRepository.findOne({ 
-              where: { subject_id: subject.subject_id }, 
-              relations: ['course'] 
+            subject = await this.subjectRepository.findOne({
+              where: { subject_id: subject.subject_id },
+              relations: ['course']
             }) || subject;
             console.log(`Created new subject "${name}" with course_id ${subject?.course?.course_id || courseEntity.course_id}, subject_id: ${subject.subject_id}`);
           }
@@ -659,9 +659,9 @@ export class TutorsService {
           console.log(`Created new subject "${name}" without course, subject_id: ${subject.subject_id}`);
         } else {
           // Reload with relations for consistency
-          subject = await this.subjectRepository.findOne({ 
-            where: { subject_id: subject.subject_id }, 
-            relations: ['course'] 
+          subject = await this.subjectRepository.findOne({
+            where: { subject_id: subject.subject_id },
+            relations: ['course']
           }) || subject;
           console.log(`Found existing subject "${name}" without course, subject_id: ${subject.subject_id}`);
         }
@@ -676,10 +676,10 @@ export class TutorsService {
         }
       }
 
-      const link = this.tutorSubjectRepository.create({ 
-        tutor, 
-        subject, 
-        status: 'pending' 
+      const link = this.tutorSubjectRepository.create({
+        tutor,
+        subject,
+        status: 'pending'
       });
       toCreate.push(link);
       console.log(`Created TutorSubject link for tutor_id ${tutorId}, subject_id ${subject.subject_id}, subject_name "${name}"`);
@@ -688,16 +688,16 @@ export class TutorsService {
     // Delete existing tutor subjects for this tutor
     const deleteResult = await this.tutorSubjectRepository.delete({ tutor: { tutor_id: tutorId } as any });
     console.log(`Deleted ${deleteResult.affected || 0} existing TutorSubject entries for tutor_id ${tutorId}`);
-    
+
     // Save new tutor subjects
     const savedTutorSubjects = await this.tutorSubjectRepository.save(toCreate);
     console.log(`Saved ${savedTutorSubjects.length} TutorSubject entries for tutor_id ${tutorId}`);
     savedTutorSubjects.forEach((ts, idx) => {
       console.log(`  TutorSubject[${idx}]: tutor_subject_id=${ts.tutor_subject_id}, subject_id=${(ts.subject as any)?.subject_id || 'N/A'}, subject_name="${subjectNames[idx]}"`);
     });
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       subjects_saved: savedTutorSubjects.length,
       tutor_subject_ids: savedTutorSubjects.map(ts => ts.tutor_subject_id)
     };
@@ -706,8 +706,8 @@ export class TutorsService {
   // New methods for tutor dashboard functionality
 
   async createBookingRequest(tutorId: number, studentUserId: number, data: { subject: string; date: string; time: string; duration: number; student_notes?: string }) {
-  // Load tutor with user relation so we can reference tutor.user.user_id when creating notifications
-  const tutor = await this.tutorsRepository.findOne({ where: { tutor_id: tutorId }, relations: ['user'] });
+    // Load tutor with user relation so we can reference tutor.user.user_id when creating notifications
+    const tutor = await this.tutorsRepository.findOne({ where: { tutor_id: tutorId }, relations: ['user'] });
     if (!tutor) throw new NotFoundException('Tutor not found');
 
     const student = await this.usersRepository.findOne({ where: { user_id: studentUserId } });
@@ -786,13 +786,13 @@ export class TutorsService {
     });
 
     const saved = await this.bookingRequestRepository.save(entity as any);
-    
+
     // Verify the saved booking has the correct tutor_id
     const verifyBooking = await this.bookingRequestRepository.findOne({
       where: { id: (saved as any).id },
       relations: ['tutor', 'student']
     });
-    
+
     console.log(`createBookingRequest: saved booking id=${(saved as any).id} tutor_id=${tutor.tutor_id} tutor_user_id=${(tutor.user as any)?.user_id} student_user_id=${(student as any)?.user_id}`);
     console.log(`createBookingRequest: booking details:`, {
       id: (saved as any).id,
@@ -804,10 +804,10 @@ export class TutorsService {
       student_id: (student as any)?.user_id,
       verified_tutor_id: (verifyBooking as any)?.tutor?.tutor_id || (verifyBooking as any)?.tutor_id || 'NOT FOUND'
     });
-    
+
     // Get student user name for notification
     const studentUserName = (student as any)?.name || 'A student';
-    
+
     // Create notification for tutor only (do NOT notify the student to avoid duplicates and empty receiver_id)
     const tutorNotification = this.notificationRepository.create({
       userId: (tutor.user as any)?.user_id?.toString(),
@@ -855,13 +855,13 @@ export class TutorsService {
 
   async getTutorStatus(idParam: number) {
     console.log(`[getTutorStatus] 🔍 Starting status check for ID: ${idParam}`);
-    
+
     // Try to find tutor by user_id first with EXACT raw database query
     const rawQuery = await this.tutorsRepository.query(
       `SELECT t.*, u.user_id, u.name 
        FROM tutors t 
        JOIN users u ON t.user_id = u.user_id 
-       WHERE u.user_id = ?`,
+       WHERE u.user_id = $1`,
       [idParam]
     );
     console.log('[getTutorStatus] 📝 Raw DB Query Result:', rawQuery);
@@ -878,7 +878,7 @@ export class TutorsService {
     } else {
       // Fallback to repository query
       console.log(`[getTutorStatus] 🔍 Raw query found nothing, trying repository query...`);
-      tutor = await this.tutorsRepository.findOne({ 
+      tutor = await this.tutorsRepository.findOne({
         where: { user: { user_id: idParam } },
         relations: ['user']
       });
@@ -892,7 +892,7 @@ export class TutorsService {
         });
       }
     }
-    
+
     if (!tutor) {
       console.error(`[getTutorStatus] ❌ Tutor not found for either user_id or tutor_id: ${idParam}`);
       throw new NotFoundException('Tutor not found');
@@ -905,7 +905,7 @@ export class TutorsService {
       raw_status: tutor.status,
       status_type: typeof tutor.status
     });
-    
+
     // Debug log raw data from database
     console.log(`[getTutorStatus] 📊 Raw tutor data from DB:`, {
       tutor_id: tutor.tutor_id,
@@ -914,40 +914,40 @@ export class TutorsService {
       status_type: typeof tutor.status,
       admin_notes: tutor.admin_notes || 'none'
     });
-    
+
     // Normalize status to lowercase for consistency
     const normalizedStatus = String(tutor.status || '').toLowerCase();
     const isApproved = normalizedStatus === 'approved';
-    
+
     console.log(`[getTutorStatus] 🔄 Status normalization:`, {
       original_status: tutor.status,
       normalized_status: normalizedStatus,
       is_approved: isApproved
     });
-    
+
     const response = {
       is_verified: isApproved,
       status: normalizedStatus, // Send normalized status
       admin_notes: tutor.admin_notes || null
     };
-    
+
     console.log('[getTutorStatus] ✅ Returning response:', response);
-    
+
     return response;
   }
 
   async getTutorId(userId: number): Promise<number> {
     console.log('Looking for tutor with user_id:', userId);
-    
+
     const user = await this.usersRepository.findOne({
       where: { user_id: userId },
       relations: ['tutor_profile']
     });
-    
+
     if (!user || !user.tutor_profile) {
       throw new NotFoundException('Tutor not found');
     }
-    
+
     console.log('Found tutor profile for user:', user.tutor_profile.tutor_id);
     return user.tutor_profile.tutor_id;
   }
@@ -958,12 +958,12 @@ export class TutorsService {
         where: { user: { user_id: userId } },
         relations: ['user']
       });
-      
+
       if (!tutor) {
         console.warn(`Tutor not found for user_id: ${userId}`);
         return; // Don't throw error, just log warning
       }
-      
+
       tutor.activity_status = status;
       await this.tutorsRepository.save(tutor);
       console.log(`Tutor ${tutor.tutor_id} (user_id: ${userId}) online status updated to: ${status}`);
@@ -975,21 +975,21 @@ export class TutorsService {
 
   async getTutorProfile(userId: number) {
     // Accept either tutor_id or user.user_id
-    let tutor = await this.tutorsRepository.findOne({ 
+    let tutor = await this.tutorsRepository.findOne({
       where: { tutor_id: userId as any },
       relations: ['user', 'subjects', 'subjects.subject']
     });
     if (!tutor) {
-      tutor = await this.tutorsRepository.findOne({ 
+      tutor = await this.tutorsRepository.findOne({
         where: { user: { user_id: userId } },
         relations: ['user', 'subjects', 'subjects.subject']
       });
     }
     if (!tutor) throw new NotFoundException('Tutor not found');
-    
+
     // Filter only approved subjects
     const approvedSubjects = tutor.subjects?.filter(ts => ts.status === 'approved') || [];
-    
+
     return {
       bio: tutor.bio,
       profile_photo: tutor.user.profile_image_url,
@@ -1004,27 +1004,27 @@ export class TutorsService {
   }
 
   async updateTutorProfile(userId: number, data: { bio?: string; gcash_number?: string }) {
-    const tutor = await this.tutorsRepository.findOne({ 
+    const tutor = await this.tutorsRepository.findOne({
       where: { user: { user_id: userId } },
       relations: ['user']
     });
     if (!tutor) throw new NotFoundException('Tutor not found');
-    
+
     if (data.bio !== undefined) tutor.bio = data.bio;
     if (data.gcash_number !== undefined) tutor.gcash_number = data.gcash_number;
-    
+
     await this.tutorsRepository.save(tutor);
     return { success: true };
   }
 
   async getTutorAvailability(userId: number) {
     // Accept either tutor_id or user.user_id
-    let tutor = await this.tutorsRepository.findOne({ 
+    let tutor = await this.tutorsRepository.findOne({
       where: { tutor_id: userId as any },
       relations: ['user']
     });
     if (!tutor) {
-      tutor = await this.tutorsRepository.findOne({ 
+      tutor = await this.tutorsRepository.findOne({
         where: { user: { user_id: userId } },
         relations: ['user']
       });
@@ -1038,12 +1038,12 @@ export class TutorsService {
   }
 
   async getSubjectApplications(userId: number) {
-    const tutor = await this.tutorsRepository.findOne({ 
+    const tutor = await this.tutorsRepository.findOne({
       where: { user: { user_id: userId } },
       relations: ['user']
     });
     if (!tutor) throw new NotFoundException('Tutor not found');
-    
+
     return this.getTutorSubjectApplications(tutor.tutor_id);
   }
 
@@ -1053,12 +1053,12 @@ export class TutorsService {
       relations: ['subject', 'documents'],
       order: { created_at: 'DESC' }
     });
-    
+
     console.log(`Found ${applications.length} subject applications for tutor ${tutorId}`);
     applications.forEach(app => {
       console.log(`Application ${app.tutor_subject_id}: ${app.subject.subject_name} - ${app.status} - Notes: ${app.admin_notes || 'None'}`);
     });
-    
+
     // Transform to match the expected format
     return applications.map(app => ({
       id: app.tutor_subject_id,
@@ -1083,12 +1083,12 @@ export class TutorsService {
 
   async updateTutorSubjectStatus(tutorSubjectId: number, status: 'approved' | 'rejected', adminNotes?: string) {
     console.log('Updating tutor subject status:', { tutorSubjectId, status, adminNotes });
-    
+
     const tutorSubject = await this.tutorSubjectRepository.findOne({
       where: { tutor_subject_id: tutorSubjectId },
       relations: ['tutor', 'tutor.user', 'subject']
     });
-    
+
     if (!tutorSubject) {
       throw new NotFoundException('Tutor subject not found');
     }
@@ -1100,9 +1100,9 @@ export class TutorsService {
     } else {
       console.log('No admin notes provided');
     }
-    
+
     const updatedTutorSubject = await this.tutorSubjectRepository.save(tutorSubject);
-    
+
     // Send email to tutor based on status
     if (status === 'approved') {
       try {
@@ -1128,24 +1128,24 @@ export class TutorsService {
         // Don't throw error to avoid breaking the rejection process
       }
     }
-    
+
     return updatedTutorSubject;
   }
 
   async submitSubjectApplication(tutorId: number, subjectName: string, files: any[], isReapplication: boolean = false) {
     try {
       console.log('Starting subject application submission:', { tutorId, subjectName, filesCount: files?.length || 0 });
-      
-      const tutor = await this.tutorsRepository.findOne({ 
+
+      const tutor = await this.tutorsRepository.findOne({
         where: { tutor_id: tutorId },
         relations: ['user', 'course']
       });
       if (!tutor) throw new NotFoundException('Tutor not found');
       console.log('Tutor found:', tutor.tutor_id);
-      
+
       const tutorCourseId: number | undefined = tutor.course_id;
       let courseEntity: Course | undefined;
-      
+
       if (tutorCourseId) {
         courseEntity = await this.coursesRepository.findOne({ where: { course_id: tutorCourseId } });
         if (!courseEntity) {
@@ -1161,26 +1161,26 @@ export class TutorsService {
       if (!trimmedName) {
         throw new Error('Subject name cannot be empty');
       }
-      
+
       let subject: Subject | null = null;
-      
+
       if (courseEntity) {
         // Look up subject by name within the same course only
-        subject = await this.subjectRepository.findOne({ 
-          where: { 
-            subject_name: trimmedName, 
-            course: { course_id: courseEntity.course_id } as any 
-          }, 
-          relations: ['course'] 
+        subject = await this.subjectRepository.findOne({
+          where: {
+            subject_name: trimmedName,
+            course: { course_id: courseEntity.course_id } as any
+          },
+          relations: ['course']
         });
-        
+
         if (!subject) {
           // Check if a subject with this name exists in a different course or without a course
-          const existingWithDifferentCourse = await this.subjectRepository.findOne({ 
-            where: { subject_name: trimmedName }, 
-            relations: ['course'] 
+          const existingWithDifferentCourse = await this.subjectRepository.findOne({
+            where: { subject_name: trimmedName },
+            relations: ['course']
           });
-          
+
           if (existingWithDifferentCourse) {
             const existingCourseId = (existingWithDifferentCourse as any).course?.course_id;
             // If it exists in a different course, create a NEW subject for this course
@@ -1188,15 +1188,15 @@ export class TutorsService {
             if (existingCourseId && existingCourseId !== courseEntity.course_id) {
               console.log(`Subject "${trimmedName}" exists in course_id ${existingCourseId}, creating new subject for course_id ${courseEntity.course_id}`);
               // Create new subject for this course - same name but different course_id
-              const created = this.subjectRepository.create({ 
-                subject_name: trimmedName, 
-                course: courseEntity 
+              const created = this.subjectRepository.create({
+                subject_name: trimmedName,
+                course: courseEntity
               });
               subject = await this.subjectRepository.save(created);
               // Reload with relations to ensure course relationship is properly set
-              subject = await this.subjectRepository.findOne({ 
-                where: { subject_id: subject.subject_id }, 
-                relations: ['course'] 
+              subject = await this.subjectRepository.findOne({
+                where: { subject_id: subject.subject_id },
+                relations: ['course']
               }) || subject;
               console.log(`Created new subject "${trimmedName}" with course_id ${subject?.course?.course_id || courseEntity.course_id}, subject_id: ${subject.subject_id} (duplicate name allowed for different course)`);
             } else if (!existingCourseId) {
@@ -1204,23 +1204,23 @@ export class TutorsService {
               existingWithDifferentCourse.course = courseEntity;
               subject = await this.subjectRepository.save(existingWithDifferentCourse);
               // Reload with relations to ensure course relationship is properly set
-              subject = await this.subjectRepository.findOne({ 
-                where: { subject_id: subject.subject_id }, 
-                relations: ['course'] 
+              subject = await this.subjectRepository.findOne({
+                where: { subject_id: subject.subject_id },
+                relations: ['course']
               }) || subject;
               console.log(`Updated existing subject "${trimmedName}" to have course_id ${subject?.course?.course_id || courseEntity.course_id}, subject_id: ${subject.subject_id}`);
             }
           } else {
             // No existing subject found, create new subject for this course
-            const created = this.subjectRepository.create({ 
-              subject_name: trimmedName, 
-              course: courseEntity 
+            const created = this.subjectRepository.create({
+              subject_name: trimmedName,
+              course: courseEntity
             });
             subject = await this.subjectRepository.save(created);
             // Reload with relations to ensure course relationship is properly set
-            subject = await this.subjectRepository.findOne({ 
-              where: { subject_id: subject.subject_id }, 
-              relations: ['course'] 
+            subject = await this.subjectRepository.findOne({
+              where: { subject_id: subject.subject_id },
+              relations: ['course']
             }) || subject;
             console.log(`Created new subject "${trimmedName}" with course_id ${subject?.course?.course_id || courseEntity.course_id}, subject_id: ${subject.subject_id}`);
           }
@@ -1229,7 +1229,7 @@ export class TutorsService {
         }
       } else {
         // No course available; fall back to global by-name subject
-        subject = await this.subjectRepository.findOne({ 
+        subject = await this.subjectRepository.findOne({
           where: { subject_name: trimmedName },
           relations: ['course']
         });
@@ -1239,9 +1239,9 @@ export class TutorsService {
           console.log(`Created new subject "${trimmedName}" without course, subject_id: ${subject.subject_id}`);
         } else {
           // Reload with relations for consistency
-          subject = await this.subjectRepository.findOne({ 
-            where: { subject_id: subject.subject_id }, 
-            relations: ['course'] 
+          subject = await this.subjectRepository.findOne({
+            where: { subject_id: subject.subject_id },
+            relations: ['course']
           }) || subject;
           console.log(`Found existing subject "${trimmedName}" without course, subject_id: ${subject.subject_id}`);
         }
@@ -1256,109 +1256,109 @@ export class TutorsService {
         }
       }
 
-    // Check if tutor already has this subject (approved or pending)
-    const existingTutorSubject = await this.tutorSubjectRepository.findOne({
-      where: { 
-        tutor: { tutor_id: tutor.tutor_id },
-        subject: { subject_id: subject.subject_id }
-      },
-      relations: ['documents']
-    });
+      // Check if tutor already has this subject (approved or pending)
+      const existingTutorSubject = await this.tutorSubjectRepository.findOne({
+        where: {
+          tutor: { tutor_id: tutor.tutor_id },
+          subject: { subject_id: subject.subject_id }
+        },
+        relations: ['documents']
+      });
 
-    let savedTutorSubject;
-    
-    if (existingTutorSubject) {
-      if (existingTutorSubject.status === 'approved') {
-        throw new Error('You have already been approved for this subject expertise');
-      } else if (existingTutorSubject.status === 'pending') {
-        // If there are files to upload, allow attaching documents to existing pending application
-        // This handles the case where saveSubjects was called first, then submitSubjectApplication is called
-        if (files && files.length > 0) {
-          console.log('Found existing pending TutorSubject, attaching documents to it');
-          savedTutorSubject = existingTutorSubject;
-        } else {
-          // If no files, throw error as before (prevents duplicate applications without documents)
-          throw new Error('You have already applied for this subject expertise and it is pending review');
-        }
-      } else if (existingTutorSubject.status === 'rejected') {
-        // If status is 'rejected', allow reapplication
-        existingTutorSubject.status = 'pending';
-        existingTutorSubject.admin_notes = null; // Clear previous admin notes
-        savedTutorSubject = await this.tutorSubjectRepository.save(existingTutorSubject);
-        
-        // For reapplications, if no new files but existing documents exist, that's okay
-        // The existing documents will remain and the status will be changed to pending
-        if (isReapplication && (!files || files.length === 0)) {
-          const existingDocs = existingTutorSubject.documents || [];
-          if (existingDocs.length > 0) {
-            console.log(`Reapplying rejected subject "${trimmedName}" with ${existingDocs.length} existing documents (no new files)`);
-            // Status already changed to pending above, existing documents remain
-            return { success: true, message: 'Subject reapplication submitted successfully' };
+      let savedTutorSubject;
+
+      if (existingTutorSubject) {
+        if (existingTutorSubject.status === 'approved') {
+          throw new Error('You have already been approved for this subject expertise');
+        } else if (existingTutorSubject.status === 'pending') {
+          // If there are files to upload, allow attaching documents to existing pending application
+          // This handles the case where saveSubjects was called first, then submitSubjectApplication is called
+          if (files && files.length > 0) {
+            console.log('Found existing pending TutorSubject, attaching documents to it');
+            savedTutorSubject = existingTutorSubject;
+          } else {
+            // If no files, throw error as before (prevents duplicate applications without documents)
+            throw new Error('You have already applied for this subject expertise and it is pending review');
+          }
+        } else if (existingTutorSubject.status === 'rejected') {
+          // If status is 'rejected', allow reapplication
+          existingTutorSubject.status = 'pending';
+          existingTutorSubject.admin_notes = null; // Clear previous admin notes
+          savedTutorSubject = await this.tutorSubjectRepository.save(existingTutorSubject);
+
+          // For reapplications, if no new files but existing documents exist, that's okay
+          // The existing documents will remain and the status will be changed to pending
+          if (isReapplication && (!files || files.length === 0)) {
+            const existingDocs = existingTutorSubject.documents || [];
+            if (existingDocs.length > 0) {
+              console.log(`Reapplying rejected subject "${trimmedName}" with ${existingDocs.length} existing documents (no new files)`);
+              // Status already changed to pending above, existing documents remain
+              return { success: true, message: 'Subject reapplication submitted successfully' };
+            }
           }
         }
-      }
-    } else {
-      // Create new tutor subject with pending status
-      // For new applications, files are required
-      if (!files || files.length === 0) {
-        throw new Error('At least one file is required for new subject application');
-      }
-      const tutorSubject = this.tutorSubjectRepository.create({
-        tutor,
-        subject,
-        status: 'pending'
-      });
-      savedTutorSubject = await this.tutorSubjectRepository.save(tutorSubject);
-    }
-
-    // Save documents linked to the tutor subject
-    if (files && files.length > 0) {
-      try {
-        console.log('Creating documents for tutor subject:', savedTutorSubject.tutor_subject_id);
-        console.log('Subject name:', trimmedName, 'Files count:', files.length);
-        
-        // Clear existing documents for this tutor subject if any (to avoid duplicates during registration)
-        // This ensures clean document association when attaching to existing pending TutorSubject
-        const existingDocs = await this.tutorSubjectDocumentRepository.find({
-          where: { tutorSubject: { tutor_subject_id: savedTutorSubject.tutor_subject_id } as any }
-        });
-        if (existingDocs.length > 0) {
-          console.log(`Clearing ${existingDocs.length} existing documents for tutor subject ${savedTutorSubject.tutor_subject_id}`);
-          await this.tutorSubjectDocumentRepository.remove(existingDocs);
+      } else {
+        // Create new tutor subject with pending status
+        // For new applications, files are required
+        if (!files || files.length === 0) {
+          throw new Error('At least one file is required for new subject application');
         }
-        
-        const documents = files.map(file => {
-          console.log('Processing file:', file.filename, file.mimetype);
-          return this.tutorSubjectDocumentRepository.create({
-            tutorSubject: savedTutorSubject,
-            file_url: `/tutor_documents/${file.filename}`,
-            file_name: file.filename,
-            file_type: file.mimetype
+        const tutorSubject = this.tutorSubjectRepository.create({
+          tutor,
+          subject,
+          status: 'pending'
+        });
+        savedTutorSubject = await this.tutorSubjectRepository.save(tutorSubject);
+      }
+
+      // Save documents linked to the tutor subject
+      if (files && files.length > 0) {
+        try {
+          console.log('Creating documents for tutor subject:', savedTutorSubject.tutor_subject_id);
+          console.log('Subject name:', trimmedName, 'Files count:', files.length);
+
+          // Clear existing documents for this tutor subject if any (to avoid duplicates during registration)
+          // This ensures clean document association when attaching to existing pending TutorSubject
+          const existingDocs = await this.tutorSubjectDocumentRepository.find({
+            where: { tutorSubject: { tutor_subject_id: savedTutorSubject.tutor_subject_id } as any }
           });
-        });
-        console.log('Saving documents:', documents.length);
-        const savedDocuments = await this.tutorSubjectDocumentRepository.save(documents);
-        console.log(`Successfully saved ${savedDocuments.length} document(s) for tutor subject:`, savedTutorSubject.tutor_subject_id);
-        
-        // Verify documents were saved
-        if (!savedDocuments || savedDocuments.length === 0) {
-          throw new Error('Failed to save documents - no documents were saved');
-        }
-      } catch (error) {
-        console.error('Error saving documents:', error);
-        // Throw error so frontend knows documents weren't saved
-        throw new Error(`Failed to save documents for subject "${trimmedName}": ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    } else {
-      console.log('No files provided for tutor subject:', savedTutorSubject.tutor_subject_id);
-    }
+          if (existingDocs.length > 0) {
+            console.log(`Clearing ${existingDocs.length} existing documents for tutor subject ${savedTutorSubject.tutor_subject_id}`);
+            await this.tutorSubjectDocumentRepository.remove(existingDocs);
+          }
 
-    return { success: true, tutorSubjectId: savedTutorSubject.tutor_subject_id };
-  } catch (error) {
-    console.error('Error in submitSubjectApplication:', error);
-    throw error;
+          const documents = files.map(file => {
+            console.log('Processing file:', file.filename, file.mimetype);
+            return this.tutorSubjectDocumentRepository.create({
+              tutorSubject: savedTutorSubject,
+              file_url: `/tutor_documents/${file.filename}`,
+              file_name: file.filename,
+              file_type: file.mimetype
+            });
+          });
+          console.log('Saving documents:', documents.length);
+          const savedDocuments = await this.tutorSubjectDocumentRepository.save(documents);
+          console.log(`Successfully saved ${savedDocuments.length} document(s) for tutor subject:`, savedTutorSubject.tutor_subject_id);
+
+          // Verify documents were saved
+          if (!savedDocuments || savedDocuments.length === 0) {
+            throw new Error('Failed to save documents - no documents were saved');
+          }
+        } catch (error) {
+          console.error('Error saving documents:', error);
+          // Throw error so frontend knows documents weren't saved
+          throw new Error(`Failed to save documents for subject "${trimmedName}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      } else {
+        console.log('No files provided for tutor subject:', savedTutorSubject.tutor_subject_id);
+      }
+
+      return { success: true, tutorSubjectId: savedTutorSubject.tutor_subject_id };
+    } catch (error) {
+      console.error('Error in submitSubjectApplication:', error);
+      throw error;
+    }
   }
-}
 
   // Availability change request feature removed
 
@@ -1366,7 +1366,7 @@ export class TutorsService {
     // Accept either tutor_id or user.user_id
     let tutor = await this.tutorsRepository.findOne({ where: { tutor_id: userId as any } });
     if (!tutor) {
-      tutor = await this.tutorsRepository.findOne({ 
+      tutor = await this.tutorsRepository.findOne({
         where: { user: { user_id: userId } },
         relations: ['user']
       });
@@ -1377,14 +1377,14 @@ export class TutorsService {
     }
 
     console.log(`getBookingRequests: Looking for bookings with tutor_id=${tutor.tutor_id}`);
-    
+
     // First, let's check if there are any bookings at all for this tutor using raw query
     const rawCount = await this.bookingRequestRepository
       .createQueryBuilder('br')
       .where('br.tutor_id = :tutorId', { tutorId: tutor.tutor_id })
       .getCount();
     console.log(`getBookingRequests: Raw count of bookings with tutor_id=${tutor.tutor_id}: ${rawCount}`);
-    
+
     // Use QueryBuilder to query by the tutor_id foreign key directly
     // This is more reliable than using nested object queries
     // Note: student is already a User entity, not a Student entity, so no need to join student.user
@@ -1396,17 +1396,17 @@ export class TutorsService {
       .where('br.tutor_id = :tutorId', { tutorId: tutor.tutor_id })
       .orderBy('br.created_at', 'DESC')
       .getMany();
-    
+
     console.log(`getBookingRequests: found ${requests.length} requests for tutor_id=${tutor.tutor_id}`);
-    console.log(`getBookingRequests: booking IDs:`, requests.map((r: any) => ({ 
-      id: r.id, 
-      subject: r.subject, 
-      status: r.status, 
+    console.log(`getBookingRequests: booking IDs:`, requests.map((r: any) => ({
+      id: r.id,
+      subject: r.subject,
+      status: r.status,
       date: r.date,
       tutor_id_in_booking: (r.tutor as any)?.tutor_id || (r as any).tutor_id || 'missing',
       student_id: (r.student as any)?.user_id || 'missing'
     })));
-    
+
     // Also try alternative query to see if we get different results
     const altRequests = await this.bookingRequestRepository.find({
       where: { tutor: tutor } as any,
@@ -1414,12 +1414,12 @@ export class TutorsService {
       order: { created_at: 'DESC' }
     });
     console.log(`getBookingRequests: Alternative query found ${altRequests.length} requests`);
-    
+
     return requests;
   }
 
   async updateBookingRequestStatus(bookingId: number, status: 'accepted' | 'declined') {
-    const request = await this.bookingRequestRepository.findOne({ 
+    const request = await this.bookingRequestRepository.findOne({
       where: { id: bookingId },
       relations: ['tutor', 'tutor.user', 'student']
     });
@@ -1451,10 +1451,10 @@ export class TutorsService {
 
     // Format booking date
     const bookingDate = new Date(request.date);
-    const formattedDate = bookingDate.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const formattedDate = bookingDate.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
 
     // Format acceptance date and time
@@ -1471,13 +1471,13 @@ export class TutorsService {
     const tutorName = (tutor.user as any)?.name || 'Tutor';
 
     // Create notification for student with detailed message
-    const notificationMessage = status === 'accepted' 
+    const notificationMessage = status === 'accepted'
       ? `${tutorName} has approved your booking on ${formattedDate} for ${duration} hour${duration !== 1 ? 's' : ''}. Please pay the corresponding amount of ₱${totalAmount.toFixed(2)}. Accepted on ${formattedAcceptanceDate} at ${formattedAcceptanceTime}.`
       : `Your booking request for ${request.subject} was declined.`;
-    
+
     // Ensure sessionDate is a Date object
     const sessionDate = request.date instanceof Date ? request.date : new Date(request.date);
-    
+
     const studentNotification = this.notificationRepository.create({
       userId: student.user_id.toString(),
       receiver_id: student.user_id,
@@ -1489,7 +1489,7 @@ export class TutorsService {
       subjectName: request.subject,
       booking: savedRequest
     });
-    
+
     const savedNotification = await this.notificationRepository.save(studentNotification);
     console.log(`updateBookingRequestStatus: Created notification for student user_id=${student.user_id} about booking approval`);
     console.log(`updateBookingRequestStatus: Notification ID=${savedNotification.notification_id}, userId=${savedNotification.userId}, userType=${savedNotification.userType}`);
@@ -1670,7 +1670,7 @@ export class TutorsService {
     // Accept either tutor_id or user.user_id
     let tutor = await this.tutorsRepository.findOne({ where: { tutor_id: userId as any } });
     if (!tutor) {
-      tutor = await this.tutorsRepository.findOne({ 
+      tutor = await this.tutorsRepository.findOne({
         where: { user: { user_id: userId } },
         relations: ['user']
       });
@@ -1708,7 +1708,7 @@ export class TutorsService {
     // Accept either tutor_id or user.user_id
     let tutor = await this.tutorsRepository.findOne({ where: { tutor_id: userId as any } });
     if (!tutor) {
-      tutor = await this.tutorsRepository.findOne({ 
+      tutor = await this.tutorsRepository.findOne({
         where: { user: { user_id: userId } },
         relations: ['user']
       });
@@ -1742,7 +1742,7 @@ export class TutorsService {
     // Accept either tutor_id or user.user_id
     let tutor = await this.tutorsRepository.findOne({ where: { tutor_id: userId as any } });
     if (!tutor) {
-      tutor = await this.tutorsRepository.findOne({ 
+      tutor = await this.tutorsRepository.findOne({
         where: { user: { user_id: userId } },
         relations: ['user']
       });
@@ -1764,9 +1764,9 @@ export class TutorsService {
     const total_earnings = confirmedPayments.reduce((sum: number, p: any) => sum + Number(p.amount), 0);
     const pending_earnings = pendingPayments.reduce((sum: number, p: any) => sum + Number(p.amount), 0);
 
-    // Get completed bookings (confirmed status)
+    // Get completed bookings
     const completedBookings = await this.bookingRequestRepository.find({
-      where: { tutor: { tutor_id: tutor.tutor_id } as any, status: 'confirmed' } as any
+      where: { tutor: { tutor_id: tutor.tutor_id } as any, status: 'completed' } as any
     });
 
     // Calculate total hours from completed bookings
@@ -1791,11 +1791,11 @@ export class TutorsService {
     if (!user) return;
 
     const userProfileImagesPath = path.join(process.cwd(), 'user_profile_images');
-    
+
     try {
       // Get all files in the user_profile_images directory
       const files = fs.readdirSync(userProfileImagesPath);
-      
+
       // Find files that match the profile image pattern for this user
       const profileImagePattern = new RegExp(`^userProfile_${userId}(\\..*)?$`);
       const filesToDelete = files.filter(file => {
@@ -1803,9 +1803,9 @@ export class TutorsService {
         const isCurrentFile = user.profile_image_url && file === path.basename(user.profile_image_url);
         return matchesPattern && !isCurrentFile; // Don't delete the current file
       });
-      
+
       console.log(`Found ${filesToDelete.length} old profile image files to delete for user ${userId}:`, filesToDelete);
-      
+
       // Delete each matching file
       for (const file of filesToDelete) {
         const filePath = path.join(userProfileImagesPath, file);
@@ -1829,11 +1829,11 @@ export class TutorsService {
     if (!tutor) return;
 
     const tutorDocumentsPath = path.join(process.cwd(), 'tutor_documents');
-    
+
     try {
       // Get all files in the tutor_documents directory
       const files = fs.readdirSync(tutorDocumentsPath);
-      
+
       // Find files that match the GCash QR pattern for this user
       const gcashQRPattern = new RegExp(`^gcashQR_${userId}(\\..*)?$`);
       const filesToDelete = files.filter(file => {
@@ -1841,9 +1841,9 @@ export class TutorsService {
         const isCurrentFile = tutor.gcash_qr_url && file === path.basename(tutor.gcash_qr_url);
         return matchesPattern && !isCurrentFile; // Don't delete the current file
       });
-      
+
       console.log(`Found ${filesToDelete.length} old GCash QR files to delete for user ${userId}:`, filesToDelete);
-      
+
       // Delete each matching file
       for (const file of filesToDelete) {
         const filePath = path.join(tutorDocumentsPath, file);
