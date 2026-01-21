@@ -19,7 +19,7 @@ export declare class UsersController {
         role: string;
         tutor_profile: {
             tutor_id: number;
-            status: "pending" | "approved" | "rejected";
+            status: "pending" | "rejected" | "approved";
             activity_status: "online" | "offline";
         };
     }[]>;
@@ -67,7 +67,7 @@ export declare class UsersController {
             booking_id: any;
             title: any;
             message: any;
-            type: "upcoming_session" | "booking_update" | "payment" | "system";
+            type: "payment" | "upcoming_session" | "booking_update" | "system";
             is_read: any;
             created_at: any;
             scheduled_for: string;

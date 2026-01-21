@@ -135,7 +135,7 @@ export declare class TutorsService {
     getSubjectApplications(userId: number): Promise<{
         id: number;
         subject_name: string;
-        status: "pending" | "approved" | "rejected";
+        status: "pending" | "rejected" | "approved";
         admin_notes: string;
         created_at: Date;
         updated_at: Date;
@@ -144,7 +144,7 @@ export declare class TutorsService {
     getTutorSubjectApplications(tutorId: number): Promise<{
         id: number;
         subject_name: string;
-        status: "pending" | "approved" | "rejected";
+        status: "pending" | "rejected" | "approved";
         admin_notes: string;
         created_at: Date;
         updated_at: Date;
