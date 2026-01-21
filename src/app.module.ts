@@ -21,7 +21,7 @@ export class AppController {
   @Get()
   getRoot() {
     return {
-      message: 'TutorLink API is running!',
+      message: 'TutorFriends API is running!',
       version: '1.0.0',
       endpoints: {
         auth: '/api/auth',
