@@ -8,12 +8,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS so the frontend can communicate with the backend
-  const allowedOrigins = process.env.FRONTEND_URL 
-    ? [process.env.FRONTEND_URL, 'http://localhost:3001']
-    : ['http://localhost:3001', '*']; // Fallback for development
-  
+  const allowedOrigins = process.env.FRONTEND_URL
+    ? [process.env.FRONTEND_URL, 'http://localhost:3001', 'http://192.168.41.24:3001']
+    : ['http://localhost:3001', 'http://192.168.41.24:3001', '*']; // Fallback for development
+
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' 
+    origin: process.env.NODE_ENV === 'production'
       ? allowedOrigins.filter(origin => origin !== '*')
       : '*', // Allow all origins in development
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
