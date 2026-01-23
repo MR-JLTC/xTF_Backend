@@ -15,7 +15,6 @@ import { LandingModule } from './landing/landing.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ReschedulesModule } from './reschedules/reschedules.module';
-import { TrafficModule } from './traffic/traffic.module';
 
 @Controller()
 export class AppController {
@@ -46,7 +45,7 @@ export class AppController {
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: Object.values(entities),
-      synchronize: process.env.NODE_ENV !== 'production' || process.env.SYNC_DB === 'true',
+      synchronize: process.env.NODE_ENV !== 'production', // Only synchronize in development
     }),
     ScheduleModule.forRoot(),
     AuthModule,
@@ -61,7 +60,6 @@ export class AppController {
     EmailModule,
     NotificationsModule,
     ReschedulesModule,
-    TrafficModule,
   ],
   controllers: [AppController],
   providers: [],
