@@ -62,6 +62,23 @@ export class EmailService {
     }
   }
 
+  async sendEmail(mailOptions: nodemailer.SendMailOptions): Promise<boolean> {
+    try {
+      if (!process.env.GMAIL_APP_PASSWORD || !this.gmailUser) {
+        throw new Error('Email service not configured (missing GMAIL_USER or GMAIL_APP_PASSWORD)');
+      }
+
+      await this.transporter.sendMail({
+        from: `"TutorFriends" <${this.gmailUser}>`,
+        ...mailOptions
+      });
+      return true;
+    } catch (error) {
+      console.error('EmailService.sendEmail error:', error);
+      throw error;
+    }
+  }
+
   async sendContactEmail(contactData: {
     name: string;
     email: string;
