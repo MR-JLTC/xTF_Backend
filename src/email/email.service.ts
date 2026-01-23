@@ -9,12 +9,16 @@ export class EmailService {
   constructor() {
     // Configure nodemailer transporter using Gmail SMTP with App Password
     // Ensure you set process.env.GMAIL_APP_PASSWORD
-    this.gmailUser = process.env.GMAIL_USER || 'jhonlloydtcruz4@gmail.com';
+    this.gmailUser = process.env.GMAIL_USER || '';
     const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
 
     if (!gmailAppPassword) {
       // eslint-disable-next-line no-console
-      console.error('GMAIL_APP_PASSWORD is not set. Configure a Gmail App Password and export it as env.');
+      console.error('❌ GMAIL_APP_PASSWORD is not set. Emails will fail to send.');
+    }
+    if (!this.gmailUser) {
+      // eslint-disable-next-line no-console
+      console.error('❌ GMAIL_USER is not set. Emails will fail to send.');
     }
 
     this.transporter = nodemailer.createTransport({

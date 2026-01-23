@@ -259,38 +259,7 @@ export class EmailVerificationService {
       console.log('Name:', name);
       console.log('Code:', verificationCode);
 
-      // Check for required environment variables first
-      const gmailUser = process.env.GMAIL_USER || 'johnemmanuel.devera@bisu.edu.ph';
-      const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
-
-      if (!gmailAppPassword) {
-        console.log('❌ GMAIL_APP_PASSWORD is not set!');
-        throw new Error('Email service not configured');
-      }
-
-      // Create transporter with explicit SMTP configuration (matching other services)
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: gmailUser,
-          pass: gmailAppPassword,
-        },
-        tls: {
-          // Do not fail on invalid certificates
-          rejectUnauthorized: false,
-        },
-        connectionTimeout: 10000, // 10 seconds timeout
-        greetingTimeout: 10000,
-        socketTimeout: 10000,
-      });
-
-      const mailOptions = {
-        from: `"TUTORFRIENDS" <${gmailUser}>`,
-        to: email,
-        subject: 'TutorFriends - Email Verification Code',
-        html: `
+      const html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
             <!-- Header with Logo -->
             <div style="text-align: center; margin-bottom: 30px; padding: 20px 0; border-bottom: 2px solid #e5e7eb;">
@@ -307,7 +276,7 @@ export class EmailVerificationService {
               </p>
               
               <p style="color: #374151; font-size: 16px; margin: 0 0 25px 0; line-height: 1.6;">
-                Thank you for registering with TutorLink! To complete your account setup, please verify your email address using the verification code below:
+                Thank you for registering with TutorFriends! To complete your account setup, please verify your email address using the verification code below:
               </p>
               
               <!-- Verification Code Box -->
@@ -332,25 +301,22 @@ export class EmailVerificationService {
             <!-- Footer -->
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
               <p style="color: #9ca3af; font-size: 12px; margin: 0 0 5px 0;">
-                © 2024 TutorLink. All rights reserved.
+                © 2024 TutorFriends. All rights reserved.
               </p>
               <p style="color: #9ca3af; font-size: 12px; margin: 0;">
                 Connecting students with expert tutors for academic success.
               </p>
             </div>
           </div>
-        `
-      };
+        `;
 
-      console.log('Mail options:', {
-        from: mailOptions.from,
-        to: mailOptions.to,
-        subject: mailOptions.subject
+      await this.emailService.sendEmail({
+        to: email,
+        subject: 'TutorFriends - Email Verification Code',
+        html: html,
       });
 
-      const result = await transporter.sendMail(mailOptions);
-      console.log('✅ Verification email sent successfully');
-      console.log('Message ID:', result.messageId);
+      console.log('✅ Verification email sent successfully via EmailService');
 
     } catch (error) {
       console.log('❌ Failed to send verification email:', error);
