@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { User } from '../database/entities/user.entity';
 import { EmailVerificationRegistry } from '../database/entities/email-verification-registry.entity';
 import { EmailService } from '../email/email.service';
-import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
 
 @Injectable()

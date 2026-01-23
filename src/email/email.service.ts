@@ -1,83 +1,54 @@
 import { Injectable } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
-  private transporter;
-  private gmailUser: string;
+  private resendApiKey: string;
+  private resendFromEmail: string;
 
   constructor() {
-    // Configure nodemailer transporter using Gmail SMTP with App Password
-    // Ensure you set process.env.GMAIL_APP_PASSWORD
-    this.gmailUser = process.env.GMAIL_USER || '';
-    const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+    this.resendApiKey = process.env.RESEND_API_KEY || '';
+    // Resend free tier usually requires domain verification. 
+    // If you don't have a domain, you can use 'onboarding@resend.dev' to send to yourself,
+    // but for production, you must verify your domain.
+    this.resendFromEmail = process.env.EMAIL_FROM || 'TutorFriends <onboarding@resend.dev>';
 
-    if (!gmailAppPassword) {
-      // eslint-disable-next-line no-console
-      console.error('❌ GMAIL_APP_PASSWORD is not set. Emails will fail to send.');
-    }
-    if (!this.gmailUser) {
-      // eslint-disable-next-line no-console
-      console.error('❌ GMAIL_USER is not set. Emails will fail to send.');
-    }
-
-    // Masked credential check for Render troubleshooting
-    if (gmailAppPassword) {
-      console.log('--- Email Service Diagnostics ---');
-      console.log(`GMAIL_USER: ${this.gmailUser}`);
-      console.log(`Password set: ${!!gmailAppPassword} (length: ${gmailAppPassword.length})`);
-      console.log('---------------------------------');
-    }
-
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: this.gmailUser,
-        pass: gmailAppPassword,
-      },
-      family: 4, // Force IPv4
-      logger: true,
-      debug: true,
-      connectionTimeout: 45000,
-    } as any);
-
-    // Optional: verify transporter on startup for clearer diagnostics
-    // Use a timeout to prevent hanging, and make it non-blocking
-    if (gmailAppPassword) {
-      const verifyPromise = Promise.race([
-        this.transporter.verify(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Verification timeout')), 15000) // 15 seconds to allow for connection setup
-        )
-      ]);
-
-      verifyPromise
-        .then(() => {
-          // eslint-disable-next-line no-console
-          console.log('✅ Email transporter verified successfully');
-        })
-        .catch((err: unknown) => {
-          // Only log as warning, not error, since email might still work
-          // eslint-disable-next-line no-console
-          console.warn('⚠️ Email transporter verification failed (emails may still work):',
-            err instanceof Error ? err.message : 'Unknown error');
-        });
+    if (!this.resendApiKey) {
+      console.error('❌ RESEND_API_KEY is not set. Emails will fail to send. Please get one at resend.com');
     }
   }
 
-  async sendEmail(mailOptions: nodemailer.SendMailOptions): Promise<boolean> {
+  async sendEmail(mailOptions: { to: string; subject: string; html: string }): Promise<boolean> {
     try {
-      if (!this.gmailUser || !process.env.GMAIL_APP_PASSWORD) {
-        const missing = [];
-        if (!this.gmailUser) missing.push('GMAIL_USER');
-        if (!process.env.GMAIL_APP_PASSWORD) missing.push('GMAIL_APP_PASSWORD');
-        throw new Error(`Email service not configured. Missing environment variables on Render: ${missing.join(', ')}. Please add them in the Render Dashboard -> Environment tab.`);
+      if (!this.resendApiKey) {
+        throw new Error('Email service not configured. Missing RESEND_API_KEY on Render Dashboard.');
       }
 
-      await this.transporter.sendMail({
-        from: `"TutorFriends" <${this.gmailUser}>`,
-        ...mailOptions
+      console.log(`--- Resend API Request ---`);
+      console.log(`To: ${mailOptions.to}`);
+      console.log(`Subject: ${mailOptions.subject}`);
+
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.resendApiKey}`,
+        },
+        body: JSON.stringify({
+          from: this.resendFromEmail,
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          html: mailOptions.html,
+        }),
       });
+
+      const data = await response.json() as any;
+
+      if (!response.ok) {
+        console.error('❌ Resend API Error Response:', data);
+        throw new Error(data.message || 'Failed to send email via Resend');
+      }
+
+      console.log('✅ Email sent successfully via Resend:', data.id);
       return true;
     } catch (error) {
       console.error('EmailService.sendEmail error:', error);
@@ -93,9 +64,8 @@ export class EmailService {
   }): Promise<boolean> {
     try {
       const mailOptions = {
-        // from: `${this.gmailUser}`,
-        from: `"TutorFriends" <${this.gmailUser}>`,
-        to: `${this.gmailUser}`,
+        from: this.resendFromEmail,
+        to: process.env.CONTACT_RECEIVER_EMAIL || this.resendFromEmail,
         replyTo: `${contactData.name} <${contactData.email}>`,
         subject: `Contact Form: ${contactData.subject}`,
         html: `
@@ -119,8 +89,7 @@ export class EmailService {
         `,
       };
 
-      await this.transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('Error sending email:', error);
       return false;
@@ -133,7 +102,7 @@ export class EmailService {
   }): Promise<boolean> {
     try {
       const mailOptions = {
-        from: `"TutorFriends" <${this.gmailUser}>`,
+        from: this.resendFromEmail,
         to: tutorData.email,
         subject: '🎉 Your Tutor Application Has Been Approved!',
         html: `
@@ -169,8 +138,7 @@ export class EmailService {
         `,
       };
 
-      await this.transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('Error sending tutor application approval email:', error);
       return false;
@@ -184,7 +152,7 @@ export class EmailService {
   }): Promise<boolean> {
     try {
       const mailOptions = {
-        from: `"TutorFriends" <${this.gmailUser}>`,
+        from: this.resendFromEmail,
         to: tutorData.email,
         subject: '✅ Your Subject Expertise Has Been Approved!',
         html: `
@@ -223,8 +191,7 @@ export class EmailService {
         `,
       };
 
-      await this.transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('Error sending subject approval email:', error);
       return false;
@@ -234,27 +201,29 @@ export class EmailService {
   async sendTestEmail(to: string): Promise<boolean> {
     try {
       console.log('Attempting to send test email to:', to);
-      console.log('Using Gmail User:', this.gmailUser);
+      console.log('Using From Email:', this.resendFromEmail);
 
       const mailOptions = {
-        from: `"TutorFriends" <${this.gmailUser}>`,
+        from: this.resendFromEmail,
         to: to,
         subject: 'TutorFriends Email Test',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h2 style="color: #0ea5e9;">Email Service Test</h2>
-            <p>This is a test email from TutorFriends to verify that the email service is working correctly.</p>
-            <p>If you receive this email, the email configuration is successful!</p>
+            <p>This is a test email from TutorFriends to verify that the Resend email service is working correctly.</p>
+            <p>If you receive this email, the configuration is successful!</p>
             <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0; color: #0ea5e9;"><strong>✅ Email Service is Working!</strong></p>
+              <p style="margin: 0; color: #0ea5e9;"><strong>✅ Resend Email Service is Working!</strong></p>
             </div>
           </div>
         `,
       };
 
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('Test email sent successfully:', result.messageId);
-      return true;
+      const success = await this.sendEmail(mailOptions);
+      if (success) {
+        console.log('Test email request accepted by Resend');
+      }
+      return success;
     } catch (error) {
       console.error('Error sending test email:', error);
       return false;
@@ -267,15 +236,8 @@ export class EmailService {
     adminNotes?: string;
   }): Promise<boolean> {
     try {
-      // Log the admin notes being sent
-      console.log(`[Email Service] Sending rejection email to ${tutorData.email}`);
-      console.log(`[Email Service] Admin notes provided:`, tutorData.adminNotes ? `"${tutorData.adminNotes.substring(0, 50)}${tutorData.adminNotes.length > 50 ? '...' : ''}"` : 'none');
-
-      const hasAdminNotes = tutorData.adminNotes && tutorData.adminNotes.trim().length > 0;
-      console.log(`[Email Service] Will include rejection reason in email:`, hasAdminNotes);
-
       const mailOptions = {
-        from: `"TutorFriends" <${this.gmailUser}>`,
+        from: this.resendFromEmail,
         to: tutorData.email,
         subject: '❌ Your Tutor Application Status Update',
         html: `
@@ -324,8 +286,7 @@ export class EmailService {
         `,
       };
 
-      await this.transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('Error sending tutor application rejection email:', error);
       return false;
@@ -340,7 +301,7 @@ export class EmailService {
   }): Promise<boolean> {
     try {
       const mailOptions = {
-        from: `"TutorFriends" <${this.gmailUser}>`,
+        from: this.resendFromEmail,
         to: tutorData.email,
         subject: '❌ Your Subject Expertise Application Status Update',
         html: `
@@ -390,8 +351,7 @@ export class EmailService {
         `,
       };
 
-      await this.transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('Error sending subject rejection email:', error);
       return false;
