@@ -46,7 +46,7 @@ export class AppController {
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: Object.values(entities),
-      synchronize: process.env.NODE_ENV !== 'production', // Only synchronize in development
+      synchronize: process.env.NODE_ENV !== 'production' || process.env.SYNC_DB === 'true',
     }),
     ScheduleModule.forRoot(),
     AuthModule,
