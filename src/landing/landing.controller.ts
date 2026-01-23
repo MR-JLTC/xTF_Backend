@@ -1,7 +1,8 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Student, Tutor, University, Course, BookingRequest } from '../database/entities';
+import { EmailService } from '../email/email.service';
 
 @Controller('landing')
 export class LandingController {
@@ -11,7 +12,8 @@ export class LandingController {
     @InjectRepository(University) private readonly universitiesRepo: Repository<University>,
     @InjectRepository(Course) private readonly coursesRepo: Repository<Course>,
     @InjectRepository(BookingRequest) private readonly bookingRequestsRepo: Repository<BookingRequest>,
-  ) {}
+    private readonly emailService: EmailService,
+  ) { }
 
   @Get('stats')
   async stats() {
@@ -23,6 +25,16 @@ export class LandingController {
       this.bookingRequestsRepo.count({ where: { status: 'completed' } }),
     ]);
     return { students, tutors, universities, courses, sessions };
+  }
+
+  @Post('contact')
+  async contact(@Body() body: { name: string; email: string; message: string }) {
+    return this.emailService.sendContactEmail({
+      name: body.name,
+      email: body.email,
+      subject: 'Message from Landing Page',
+      message: body.message,
+    });
   }
 }
 
