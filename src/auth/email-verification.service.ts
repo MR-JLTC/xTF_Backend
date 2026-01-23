@@ -323,4 +323,26 @@ export class EmailVerificationService {
       throw new Error(`Failed to send verification email: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
+
+  async sendTestEmail(email: string): Promise<boolean> {
+    try {
+      console.log(`Sending test email to: ${email}`);
+      await this.emailService.sendEmail({
+        to: email,
+        subject: 'TutorFriends - SMTP Connection Test',
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4f46e5;">SMTP Test Successful!</h2>
+            <p>If you are receiving this, it means the <strong>TutorFriends</strong> email service is correctly configured on Render.</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="font-size: 12px; color: #666;">Timestamp: ${new Date().toISOString()}</p>
+          </div>
+        `,
+      });
+      return true;
+    } catch (error) {
+      console.error('❌ Test email service error:', error);
+      return false;
+    }
+  }
 }

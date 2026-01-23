@@ -28,7 +28,7 @@ export class VerifyEmailCodeDto {
 
 @Controller('auth/email-verification')
 export class EmailVerificationController {
-  constructor(private readonly emailVerificationService: EmailVerificationService) {}
+  constructor(private readonly emailVerificationService: EmailVerificationService) { }
 
   @Post('send-code')
   async sendVerificationCode(@Body() sendVerificationCodeDto: SendVerificationCodeDto) {
@@ -116,6 +116,29 @@ export class EmailVerificationController {
           statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
         },
         error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  @Post('test-email')
+  async testEmail(@Body('email') email: string) {
+    try {
+      console.log('=== TEST EMAIL REQUEST ===');
+      console.log('To:', email);
+
+      const success = await this.emailVerificationService.sendTestEmail(email);
+      if (!success) {
+        throw new Error('Email service returned failure status');
+      }
+      return { message: 'Test email sent successfully' };
+    } catch (error) {
+      console.log('❌ Test email controller error:', error);
+      throw new HttpException(
+        {
+          message: error.message || 'Failed to send test email',
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }
