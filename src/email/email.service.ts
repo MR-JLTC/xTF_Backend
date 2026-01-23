@@ -23,8 +23,8 @@ export class EmailService {
 
     this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false, // true for port 465, false for other ports (like 587)
       auth: {
         user: this.gmailUser,
         pass: gmailAppPassword,
@@ -33,9 +33,9 @@ export class EmailService {
         // Do not fail on invalid certificates
         rejectUnauthorized: false,
       },
-      connectionTimeout: 10000, // 10 seconds timeout
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
+      connectionTimeout: 20000, // 20 seconds timeout
+      greetingTimeout: 20000,
+      socketTimeout: 20000,
     });
 
     // Optional: verify transporter on startup for clearer diagnostics
@@ -64,8 +64,11 @@ export class EmailService {
 
   async sendEmail(mailOptions: nodemailer.SendMailOptions): Promise<boolean> {
     try {
-      if (!process.env.GMAIL_APP_PASSWORD || !this.gmailUser) {
-        throw new Error('Email service not configured (missing GMAIL_USER or GMAIL_APP_PASSWORD)');
+      if (!this.gmailUser || !process.env.GMAIL_APP_PASSWORD) {
+        const missing = [];
+        if (!this.gmailUser) missing.push('GMAIL_USER');
+        if (!process.env.GMAIL_APP_PASSWORD) missing.push('GMAIL_APP_PASSWORD');
+        throw new Error(`Email service not configured. Missing environment variables on Render: ${missing.join(', ')}. Please add them in the Render Dashboard -> Environment tab.`);
       }
 
       await this.transporter.sendMail({
