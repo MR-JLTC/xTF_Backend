@@ -19,3 +19,5 @@ export * from './booking-request.entity';
 export * from './password-reset-token.entity';
 export * from './email-verification-registry.entity';
 export * from './notification.entity';
+export * from './traffic-log.entity';
+export * from './reschedule.entity';
