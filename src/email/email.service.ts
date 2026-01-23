@@ -30,25 +30,15 @@ export class EmailService {
     }
 
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // Port 587 uses STARTTLS
-      name: 'xtf-backend-1.onrender.com', // Explicit HELO name for Render
+      service: 'gmail',
       auth: {
         user: this.gmailUser,
         pass: gmailAppPassword,
       },
-      tls: {
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.2'
-      },
       family: 4, // Force IPv4
-      // Troubleshooting flags for Render logs
       logger: true,
       debug: true,
       connectionTimeout: 45000,
-      greetingTimeout: 45000,
-      socketTimeout: 45000,
     } as any);
 
     // Optional: verify transporter on startup for clearer diagnostics

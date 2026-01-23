@@ -142,4 +142,54 @@ export class EmailVerificationController {
       );
     }
   }
+
+  @Get('check-network')
+  async checkNetwork() {
+    const net = require('net');
+    const ports = [587, 465, 25];
+    const results = {};
+
+    for (const port of ports) {
+      results[port] = await new Promise((resolve) => {
+        const socket = new net.Socket();
+        const timeout = 5000;
+        let resolved = false;
+
+        socket.setTimeout(timeout);
+        socket.on('connect', () => {
+          socket.destroy();
+          if (!resolved) {
+            resolved = true;
+            resolve('CONNECTED');
+          }
+        });
+        socket.on('timeout', () => {
+          socket.destroy();
+          if (!resolved) {
+            resolved = true;
+            resolve('TIMEOUT');
+          }
+        });
+        socket.on('error', (err) => {
+          socket.destroy();
+          if (!resolved) {
+            resolved = true;
+            resolve(`ERROR: ${err.message}`);
+          }
+        });
+        socket.connect(port, 'smtp.gmail.com');
+      });
+    }
+
+    return {
+      host: 'smtp.gmail.com',
+      results,
+      env: {
+        hasUser: !!process.env.GMAIL_USER,
+        hasPass: !!process.env.GMAIL_APP_PASSWORD,
+        user: process.env.GMAIL_USER ? `${process.env.GMAIL_USER.substring(0, 3)}***` : 'MISSING',
+        passLength: process.env.GMAIL_APP_PASSWORD ? process.env.GMAIL_APP_PASSWORD.length : 0
+      }
+    };
+  }
 }
