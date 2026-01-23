@@ -21,24 +21,34 @@ export class EmailService {
       console.error('❌ GMAIL_USER is not set. Emails will fail to send.');
     }
 
+    // Masked credential check for Render troubleshooting
+    if (gmailAppPassword) {
+      console.log('--- Email Service Diagnostics ---');
+      console.log(`GMAIL_USER: ${this.gmailUser}`);
+      console.log(`Password set: ${!!gmailAppPassword} (length: ${gmailAppPassword.length})`);
+      console.log('---------------------------------');
+    }
+
     this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // SSL
+      port: 587,
+      secure: false, // Port 587 uses STARTTLS
+      name: 'xtf-backend-1.onrender.com', // Explicit HELO name for Render
       auth: {
         user: this.gmailUser,
         pass: gmailAppPassword,
       },
       tls: {
         rejectUnauthorized: false,
+        minVersion: 'TLSv1.2'
       },
-      family: 4, // Force IPv4 - critical for many cloud environments
+      family: 4, // Force IPv4
       // Troubleshooting flags for Render logs
       logger: true,
       debug: true,
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
+      connectionTimeout: 45000,
+      greetingTimeout: 45000,
+      socketTimeout: 45000,
     } as any);
 
     // Optional: verify transporter on startup for clearer diagnostics
