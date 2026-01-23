@@ -25,7 +25,6 @@ export class EmailService {
       host: 'smtp.gmail.com',
       port: 465,
       secure: true, // SSL
-      pool: true,
       auth: {
         user: this.gmailUser,
         pass: gmailAppPassword,
@@ -33,13 +32,14 @@ export class EmailService {
       tls: {
         rejectUnauthorized: false,
       },
+      family: 4, // Force IPv4 - critical for many cloud environments
       // Troubleshooting flags for Render logs
       logger: true,
       debug: true,
-      connectionTimeout: 20000,
-      greetingTimeout: 20000,
-      socketTimeout: 20000,
-    });
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+    } as any);
 
     // Optional: verify transporter on startup for clearer diagnostics
     // Use a timeout to prevent hanging, and make it non-blocking
