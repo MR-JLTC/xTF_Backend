@@ -22,12 +22,21 @@ export class EmailService {
     }
 
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // SSL
+      pool: true,
       auth: {
         user: this.gmailUser,
         pass: gmailAppPassword,
       },
-      connectionTimeout: 20000, // 20 seconds timeout
+      tls: {
+        rejectUnauthorized: false,
+      },
+      // Troubleshooting flags for Render logs
+      logger: true,
+      debug: true,
+      connectionTimeout: 20000,
       greetingTimeout: 20000,
       socketTimeout: 20000,
     });
