@@ -936,7 +936,7 @@ export class TutorsService {
     return response;
   }
 
-  async getTutorId(userId: number): Promise<number> {
+  async getTutorId(userId: number): Promise<number | null> {
     console.log('Looking for tutor with user_id:', userId);
 
     const user = await this.usersRepository.findOne({
@@ -945,7 +945,8 @@ export class TutorsService {
     });
 
     if (!user || !user.tutor_profile) {
-      throw new NotFoundException('Tutor not found');
+      // Return null instead of throwing error to avoid 404 logs in frontend
+      return null;
     }
 
     console.log('Found tutor profile for user:', user.tutor_profile.tutor_id);

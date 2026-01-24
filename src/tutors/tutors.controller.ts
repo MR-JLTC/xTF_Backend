@@ -13,7 +13,7 @@ import { BookingRequest } from '../database/entities';
 
 @Controller('tutors')
 export class TutorsController {
-  constructor(private readonly tutorsService: TutorsService) {}
+  constructor(private readonly tutorsService: TutorsService) { }
 
   @Get('applications')
   @UseGuards(JwtAuthGuard)
@@ -39,7 +39,7 @@ export class TutorsController {
   @Patch('tutor-subjects/:tutorSubjectId/status')
   @UseGuards(JwtAuthGuard)
   updateTutorSubjectStatus(
-    @Param('tutorSubjectId') tutorSubjectId: string, 
+    @Param('tutorSubjectId') tutorSubjectId: string,
     @Body() body: { status: 'approved' | 'rejected'; adminNotes?: string }
   ) {
     return this.tutorsService.updateTutorSubjectStatus(+tutorSubjectId, body.status, body.adminNotes);
@@ -231,17 +231,17 @@ export class TutorsController {
     const subjectName = body?.subject_name || body?.subjectName || '';
     const isReapplication = body?.is_reapplication === 'true' || body?.is_reapplication === true;
     console.log('Received subject application:', { tutorId, subjectName, filesCount: files?.length || 0, isReapplication, bodyKeys: Object.keys(body || {}) });
-    
+
     if (!subjectName || !subjectName.trim()) {
       throw new Error('Subject name is required');
     }
-    
+
     // Allow reapplying rejected subjects even without new files (they may have existing documents)
     // For new applications, files are still required
     if ((!files || files.length === 0) && !isReapplication) {
       throw new Error('At least one file is required for subject application');
     }
-    
+
     return this.tutorsService.submitSubjectApplication(+tutorId, subjectName, files || [], isReapplication);
   }
 
