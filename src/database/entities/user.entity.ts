@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToOne, OneToMany, Index } from 'typeorm';
 import { University } from './university.entity';
 import { Course } from './course.entity';
 import { Admin } from './admin.entity';
@@ -8,6 +8,7 @@ import { BookingRequest } from './booking-request.entity';
 import { PasswordResetToken } from './password-reset-token.entity';
 
 @Entity('users')
+@Index(['email', 'user_type'], { unique: true })
 export class User {
   @PrimaryGeneratedColumn()
   user_id: number;
@@ -15,7 +16,7 @@ export class User {
   @Column()
   name: string;
 
-  @Column({ unique: true })
+  @Column()
   email: string;
 
   @Column()

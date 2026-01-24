@@ -13,77 +13,63 @@ export class AuthService {
     private jwtService: JwtService,
     private emailVerificationService: EmailVerificationService,
     private tutorsService: TutorsService,
-  ) {}
+  ) { }
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(email: string, pass: string, targetUserType?: string): Promise<any> {
     console.log('\n=== VALIDATE USER DEBUG ===');
     console.log('Email:', email);
-    console.log('Password provided length:', pass?.length || 0);
-    
-    const user = await this.usersService.findOneByEmail(email);
-    console.log('User found in database:', !!user);
-    
-    if (user) {
-      console.log('\nUser details:', {
-        user_id: user.user_id,
-        email: user.email,
-        name: user.name,
-        user_type: user.user_type,
-        status: user.status,
-        has_password: !!user.password,
-        password_length: user.password?.length || 0
-      });
-      
-      // First, ensure we have both passwords for comparison
-      if (!pass || !user.password) {
-        console.log('❌ Missing password data:', {
-          providedPassword: !!pass,
-          storedPassword: !!user.password
-        });
-        return null;
+    console.log('Target User Type hint:', targetUserType);
+
+    // Find all users with this email (can have multiple if user has different roles)
+    const users = await this.usersService.findAllByEmail(email);
+    console.log('Users found in database:', users.length);
+
+    if (users.length === 0) {
+      console.log('\n❌ No user found with this email');
+      return null;
+    }
+
+    // Sort to prioritize targetUserType if hinted
+    const sortedUsers = [...users].sort((a, b) => {
+      if (targetUserType) {
+        if (a.user_type === targetUserType) return -1;
+        if (b.user_type === targetUserType) return 1;
       }
-      
+      return 0;
+    });
+
+    for (const user of sortedUsers) {
+      console.log('\nChecking account:', {
+        user_id: user.user_id,
+        user_type: user.user_type,
+        status: user.status
+      });
+
+      if (!pass || !user.password) continue;
+
       try {
-        // Try normal password comparison first
-        console.log('\nAttempting normal password comparison...');
         let passwordMatch = await bcrypt.compare(pass, user.password);
-        console.log('Password match (normal):', passwordMatch);
-        
-        // If normal comparison fails, try comparing against double-hashed password
+
         if (!passwordMatch) {
-          console.log('\nTrying double-hashed password comparison...');
           const doubleHashed = await bcrypt.hash(pass, 10);
           passwordMatch = await bcrypt.compare(doubleHashed, user.password);
-          console.log('Password match (double-hashed):', passwordMatch);
-          
-          // If double-hashed comparison works, update the password to single-hashed
           if (passwordMatch) {
-            console.log('✅ Double-hashed password detected, updating to single-hashed');
             const singleHashed = await bcrypt.hash(pass, 10);
             await this.usersService.updatePassword(user.user_id, singleHashed);
-            console.log('Password updated to single-hashed version');
           }
         }
-        
+
         if (passwordMatch) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { password, ...result } = user;
-          console.log('\n✅ User validation successful');
-          console.log('Returning user data:', result);
+          console.log('\n✅ User validation successful for account type:', user.user_type);
           return result;
-        } else {
-          console.log('\n❌ Password does not match');
-          console.log('Password comparison failed for user:', user.email);
         }
       } catch (error) {
         console.error('\n❌ Error during password comparison:', error);
-        return null;
       }
-    } else {
-      console.log('\n❌ No user found with this email');
     }
-    
-    console.log('\n❌ User validation failed');
+
+    console.log('\n❌ User validation failed (no matching password found for any associated account)');
     return null;
   }
 
@@ -96,7 +82,7 @@ export class AuthService {
     if ((user as any).status === 'inactive') {
       throw new UnauthorizedException('Your account is inactive. Please contact an administrator.');
     }
-    
+
     // Check if the user is an admin
     const isAdmin = await this.usersService.isAdmin(user.user_id);
     if (!isAdmin) {
@@ -114,7 +100,7 @@ export class AuthService {
     console.log('=== TUTOR/TUTEE LOGIN DEBUG ===');
     console.log('Email:', loginDto.email);
     console.log('Password length:', loginDto.password?.length);
-    
+
     const user = await this.validateUser(loginDto.email, loginDto.password);
     console.log('User found:', !!user);
     if (user) {
@@ -126,18 +112,18 @@ export class AuthService {
         status: user.status
       });
     }
-    
+
     if (!user) {
       console.log('❌ No user found or invalid credentials');
       throw new UnauthorizedException('Invalid credentials');
     }
-    
+
     // Block login if account is inactive
     if ((user as any).status === 'inactive') {
       console.log('❌ Account is inactive');
       throw new UnauthorizedException('Your account is inactive. Please contact an administrator.');
     }
-    
+
     // Check if the user is an admin (block admin login here)
     const isAdmin = await this.usersService.isAdmin(user.user_id);
     console.log('Is admin:', isAdmin);
@@ -152,7 +138,7 @@ export class AuthService {
       userType = 'student'; // Normalize both to 'student' for frontend
     }
     console.log('Mapped user type:', userType);
-    
+
     // If user is a tutor, set online status to 'online'
     if (userType === 'tutor') {
       try {
@@ -163,7 +149,7 @@ export class AuthService {
         // Don't block login if online status update fails
       }
     }
-    
+
     const payload = { email: user.email, sub: user.user_id, name: user.name, role: userType };
     console.log('✅ Login successful, generating token');
     return {
@@ -186,17 +172,17 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     console.log('=== REGISTRATION DEBUG ===');
     console.log('Register DTO:', registerDto);
-    
-    // Removed existing user check as email verification handles pre-registration status
-    // const existingUser = await this.usersService.findOneByEmail(registerDto.email);
-    // if (existingUser) {
-    //     throw new BadRequestException('Email already exists');
-    // }
+
+    // Check if user with same email and user_type already exists
+    const existingUserWithType = await this.usersService.findOneByEmailAndType(registerDto.email, registerDto.user_type);
+    if (existingUserWithType) {
+      throw new BadRequestException(`An account with this email is already registered as a ${registerDto.user_type}.`);
+    }
 
     // Check if email has been verified for the given user type
     const emailVerificationStatus = await this.emailVerificationService.getEmailVerificationStatus(registerDto.email, registerDto.user_type);
     console.log('Email verification status:', emailVerificationStatus);
-    
+
     if (!emailVerificationStatus.is_verified) {
       throw new BadRequestException('Email address not verified. Please complete email verification first.');
     }
@@ -225,23 +211,26 @@ export class AuthService {
 
     const payload = { email: user.email, sub: user.user_id, name: user.name, user_type: user.user_type };
     const accessToken = this.jwtService.sign(payload);
-    
+
     console.log('JWT Payload:', payload);
     console.log('Access Token generated:', !!accessToken);
     console.log('=== END REGISTRATION DEBUG ===');
-    
+
     return {
-        user,
-        accessToken,
+      user,
+      accessToken,
     };
   }
 
   async registerStudent(body: { name: string; email: string; password: string; university_id: number; course_id?: number; course_name?: string; year_level: number }) {
     // This method is now effectively redundant if `register` handles all types.
     // For now, leaving it as is, but could be removed.
-    const existingUser = await this.usersService.findOneByEmail(body.email);
-    if (existingUser) {
-      throw new BadRequestException('Email already exists');
+    // Check if user with same email and user_type already exists
+    const existingStudent = await this.usersService.findOneByEmailAndType(body.email, 'student');
+    const existingTutee = await this.usersService.findOneByEmailAndType(body.email, 'tutee');
+
+    if (existingStudent || existingTutee) {
+      throw new BadRequestException('A student account with this email already exists');
     }
 
     const user = await this.usersService.createStudent(body);

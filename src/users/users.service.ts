@@ -32,7 +32,7 @@ export class UsersService {
     @InjectRepository(Subject)
     private subjectRepository: Repository<Subject>,
     private notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find({ relations: ['admin_profile', 'tutor_profile', 'student_profile', 'student_profile.university', 'student_profile.course', 'tutor_profile.university', 'tutor_profile.course'] });
@@ -65,7 +65,7 @@ export class UsersService {
             start_time: startDate,
           } as any,
         });
-        
+
         // Only create session if it doesn't already exist
         if (!existingSession) {
           // Find Student and Tutor entities by user reference
@@ -87,7 +87,7 @@ export class UsersService {
             status: 'scheduled', // Keep as 'scheduled' until tutor marks as done
           });
         }
-        
+
         // DO NOT change booking request status - it should remain 'upcoming' 
         // until the tutor explicitly marks it as done via the "Mark as Done" button
         // This allows the tutor to still upload proof and mark the session as completed
@@ -97,16 +97,16 @@ export class UsersService {
     return { moved };
   }
 
-    /**
-     * Cron job: runs every hour to move overdue bookings automatically
-     */
-    @Cron(CronExpression.EVERY_HOUR)
-    async handleMoveOverdueBookingsCron() {
-      const result = await this.moveOverdueBookingsToSessions();
-      if (result.moved > 0) {
-        this.logger.log(`Moved ${result.moved} overdue bookings to sessions.`);
-      }
+  /**
+   * Cron job: runs every hour to move overdue bookings automatically
+   */
+  @Cron(CronExpression.EVERY_HOUR)
+  async handleMoveOverdueBookingsCron() {
+    const result = await this.moveOverdueBookingsToSessions();
+    if (result.moved > 0) {
+      this.logger.log(`Moved ${result.moved} overdue bookings to sessions.`);
     }
+  }
 
   async findOneById(id: number): Promise<User | undefined> {
     return this.usersRepository.findOne({ where: { user_id: id }, relations: ['admin_profile', 'tutor_profile', 'student_profile', 'student_profile.university', 'student_profile.course', 'tutor_profile.university', 'tutor_profile.course'] });
@@ -114,6 +114,14 @@ export class UsersService {
 
   async findOneByEmail(email: string): Promise<User | undefined> {
     return this.usersRepository.findOne({ where: { email } });
+  }
+
+  async findOneByEmailAndType(email: string, user_type: string): Promise<User | undefined> {
+    return this.usersRepository.findOne({ where: { email, user_type: user_type as any } });
+  }
+
+  async findAllByEmail(email: string): Promise<User[]> {
+    return this.usersRepository.find({ where: { email } });
   }
 
   async hasAdmin(): Promise<boolean> {
@@ -145,12 +153,12 @@ export class UsersService {
     const savedUser: User = await this.usersRepository.save(newUser);
 
     // Create an admin profile for this user and link university if provided
-    const adminProfile = this.adminRepository.create({ 
+    const adminProfile = this.adminRepository.create({
       user: savedUser,
       ...(university && { university: university, university_id: university.university_id }) // Link university to admin profile if exists
     });
     await this.adminRepository.save(adminProfile);
-    
+
     // Reload user with profile
     return this.findOneById(savedUser.user_id);
   }
@@ -238,8 +246,8 @@ export class UsersService {
   }
 
   async isAdmin(userId: number): Promise<boolean> {
-      const admin = await this.adminRepository.findOne({ where: { user: { user_id: userId } } });
-      return !!admin;
+    const admin = await this.adminRepository.findOne({ where: { user: { user_id: userId } } });
+    return !!admin;
   }
 
   async getAdminProfile(userId: number) {
@@ -304,8 +312,7 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async resetPassword(userId: number, newPassword: string): Promise<{ success: true }>
-  {
+  async resetPassword(userId: number, newPassword: string): Promise<{ success: true }> {
     const user = await this.findOneById(userId);
     if (!user) {
       throw new Error('User not found');
@@ -403,7 +410,7 @@ export class UsersService {
     // Password is already hashed in AuthService.register(), so use it directly
     console.log('=== CREATE TUTOR DEBUG ===');
     console.log('Password already hashed:', body.password.startsWith('$2b$'));
-    
+
     // Resolve course: either provided course_id or create/find by name under university
     let resolvedCourseId: number | null = body.course_id ?? null;
     if (!resolvedCourseId && body.course_name && body.course_name.trim().length > 0) {
@@ -461,11 +468,11 @@ export class UsersService {
 
   async getNotifications(userId: number) {
     // Determine user type from user_id
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { user_id: userId },
       relations: ['tutor_profile', 'student_profile']
     });
-    
+
     if (!user) {
       console.log(`getNotifications: User with user_id=${userId} not found`);
       return { success: true, data: [] };
@@ -482,7 +489,7 @@ export class UsersService {
       if ((userType as any) === 'student') userType = 'tutee';
     }
     console.log(`getNotifications: Fetching notifications for user_id=${userId}, userType=${userType}`);
-    
+
     // For tutors, only show booking requests and admin payment notifications
     // For tutees, show all their notifications
     // Delegate fetching to NotificationsService which filters by receiver_id and userType
@@ -492,9 +499,9 @@ export class UsersService {
     if (userType === 'tutor') {
       notifications = notifications.filter((n: any) => {
         const message = (n.message || '').toLowerCase();
-        return message.includes('requested a booking') || 
-               message.includes('booking request') ||
-               (message.includes('payment') && message.includes('approved by admin'));
+        return message.includes('requested a booking') ||
+          message.includes('booking request') ||
+          (message.includes('payment') && message.includes('approved by admin'));
       });
     }
 
@@ -502,7 +509,7 @@ export class UsersService {
     if (userType === 'tutee') {
       notifications = notifications.filter((n: any) => !((n.message || '').toLowerCase().includes('upcoming')));
     }
-    
+
     console.log(`getNotifications: Found ${notifications.length} notifications for user_id=${userId}, userType=${userType}`);
 
     // Map to frontend format
@@ -511,7 +518,7 @@ export class UsersService {
       // Priority: payment > booking_update > upcoming_session > system
       let type: 'upcoming_session' | 'booking_update' | 'payment' | 'system' = 'system';
       const messageLower = (n.message || '').toLowerCase();
-      
+
       // Check for payment-related keywords first (highest priority)
       if (messageLower.includes('payment') || messageLower.includes('pay') || messageLower.includes('amount') || messageLower.includes('₱')) {
         type = 'payment';
@@ -544,11 +551,11 @@ export class UsersService {
   }
 
   async getUnreadNotificationCount(userId: number) {
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { user_id: userId },
       relations: ['tutor_profile', 'student_profile']
     });
-    
+
     if (!user) {
       return { success: true, data: { count: 0 } };
     }
@@ -572,7 +579,7 @@ export class UsersService {
 
   async hasUpcomingSessions(userId: number) {
     // Check if user has any upcoming bookings in the next 7 days using bookings, not notifications
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { user_id: userId },
       relations: ['tutor_profile', 'student_profile']
     });
@@ -584,17 +591,17 @@ export class UsersService {
     } else {
       isTutor = !!user.tutor_profile;
     }
-  // Use start-of-day for the lower bound so bookings scheduled for today
-  // (stored as date at 00:00:00) are included even if current time is later.
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const sevenDaysFromNow = new Date(startOfDay.getTime() + 7 * 24 * 60 * 60 * 1000);
-  // Include the whole last day up to end-of-day
-  const endOfSevenDays = new Date(sevenDaysFromNow);
-  endOfSevenDays.setHours(23, 59, 59, 999);
+    // Use start-of-day for the lower bound so bookings scheduled for today
+    // (stored as date at 00:00:00) are included even if current time is later.
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const sevenDaysFromNow = new Date(startOfDay.getTime() + 7 * 24 * 60 * 60 * 1000);
+    // Include the whole last day up to end-of-day
+    const endOfSevenDays = new Date(sevenDaysFromNow);
+    endOfSevenDays.setHours(23, 59, 59, 999);
 
-  // Upcoming session criteria: scheduled within next 7 days and status 'upcoming'
-  const statuses: any[] = ['upcoming'];
+    // Upcoming session criteria: scheduled within next 7 days and status 'upcoming'
+    const statuses: any[] = ['upcoming'];
 
     let hasUpcoming = false;
     if (isTutor) {
@@ -624,7 +631,7 @@ export class UsersService {
   }
 
   async getUpcomingSessionsList(userId: number) {
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { user_id: userId },
       relations: ['tutor_profile', 'student_profile']
     });
@@ -636,12 +643,12 @@ export class UsersService {
       isTutor = !!user.tutor_profile;
     }
     console.log(`getUpcomingSessionsList: user_id=${userId}, resolved isTutor=${isTutor}, user_type=${(user as any).user_type}`);
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const thirtyDaysFromNow = new Date(startOfDay.getTime() + 30 * 24 * 60 * 60 * 1000);
-  const endOfThirtyDays = new Date(thirtyDaysFromNow);
-  endOfThirtyDays.setHours(23, 59, 59, 999);
-  const statuses: any[] = ['upcoming'];
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thirtyDaysFromNow = new Date(startOfDay.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const endOfThirtyDays = new Date(thirtyDaysFromNow);
+    endOfThirtyDays.setHours(23, 59, 59, 999);
+    const statuses: any[] = ['upcoming'];
 
     let bookings: BookingRequest[] = [];
     if (isTutor) {
@@ -693,11 +700,11 @@ export class UsersService {
   }
 
   async markAllNotificationsAsRead(userId: number) {
-    const user = await this.usersRepository.findOne({ 
+    const user = await this.usersRepository.findOne({
       where: { user_id: userId },
       relations: ['tutor_profile', 'student_profile']
     });
-    
+
     if (!user) {
       return { success: true };
     }

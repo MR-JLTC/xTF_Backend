@@ -144,6 +144,13 @@ export class EmailVerificationService {
     return result;
   }
 
+  async checkTutorEmailExists(email: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: { email, user_type: 'tutor' },
+    });
+    return !!user;
+  }
+
   async verifyEmailCode(email: string, code: string, user_type: 'tutor' | 'tutee' | 'admin'): Promise<{ message: string; user_id?: number }> {
     console.log('=== EMAIL VERIFICATION DEBUG ===');
     console.log('Verifying email:', email);
