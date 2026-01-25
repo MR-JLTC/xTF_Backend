@@ -19,7 +19,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 
 @Controller()
 export class AppController {
-  @Get()
+  @Get('server-status')
   getRoot() {
     return {
       message: 'TutorFriends API is running!',

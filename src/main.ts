@@ -62,10 +62,25 @@ async function bootstrap() {
     }
   }));
 
-  // Set a global prefix for all routes except the root path
-  app.setGlobalPrefix('api', {
-    exclude: ['/']
-  });
+  // Set a global prefix for all routes
+  app.setGlobalPrefix('api');
+
+  // Serve Frontend Static Files (SPA Support)
+  const frontendDistPath = join(process.cwd(), '../frontend/dist');
+  if (fs.existsSync(frontendDistPath)) {
+    console.log(`Serving frontend from: ${frontendDistPath}`);
+    app.use(express.static(frontendDistPath));
+
+    // Handle SPA Fallback - serve index.html for unknown routes (excluding /api)
+    app.use('*', (req, res, next) => {
+      if (req.baseUrl.startsWith('/api')) {
+        return next();
+      }
+      res.sendFile(join(frontendDistPath, 'index.html'));
+    });
+  } else {
+    console.warn(`Frontend build not found at: ${frontendDistPath}`);
+  }
 
   // Use global pipes for validation
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
