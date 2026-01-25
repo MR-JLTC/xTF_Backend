@@ -150,7 +150,6 @@ export class UsersService {
       password: registerDto.password,
       user_type: 'admin',
       status: 'active',
-      status: 'active',
       profile_image_url: this.supabaseService.getPublicUrl('user_profile_images', 'userProfile_admin.png'),
     });
     const savedUser: User = await this.usersRepository.save(newUser);
