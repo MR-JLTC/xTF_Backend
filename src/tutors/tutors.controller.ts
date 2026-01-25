@@ -5,15 +5,18 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UpdateTutorStatusDto } from './tutor.dto';
 import { UseInterceptors, UploadedFiles, UploadedFile } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import * as fs from 'fs';
 import * as path from 'path';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BookingRequest } from '../database/entities';
 
+import { SupabaseService } from '../supabase/supabase.service';
+
 @Controller('tutors')
 export class TutorsController {
-  constructor(private readonly tutorsService: TutorsService) { }
+  constructor(
+    private readonly tutorsService: TutorsService,
+    private readonly supabaseService: SupabaseService
+  ) { }
 
   @Get('applications')
   @UseGuards(JwtAuthGuard)
@@ -59,67 +62,57 @@ export class TutorsController {
   }
 
   @Post(':tutorId/documents')
-  @UseInterceptors(FilesInterceptor('files', 10, {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        const dest = path.join(process.cwd(), 'tutor_documents');
-        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-        cb(null, dest);
-      },
-      filename: (req: any, file, cb) => {
-        const tutorId = req.params.tutorId;
-        const originalExt = path.extname(file.originalname) || '';
-        // Determine starting sequence from existing files (matches _<tutorId>)
-        const dest = path.join(process.cwd(), 'tutor_documents');
-        if (typeof req.__tutorDocsSeqStart !== 'number') {
-          const files = fs.existsSync(dest) ? fs.readdirSync(dest) : [];
-          const existing = files.filter((f) => f.endsWith(`_${tutorId}${path.extname(f)}`) || f.includes(`_${tutorId}.`)).length;
-          req.__tutorDocsSeqStart = existing; // number of existing docs
-          req.__tutorDocsSeqCounter = 0; // counter within this request
-        }
-        req.__tutorDocsSeqCounter = (req.__tutorDocsSeqCounter || 0) + 1;
-        const seq = req.__tutorDocsSeqStart + req.__tutorDocsSeqCounter; // 1-based when none exists
-        const base = `tutorDocs${seq}_${tutorId}`;
-        cb(null, `${base}${originalExt}`);
-      }
-    })
-  }))
-  async uploadDocuments(@Param('tutorId') tutorId: string, @UploadedFiles() files: any[]) {
-    return this.tutorsService.saveDocuments(+tutorId, files);
+  @UseInterceptors(FilesInterceptor('files', 10))
+  async uploadDocuments(@Param('tutorId') tutorId: string, @UploadedFiles() files: Array<any>) {
+    // Determine starting sequence from existing files in Supabase
+    const existingFiles = await this.supabaseService.listFiles('tutor_documents', `tutorDocs`);
+    // Filter specifically for this tutor's docs to be safe, though search prefix helps
+    const tutorDocsCount = existingFiles.filter(f => f.includes(`_${tutorId}.`) || f.includes(`_${tutorId}_`)).length;
+
+    let seq = tutorDocsCount + 1;
+    const uploadedFiles = [];
+
+    for (const file of files) {
+      const originalExt = path.extname(file.originalname) || '';
+      // filename format: tutorDocs<Seq>_<TutorId>.<Ext>
+      const filename = `tutorDocs${seq}_${tutorId}${originalExt}`;
+      const publicUrl = await this.supabaseService.uploadFile('tutor_documents', filename, file.buffer, file.mimetype);
+
+      // Mocking the file object structure expected by the service if needed, 
+      // or just passing what the service expects. Existing service likely expects multer file objects with 'filename' property.
+      // We will modify the file object to have the new filename and destination (which is now a URL or virtual path)
+      const fileForService = {
+        ...file,
+        filename: filename,
+        destination: 'tutor_documents', // Virtual destination
+        path: publicUrl // Use public URL as path
+      };
+      uploadedFiles.push(fileForService);
+      seq++;
+    }
+
+    return this.tutorsService.saveDocuments(+tutorId, uploadedFiles);
   }
 
   // Upload of tutor profile image
   @Post(':tutorId/profile-image')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        console.log('Multer Destination Called for Profile Image.');
-        const dest = path.join(process.cwd(), 'tutor_documents');
-        try {
-          if (!fs.existsSync(dest)) {
-            fs.mkdirSync(dest, { recursive: true });
-          }
-        } catch (error) {
-          console.error('Error creating directory for profile images:', error);
-          return cb(error, null);
-        }
-        console.log('Profile Image Upload Destination:', dest);
-        (req as any).uploadDestination = dest; // Store destination on req object
-        cb(null, dest);
-      },
-      filename: (req: any, file, cb) => {
-        console.log('Multer Filename Called for Profile Image.', 'Original Name:', file.originalname);
-        const tutorId = req.params.tutorId;
-        const ext = path.extname(file.originalname) || '';
-        // Generate a temporary filename - the service will rename it
-        const tempFilename = `temp_profile_${tutorId}_${Date.now()}${ext}`;
-        console.log('Generated temporary Profile Image Filename:', tempFilename);
-        cb(null, tempFilename);
-      }
-    })
-  }))
+  @UseInterceptors(FileInterceptor('file'))
   async uploadProfileImage(@Param('tutorId') tutorId: string, @UploadedFile() file: any) {
-    return this.tutorsService.saveProfileImage(+tutorId, file);
+    const ext = path.extname(file.originalname) || '';
+    const tempFilename = `temp_profile_${tutorId}_${Date.now()}${ext}`;
+
+    // Upload to Supabase
+    const publicUrl = await this.supabaseService.uploadFile('tutor_documents', tempFilename, file.buffer, file.mimetype);
+
+    // Create a modified file object to pass to the service
+    const fileForService = {
+      ...file,
+      filename: tempFilename,
+      destination: 'tutor_documents',
+      path: publicUrl
+    };
+
+    return this.tutorsService.saveProfileImage(+tutorId, fileForService);
   }
 
   @Post(':tutorId/availability')
@@ -209,24 +202,12 @@ export class TutorsController {
 
   @Post(':tutorId/subject-application')
   // JWT guard removed to allow registration flow, can be called during registration before full auth
-  @UseInterceptors(FilesInterceptor('files', 10, {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        const dest = path.join(process.cwd(), 'tutor_documents');
-        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-        cb(null, dest);
-      },
-      filename: (req: any, file, cb) => {
-        const tutorId = req.params.tutorId;
-        const originalExt = path.extname(file.originalname) || '';
-        const timestamp = Date.now();
-        // Use a counter or random to avoid filename collisions
-        const random = Math.random().toString(36).substring(2, 8);
-        cb(null, `subjectApp_${tutorId}_${timestamp}_${random}${originalExt}`);
-      }
-    })
-  }))
-  async submitSubjectApplication(@Param('tutorId') tutorId: string, @Body() body: any, @UploadedFiles() files?: any[]) {
+  @UseInterceptors(FilesInterceptor('files', 10))
+  async submitSubjectApplication(
+    @Param('tutorId') tutorId: string,
+    @Body() body: any,
+    @UploadedFiles() files?: Array<any>
+  ) {
     // FormData fields are available in req.body when using multer
     const subjectName = body?.subject_name || body?.subjectName || '';
     const isReapplication = body?.is_reapplication === 'true' || body?.is_reapplication === true;
@@ -242,7 +223,27 @@ export class TutorsController {
       throw new Error('At least one file is required for subject application');
     }
 
-    return this.tutorsService.submitSubjectApplication(+tutorId, subjectName, files || [], isReapplication);
+    const uploadedFiles = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const originalExt = path.extname(file.originalname) || '';
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        const filename = `subjectApp_${tutorId}_${timestamp}_${random}${originalExt}`;
+
+        const publicUrl = await this.supabaseService.uploadFile('tutor_documents', filename, file.buffer, file.mimetype);
+
+        const fileForService = {
+          ...file,
+          filename: filename,
+          destination: 'tutor_documents',
+          path: publicUrl
+        };
+        uploadedFiles.push(fileForService);
+      }
+    }
+
+    return this.tutorsService.submitSubjectApplication(+tutorId, subjectName, uploadedFiles, isReapplication);
   }
 
   // Availability change request endpoints removed as redundant
@@ -286,50 +287,47 @@ export class TutorsController {
 
   // Tutee uploads payment proof image
   @Post('booking-requests/:bookingId/payment-proof')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        const dest = path.join(process.cwd(), 'tutor_documents');
-        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-        cb(null, dest);
-      },
-      filename: (req: any, file, cb) => {
-        const bookingId = req.params.bookingId;
-        const ext = path.extname(file.originalname) || '';
-        const safeExt = ext || '.jpg';
-        const filename = `paymentProof_${bookingId}_${Date.now()}${safeExt}`;
-        cb(null, filename);
-      }
-    })
-  }))
+  @UseInterceptors(FileInterceptor('file'))
   async uploadPaymentProof(@Param('bookingId') bookingId: string, @UploadedFile() file: any) {
-    return this.tutorsService.uploadPaymentProof(+bookingId, file);
+    const ext = path.extname(file.originalname) || '';
+    const safeExt = ext || '.jpg';
+    const filename = `paymentProof_${bookingId}_${Date.now()}${safeExt}`;
+
+    const publicUrl = await this.supabaseService.uploadFile('tutor_documents', filename, file.buffer, file.mimetype);
+
+    const fileForService = {
+      ...file,
+      filename: filename,
+      destination: 'tutor_documents',
+      path: publicUrl
+    };
+
+    return this.tutorsService.uploadPaymentProof(+bookingId, fileForService);
   }
 
   @Post('booking-requests/:bookingId/complete')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        const dest = path.join(process.cwd(), 'tutor_documents');
-        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-        cb(null, dest);
-      },
-      filename: (req: any, file, cb) => {
-        const bookingId = req.params.bookingId;
-        const ext = path.extname(file.originalname) || '';
-        const filename = `sessionProof_${bookingId}_${Date.now()}${ext}`;
-        cb(null, filename);
-      }
-    })
-  }))
+  @UseInterceptors(FileInterceptor('file'))
   async completeBooking(
     @Param('bookingId') bookingId: string,
     @UploadedFile() file: any,
     @Body() body: { status?: string }
   ) {
     const status = (body.status || 'awaiting_confirmation') as BookingRequest['status'];
-    return this.tutorsService.markBookingAsCompleted(+bookingId, status, file);
+
+    const ext = path.extname(file.originalname) || '';
+    const filename = `sessionProof_${bookingId}_${Date.now()}${ext}`;
+
+    const publicUrl = await this.supabaseService.uploadFile('tutor_documents', filename, file.buffer, file.mimetype);
+
+    const fileForService = {
+      ...file,
+      filename: filename,
+      destination: 'tutor_documents',
+      path: publicUrl
+    };
+
+    return this.tutorsService.markBookingAsCompleted(+bookingId, status, fileForService);
   }
 
   @Get(':tutorId/sessions')
@@ -358,36 +356,21 @@ export class TutorsController {
 
 
   @Post(':tutorId/gcash-qr')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        console.log('Multer Destination Called for GCash QR.');
-        const dest = path.join(process.cwd(), 'tutor_documents');
-        try {
-          if (!fs.existsSync(dest)) {
-            fs.mkdirSync(dest, { recursive: true });
-          }
-        } catch (error) {
-          console.error('Error creating directory for GCash QR images:', error);
-          return cb(error, null);
-        }
-        console.log('GCash QR Upload Destination:', dest);
-        (req as any).uploadDestination = dest; // Store destination on req object
-        cb(null, dest);
-      },
-      filename: (req: any, file, cb) => {
-        console.log('Multer Filename Called for GCash QR.', 'Original Name:', file.originalname);
-        const tutorId = req.params.tutorId;
-        const ext = path.extname(file.originalname) || '';
-        // Generate a temporary filename - the service will rename it
-        const tempFilename = `temp_gcash_${tutorId}_${Date.now()}${ext}`;
-        console.log('Generated temporary GCash QR Filename:', tempFilename);
-        cb(null, tempFilename);
-      }
-    })
-  }))
+  @UseInterceptors(FileInterceptor('file'))
   async uploadGcashQR(@Param('tutorId') tutorId: string, @UploadedFile() file: any) {
-    return this.tutorsService.saveGcashQR(+tutorId, file);
+    const ext = path.extname(file.originalname) || '';
+    const tempFilename = `temp_gcash_${tutorId}_${Date.now()}${ext}`;
+
+    const publicUrl = await this.supabaseService.uploadFile('tutor_documents', tempFilename, file.buffer, file.mimetype);
+
+    const fileForService = {
+      ...file,
+      filename: tempFilename,
+      destination: 'tutor_documents',
+      path: publicUrl
+    };
+
+    return this.tutorsService.saveGcashQR(+tutorId, fileForService);
   }
 
   // Set placeholder profile image when no file is uploaded

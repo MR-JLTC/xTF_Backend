@@ -15,6 +15,7 @@ import { LandingModule } from './landing/landing.module';
 import { SubjectsModule } from './subjects/subjects.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ReschedulesModule } from './reschedules/reschedules.module';
+import { SupabaseModule } from './supabase/supabase.module';
 
 @Controller()
 export class AppController {
@@ -60,6 +61,7 @@ export class AppController {
     EmailModule,
     NotificationsModule,
     ReschedulesModule,
+    SupabaseModule,
   ],
   controllers: [AppController],
   providers: [],

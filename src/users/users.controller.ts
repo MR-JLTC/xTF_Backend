@@ -1,17 +1,21 @@
 import { Controller, Get, Patch, Param, Body, UseGuards, Delete, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import * as path from 'path';
-import * as fs from 'fs';
 import { UsersService } from './users.service';
 import { TutorsService } from '../tutors/tutors.service';
 import { Req } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+import { SupabaseService } from '../supabase/supabase.service';
+
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService, private readonly tutorsService: TutorsService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly tutorsService: TutorsService,
+    private readonly supabaseService: SupabaseService
+  ) { }
 
   @Get()
   async findAll() {
@@ -75,89 +79,25 @@ export class UsersController {
   }
 
   @Post(':id/profile-image')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        console.log('=== MULTER DESTINATION DEBUG ===');
-        console.log('Request params:', req.params);
-        console.log('File info:', file);
-        
-        const dest = path.join(process.cwd(), 'user_profile_images');
-        console.log('Destination path:', dest);
-        
-        try {
-          if (!fs.existsSync(dest)) {
-            fs.mkdirSync(dest, { recursive: true });
-            console.log('Created directory:', dest);
-          } else {
-            console.log('Directory already exists:', dest);
-          }
-        } catch (error) {
-          console.error('Error creating directory for profile images:', error);
-          return cb(error, null);
-        }
-        cb(null, dest);
-        console.log('=== END MULTER DESTINATION DEBUG ===');
-      },
-      filename: (req: any, file, cb) => {
-        console.log('=== MULTER FILENAME DEBUG ===');
-        console.log('Request params:', req.params);
-        console.log('File originalname:', file.originalname);
-        
-        const userId = req.params.id;
-        const ext = path.extname(file.originalname) || '.jpg';
-        const filename = `userProfile_${userId}${ext}`;
-        
-        console.log('Generated filename:', filename);
-        console.log('=== END MULTER FILENAME DEBUG ===');
-        
-        cb(null, filename);
-      }
-    })
-  }))
+  @UseInterceptors(FileInterceptor('file'))
   async uploadProfileImage(@Param('id') id: string, @UploadedFile() file: any) {
-    console.log('=== PROFILE IMAGE UPLOAD DEBUG ===');
-    console.log('User ID:', id);
-    console.log('File received:', file);
-    console.log('File filename:', file?.filename);
-    
     const userId = parseInt(id);
-    const filename = file.filename;
-    const filePath = path.join('user_profile_images', filename);
-    
-    console.log('Parsed user ID:', userId);
-    console.log('Generated filename:', filename);
-    console.log('File path:', filePath);
-    
-    // Check if old profile image exists and delete it
-    try {
-      const oldFiles = fs.readdirSync(path.join(process.cwd(), 'user_profile_images'));
-      const oldFile = oldFiles.find(f => f.startsWith(`userProfile_${userId}`));
-      if (oldFile && oldFile !== filename) {
-        const oldFilePath = path.join(process.cwd(), 'user_profile_images', oldFile);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-          console.log(`Deleted old profile image: ${oldFile}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting old profile image:', error);
-    }
-    
+    const ext = path.extname(file.originalname) || '.jpg';
+    const filename = `userProfile_${userId}${ext}`;
+
+    // Upload to Supabase 'user_profile_images' bucket/folder
+    // Assuming 'user_profile_images' is a folder inside the main bucket
+    const publicUrl = await this.supabaseService.uploadFile('user_profile_images', filename, file.buffer, file.mimetype);
+
     // Update the user's profile_image_url in the database
-    const dbUrl = `user_profile_images/${filename}`;
-    console.log('Updating database with URL:', dbUrl);
-    
-    await this.usersService.updateUser(userId, { 
-      profile_image_url: dbUrl
+    // We store the full public URL now.
+    await this.usersService.updateUser(userId, {
+      profile_image_url: publicUrl
     });
 
-    console.log('Database updated successfully');
-    console.log('=== END PROFILE IMAGE UPLOAD DEBUG ===');
-
-    return { 
+    return {
       message: 'Profile image uploaded successfully',
-      profile_image_url: dbUrl
+      profile_image_url: publicUrl
     };
   }
 
@@ -166,10 +106,10 @@ export class UsersController {
     const userId = parseInt(id);
     // No placeholder image stored, just return success
     // The frontend will use initials as fallback
-    
-    return { 
+
+    return {
       message: 'Placeholder profile image set successfully',
-      profile_image_url: null 
+      profile_image_url: null
     };
   }
 
@@ -251,27 +191,18 @@ export class UsersController {
 
   // Upload Admin QR code image
   @Post(':id/admin-qr')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (req, file, cb) => {
-        const dest = path.join(process.cwd(), 'admin_qr');
-        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-        cb(null, dest);
-      },
-      filename: (req: any, file, cb) => {
-        const userId = req.params.id;
-        const ext = path.extname(file.originalname) || '.png';
-        const filename = `adminQR_${userId}${ext}`;
-        cb(null, filename);
-      }
-    })
-  }))
+  @UseInterceptors(FileInterceptor('file'))
   async uploadAdminQr(@Param('id') id: string, @UploadedFile() file: any) {
     const userId = parseInt(id);
     if (!file) {
       return { success: false, message: 'No file uploaded' };
     }
-    const dbUrl = `/admin_qr/${file.filename}`;
-    return this.usersService.updateAdminQr(userId, dbUrl);
+
+    const ext = path.extname(file.originalname) || '.png';
+    const filename = `adminQR_${userId}${ext}`;
+
+    const publicUrl = await this.supabaseService.uploadFile('admin_qr', filename, file.buffer, file.mimetype);
+
+    return this.usersService.updateAdminQr(userId, publicUrl);
   }
 }
