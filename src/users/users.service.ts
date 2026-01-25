@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Repository } from 'typeorm';
 import { User, Admin, Tutor, Course, University, Student, Notification, BookingRequest, Session, Subject } from '../database/entities';
 import { NotificationsService } from '../notifications/notifications.service';
+import { SupabaseService } from '../supabase/supabase.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from '../auth/auth.dto';
@@ -32,6 +33,7 @@ export class UsersService {
     @InjectRepository(Subject)
     private subjectRepository: Repository<Subject>,
     private notificationsService: NotificationsService,
+    private readonly supabaseService: SupabaseService,
   ) { }
 
   async findAll(): Promise<User[]> {
@@ -148,7 +150,8 @@ export class UsersService {
       password: registerDto.password,
       user_type: 'admin',
       status: 'active',
-      profile_image_url: 'user_profile_images/userProfile_admin.png',
+      status: 'active',
+      profile_image_url: this.supabaseService.getPublicUrl('user_profile_images', 'userProfile_admin.png'),
     });
     const savedUser: User = await this.usersRepository.save(newUser);
 
