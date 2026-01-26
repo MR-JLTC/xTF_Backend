@@ -115,15 +115,51 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string): Promise<User | undefined> {
-    return this.usersRepository.findOne({ where: { email } });
+    return this.usersRepository.findOne({
+      where: { email },
+      relations: [
+        'student_profile',
+        'student_profile.university',
+        'student_profile.course',
+        'tutor_profile',
+        'tutor_profile.university',
+        'tutor_profile.course',
+        'admin_profile',
+        'admin_profile.university'
+      ]
+    });
   }
 
   async findOneByEmailAndType(email: string, user_type: string): Promise<User | undefined> {
-    return this.usersRepository.findOne({ where: { email, user_type: user_type as any } });
+    return this.usersRepository.findOne({
+      where: { email, user_type: user_type as any },
+      relations: [
+        'student_profile',
+        'student_profile.university',
+        'student_profile.course',
+        'tutor_profile',
+        'tutor_profile.university',
+        'tutor_profile.course',
+        'admin_profile',
+        'admin_profile.university'
+      ]
+    });
   }
 
   async findAllByEmail(email: string): Promise<User[]> {
-    return this.usersRepository.find({ where: { email } });
+    return this.usersRepository.find({
+      where: { email },
+      relations: [
+        'student_profile',
+        'student_profile.university',
+        'student_profile.course',
+        'tutor_profile',
+        'tutor_profile.university',
+        'tutor_profile.course',
+        'admin_profile',
+        'admin_profile.university'
+      ]
+    });
   }
 
   async hasAdmin(): Promise<boolean> {
