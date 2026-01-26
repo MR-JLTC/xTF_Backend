@@ -3,13 +3,15 @@ import { UniversitiesService } from './universities.service';
 import { CreateUniversityDto, UpdateUniversityDto } from './university.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import * as fs from 'fs';
+import { SupabaseService } from '../supabase/supabase.service';
 import * as path from 'path';
 
 @Controller('universities')
 export class UniversitiesController {
-  constructor(private readonly universitiesService: UniversitiesService) {}
+  constructor(
+    private readonly universitiesService: UniversitiesService,
+    private readonly supabaseService: SupabaseService
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -31,26 +33,16 @@ export class UniversitiesController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/logo')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: (_req, _file, cb) => {
-        const dir = path.resolve(process.cwd(), 'user_profile_images', 'universities');
-        try {
-          fs.mkdirSync(dir, { recursive: true });
-        } catch {}
-        cb(null, dir);
-      },
-      filename: (_req, file, cb) => {
-        const ext = path.extname(file.originalname) || '.png';
-        const name = `uni_${Date.now()}${ext}`;
-        cb(null, name);
-      }
-    })
-  }))
+  @UseInterceptors(FileInterceptor('file'))
   async uploadLogo(@Param('id') id: string, @UploadedFile() file: any) {
-    const relPath = `/user_profile_images/universities/${file.filename}`;
-    const updated = await this.universitiesService.update(+id, { logo_url: relPath } as any);
-    return { success: true, logo_url: relPath, university: updated };
+    const ext = path.extname(file.originalname) || '.png';
+    const filename = `uni_${Date.now()}${ext}`;
+
+    // Upload to 'universities' folder in Supabase bucket
+    const publicUrl = await this.supabaseService.uploadFile('universities', filename, file.buffer, file.mimetype);
+
+    const updated = await this.universitiesService.update(+id, { logo_url: publicUrl } as any);
+    return { success: true, logo_url: publicUrl, university: updated };
   }
 
   @UseGuards(JwtAuthGuard)
