@@ -8,9 +8,18 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS so the frontend can communicate with the backend
+  // Base allowed origins that represent your known environments
+  const defaultAllowedOrigins = [
+    'http://localhost:3001',
+    'http://192.168.41.24:3001',
+    'https://tutorfriends.onrender.com',
+    'https://tutorfriends.online',
+    'https://www.tutorfriends.online'
+  ];
+
   const allowedOrigins = process.env.FRONTEND_URL
-    ? [process.env.FRONTEND_URL, 'http://localhost:3001', 'http://192.168.41.24:3001', 'https://tutorfriends.onrender.com']
-    : ['http://localhost:3001', 'http://192.168.41.24:3001', 'https://tutorfriends.onrender.com', '*']; // Fallback for development
+    ? [process.env.FRONTEND_URL, ...defaultAllowedOrigins]
+    : [...defaultAllowedOrigins, '*']; // Fallback for development
 
   app.enableCors({
     origin: process.env.NODE_ENV === 'production'
