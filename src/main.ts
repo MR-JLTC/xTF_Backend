@@ -9,10 +9,10 @@ async function bootstrap() {
 
   // Enable CORS so the frontend can communicate with the backend
   // Base allowed origins that represent your known environments
+  //1 allowed origin disabled 'https://tutorfriends.onrender.com',
   const defaultAllowedOrigins = [
     'http://localhost:3001',
     'http://192.168.41.24:3001',
-    'https://tutorfriends.onrender.com',
     'https://tutorfriends.online',
     'https://www.tutorfriends.online'
   ];
