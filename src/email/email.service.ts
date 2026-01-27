@@ -144,24 +144,34 @@ export class EmailService {
     try {
       const mailOptions = {
         to: tutorData.email,
-        subject: '🎉 Your Tutor Application Has Been Approved!',
+        subject: '🎉 Welcome to TutorFriends! Your Application is Approved',
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc;">
-            <div style="background-color: #0ea5e9; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Congratulations!</h1>
-              <p style="color: white; margin: 10px 0 0 0; font-size: 16px;">Your tutor application has been approved</p>
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #0ea5e9; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">Congratulations!</h1>
+              <p style="color: #e0f2fe; margin: 10px 0 0 0; font-size: 18px;">You are now a TutorFriends Tutor</p>
             </div>
-            <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-              <h2 style="color: #1e293b; margin-top: 0;">Welcome to TutorFriends, ${tutorData.name}!</h2>
-              <p style="color: #475569; line-height: 1.6; font-size: 16px;">
-                We're excited to inform you that your tutor application has been reviewed and approved! 
+            <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 22px;">Hello ${tutorData.name},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px; margin-bottom: 24px;">
+                We are thrilled to inform you that your application to join <strong>TutorFriends</strong> has been <strong>approved</strong>! You can now access your dashboard, set up your profile, and start accepting booking requests from students.
               </p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://tutorfriends.onrender.com/login" style="background-color: #0ea5e9; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">Go to Dashboard</a>
+              </div>
+              <p style="color: #64748b; font-size: 14px; margin-top: 30px; text-align: center;">
+                Welcome to the community!
+              </p>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
             </div>
           </div>
         `,
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
+      console.error('Failed to send tutor application approval email:', error);
       return false;
     }
   }
@@ -174,11 +184,31 @@ export class EmailService {
     try {
       const mailOptions = {
         to: tutorData.email,
-        subject: '✅ Your Subject Expertise Has Been Approved!',
-        html: `<h2>Subject Expertise Approved: ${tutorData.subjectName}</h2>`,
+        subject: '✅ Subject Expertise Approved',
+        html: `
+           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #10b981; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Subject Approved</h1>
+              <p style="color: #ecfdf5; margin: 8px 0 0 0; font-size: 16px;">Expand your teaching portfolio</p>
+            </div>
+            <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 22px;">Hello ${tutorData.name},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px; margin-bottom: 24px;">
+                Great news! Your application to teach <strong>${tutorData.subjectName}</strong> has been approved. This subject is now listed on your profile, and students can start booking sessions for it.
+              </p>
+              <div style="text-align: center; margin: 30px 0;">
+                 <a href="https://tutorfriends.onrender.com/dashboard" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">View Profile</a>
+              </div>
+            </div>
+             <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
+      console.error('Failed to send subject approval email:', error);
       return false;
     }
   }
@@ -210,11 +240,38 @@ export class EmailService {
     try {
       const mailOptions = {
         to: tutorData.email,
-        subject: '❌ Your Tutor Application Status Update',
-        html: `<h2>Application Update for ${tutorData.name}</h2>`,
+        subject: 'Update on Your Tutor Application',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #ef4444; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Application Update</h1>
+            </div>
+            <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 22px;">Hello ${tutorData.name},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px; margin-bottom: 24px;">
+                Thank you for your interest in joining TutorFriends. After carefully reviewing your application, we regret to inform you that we cannot approve your moderator/tutor account at this time.
+              </p>
+              
+              ${tutorData.adminNotes ? `
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 20px; margin: 25px 0; border-radius: 4px;">
+                <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">Reason for Rejection:</h3>
+                <p style="color: #7f1d1d; margin: 0; line-height: 1.6; font-size: 15px;">${tutorData.adminNotes}</p>
+              </div>
+              ` : ''}
+
+              <p style="color: #475569; line-height: 1.8; font-size: 16px;">
+                You are welcome to update your profile information and documents to address the feedback above, and then re-apply.
+              </p>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
+      console.error('Failed to send tutor rejection email:', error);
       return false;
     }
   }
@@ -228,11 +285,38 @@ export class EmailService {
     try {
       const mailOptions = {
         to: tutorData.email,
-        subject: '❌ Your Subject Expertise Application Status Update',
-        html: `<h2>Subject Rejection: ${tutorData.subjectName}</h2>`,
+        subject: 'Update on Your Subject Application',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #ef4444; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Subject Not Approved</h1>
+            </div>
+            <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 22px;">Hello ${tutorData.name},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px; margin-bottom: 24px;">
+                We have reviewed your request to teach <strong>${tutorData.subjectName}</strong>. Unfortunately, we are unable to approve this subject at this time.
+              </p>
+              
+              ${tutorData.adminNotes ? `
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 20px; margin: 25px 0; border-radius: 4px;">
+                <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">Reason for Rejection:</h3>
+                <p style="color: #7f1d1d; margin: 0; line-height: 1.6; font-size: 15px;">${tutorData.adminNotes}</p>
+              </div>
+              ` : ''}
+
+              <p style="color: #475569; line-height: 1.8; font-size: 16px;">
+                Please address the issues mentioned above and try applying for this subject again, or ensure your documents meet our requirements.
+              </p>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
+      console.error('Failed to send subject rejection email:', error);
       return false;
     }
   }
