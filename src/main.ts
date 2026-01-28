@@ -14,7 +14,9 @@ async function bootstrap() {
     'http://localhost:3001',
     'http://192.168.41.24:3001',
     'https://tutorfriends.online',
-    'https://www.tutorfriends.online'
+    'https://www.tutorfriends.online',
+    'https://tutorfriends.onrender.com',
+    'https://xtf-backend-1.onrender.com'
   ];
 
   const allowedOrigins = process.env.FRONTEND_URL
