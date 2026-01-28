@@ -16,6 +16,7 @@ import { SubjectsModule } from './subjects/subjects.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ReschedulesModule } from './reschedules/reschedules.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { DebugController } from './debug/debug.controller';
 
 @Controller()
 export class AppController {
@@ -67,7 +68,7 @@ export class AppController {
     ReschedulesModule,
     SupabaseModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, DebugController],
   providers: [],
 })
 export class AppModule { }
