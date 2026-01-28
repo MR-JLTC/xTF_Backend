@@ -47,6 +47,10 @@ export class AppController {
       url: process.env.DATABASE_URL,
       entities: Object.values(entities),
       synchronize: process.env.NODE_ENV !== 'production', // Only synchronize in development
+      ssl: process.env.NODE_ENV === 'production',
+      extra: process.env.NODE_ENV === 'production'
+        ? { ssl: { rejectUnauthorized: false } }
+        : {},
     }),
     ScheduleModule.forRoot(),
     AuthModule,
