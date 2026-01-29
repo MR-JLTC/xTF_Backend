@@ -448,7 +448,7 @@ export class TutorsService {
     if (!tutor) throw new Error('Tutor not found');
     const toSave = files.map((f) => this.documentsRepository.create({
       tutor,
-      file_url: `/tutor_documents/${f.filename}`,
+      file_url: f.path || `/tutor_documents/${f.filename}`, // Use Supabase URL if available
       file_name: f.filename,
       file_type: f.mimetype,
     }));
@@ -473,34 +473,18 @@ export class TutorsService {
       return { success: true, profile_image_url: placeholderUrl };
     }
 
-    // Rename the temporary file to the correct userId-based name
     const userId = tutor.user.user_id;
-    const ext = path.extname(file.filename);
-    const newFilename = `userProfile_${userId}${ext}`;
-    const oldPath = path.join(process.cwd(), 'tutor_documents', file.filename); // Assuming temp upload goes to tutor_documents
-    const newPath = path.join(process.cwd(), 'user_profile_images', newFilename);
 
-    // Ensure the target directory exists
-    const targetDir = path.join(process.cwd(), 'user_profile_images');
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
-    }
-
-    try {
-      // Rename the file
-      fs.renameSync(oldPath, newPath);
-      console.log(`Renamed profile image from ${file.filename} to ${newFilename}`);
-    } catch (error) {
-      console.error('Error renaming profile image file:', error);
-      throw new Error('Failed to save profile image');
-    }
+    // The controller uploads to Supabase and puts the public URL in file.path
+    // We should use that directly instead of trying to rename local files (which don't exist in memory storage)
+    const fileUrl = file.path;
 
     // Update database with new file URL on the User entity
-    const fileUrl = `/user_profile_images/${newFilename}`;
     await this.usersRepository.update({ user_id: userId }, { profile_image_url: fileUrl });
 
     // Delete old profile image files AFTER new file is saved
-    await this.deleteOldProfileImages(userId);
+    // Note: This should ideally delete from Supabase, but for now we just handle the DB update
+    // await this.deleteOldProfileImages(userId); 
 
     return { success: true, profile_image_url: fileUrl };
   }
@@ -522,28 +506,16 @@ export class TutorsService {
       return { success: true, gcash_qr_url: placeholderUrl };
     }
 
-    // Rename the temporary file to the correct userId-based name
     const userId = tutor.user.user_id;
-    const ext = path.extname(file.filename);
-    const newFilename = `gcashQR_${userId}${ext}`;
-    const oldPath = path.join(process.cwd(), 'tutor_documents', file.filename);
-    const newPath = path.join(process.cwd(), 'tutor_documents', newFilename);
 
-    try {
-      // Rename the file
-      fs.renameSync(oldPath, newPath);
-      console.log(`Renamed GCash QR from ${file.filename} to ${newFilename}`);
-    } catch (error) {
-      console.error('Error renaming GCash QR file:', error);
-      throw new Error('Failed to save GCash QR');
-    }
+    // The controller uploads to Supabase and puts the public URL in file.path
+    const fileUrl = file.path;
 
     // Update database with new file URL
-    const fileUrl = `/tutor_documents/${newFilename}`;
     await this.tutorsRepository.update({ tutor_id: tutor.tutor_id }, { gcash_qr_url: fileUrl });
 
     // Delete old GCash QR files AFTER new file is saved
-    await this.deleteOldGcashQRFiles(userId);
+    // await this.deleteOldGcashQRFiles(userId);
 
     return { success: true, gcash_qr_url: fileUrl };
   }
@@ -1332,7 +1304,7 @@ export class TutorsService {
             console.log('Processing file:', file.filename, file.mimetype);
             return this.tutorSubjectDocumentRepository.create({
               tutorSubject: savedTutorSubject,
-              file_url: `/tutor_documents/${file.filename}`,
+              file_url: file.path || `/tutor_documents/${file.filename}`, // Use Supabase URL if available
               file_name: file.filename,
               file_type: file.mimetype
             });
