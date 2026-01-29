@@ -157,7 +157,7 @@ export class EmailService {
                 We are thrilled to inform you that your application to join <strong>TutorFriends</strong> has been <strong>approved</strong>! You can now access your dashboard, set up your profile, and start accepting booking requests from students.
               </p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="https://tutorfriends.onrender.com/login" style="background-color: #0ea5e9; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">Go to Dashboard</a>
+                <a href="https://tutorfriends.online/login" style="background-color: #0ea5e9; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">Go to Dashboard</a>
               </div>
               <p style="color: #64748b; font-size: 14px; margin-top: 30px; text-align: center;">
                 Welcome to the community!
@@ -197,7 +197,7 @@ export class EmailService {
                 Great news! Your application to teach <strong>${tutorData.subjectName}</strong> has been approved. This subject is now listed on your profile, and students can start booking sessions for it.
               </p>
               <div style="text-align: center; margin: 30px 0;">
-                 <a href="https://tutorfriends.onrender.com/dashboard" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">View Profile</a>
+                 <a href="https://tutorfriends.online/dashboard" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">View Profile</a>
               </div>
             </div>
              <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
