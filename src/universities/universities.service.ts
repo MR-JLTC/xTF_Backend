@@ -9,7 +9,7 @@ export class UniversitiesService {
   constructor(
     @InjectRepository(University)
     private universitiesRepository: Repository<University>,
-  ) {}
+  ) { }
 
   create(createUniversityDto: CreateUniversityDto): Promise<University> {
     const university = this.universitiesRepository.create(createUniversityDto);
