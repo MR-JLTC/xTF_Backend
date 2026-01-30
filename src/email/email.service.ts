@@ -157,7 +157,7 @@ export class EmailService {
                 We are thrilled to inform you that your application to join <strong>TutorFriends</strong> has been <strong>approved</strong>! You can now access your dashboard, set up your profile, and start accepting booking requests from students.
               </p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="https://tutorfriends.online/login" style="background-color: #0ea5e9; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">Go to Dashboard</a>
+                <a href="https://tutorfriends.online/tutor-dashboard/profile" style="background-color: #0ea5e9; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">View Profile</a>
               </div>
               <p style="color: #64748b; font-size: 14px; margin-top: 30px; text-align: center;">
                 Welcome to the community!
