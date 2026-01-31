@@ -1551,8 +1551,8 @@ export class TutorsService {
     }
 
     if (file) {
-      // Assuming the column is named 'session_proof_url' on the BookingRequest entity
-      const proofUrl = `/tutor_documents/${file.filename}`;
+      // Use Supabase URL if available (file.path), otherwise fallback to local path
+      const proofUrl = file.path || `/tutor_documents/${file.filename}`;
       (request as any).session_proof_url = proofUrl;
     }
 
@@ -1596,7 +1596,8 @@ export class TutorsService {
     }
 
     // Save file URL and set status back to awaiting_payment for tutor review
-    const fileUrl = `/tutor_documents/${file.filename}`;
+    // Use Supabase URL if available (file.path), otherwise fallback to local path
+    const fileUrl = file.path || `/tutor_documents/${file.filename}`;
     request.payment_proof = fileUrl;
     // Keep status consistent with tutor dashboard logic
     if (request.status === 'pending' || request.status === 'declined' || request.status === 'cancelled') {
