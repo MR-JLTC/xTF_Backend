@@ -47,6 +47,19 @@ async function bootstrap() {
     }
   }));
 
+  // Fallback redirect for missing tutor documents (files uploaded to Supabase but path stored as local)
+  app.use('/tutor_documents/:filename', (req, res, next) => {
+    const filename = req.params.filename;
+    const supabaseUrl = process.env.SUPABASE_URL || 'https://lvoimpgeoslbfnlaudci.supabase.co'; // Fallback to known Supabase URL if env missing
+    if (filename && supabaseUrl) {
+      // Construct Supabase public storage URL
+      const redirectUrl = `${supabaseUrl}/storage/v1/object/public/tutor_documents/${filename}`;
+      // console.log(`Redirecting missing local file ${filename} to ${redirectUrl}`);
+      return res.redirect(redirectUrl);
+    }
+    next();
+  });
+
   // Ensure user_profile_images folder exists and serve static files for user profile images
   const userProfileImagesDir = join(process.cwd(), 'user_profile_images');
   if (!fs.existsSync(userProfileImagesDir)) {
