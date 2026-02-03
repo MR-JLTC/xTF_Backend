@@ -47,11 +47,8 @@ export class EmailVerificationService {
       where: { email: trimmedEmail, user_type: user_type },
     });
 
-    // If user is already verified (in the registry), don't send another code
-    if (verificationEntry && verificationEntry.is_verified) {
-      console.log('⚠️ Email is already verified in registry, not sending new code');
-      return { message: 'Email is already verified' };
-    }
+    // If user is already verified (in the registry), we STILL send a new code to re-verify for this specific action (e.g. Tutor Application)
+    // The previous check blocking this is removed.
 
     const verificationCode = this.generateVerificationCode();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
