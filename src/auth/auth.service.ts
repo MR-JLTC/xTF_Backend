@@ -111,28 +111,45 @@ export class AuthService {
     }
 
     // 2. If no user_type specified, check for multiple potential accounts
+    console.log(`[DEBUG] Finding users for email: ${loginDto.email}`);
     const allUsers = await this.usersService.findAllByEmail(loginDto.email);
+    console.log(`[DEBUG] Found ${allUsers.length} users in DB for email ${loginDto.email}`);
+
     const validUsers = [];
 
     for (const user of allUsers) {
+      console.log(`[DEBUG] Checking User ID: ${user.user_id}, Type: ${user.user_type}, Has Password: ${!!user.password}`);
+
       // Skip admin accounts for this endpoint
-      if (user.user_type === 'admin') continue;
+      if (user.user_type === 'admin') {
+        console.log(`[DEBUG] Skipping admin user ${user.user_id}`);
+        continue;
+      }
 
       // Check password
-      if (!user.password) continue;
+      if (!user.password) {
+        console.log(`[DEBUG] User ${user.user_id} skipped (no password)`);
+        continue;
+      }
+
       let passwordMatch = await bcrypt.compare(loginDto.password, user.password);
+      console.log(`[DEBUG] Password match for user ${user.user_id}: ${passwordMatch}`);
+
       if (!passwordMatch) {
         // Try double hash fallback if needed (legacy support)
         const doubleHashed = await bcrypt.hash(loginDto.password, 10);
         passwordMatch = await bcrypt.compare(doubleHashed, user.password);
+        console.log(`[DEBUG] Double-hash match for user ${user.user_id}: ${passwordMatch}`);
       }
 
       if (passwordMatch) {
+        console.log(`[DEBUG] User ${user.user_id} credentials VALID`);
         validUsers.push(user);
       }
     }
 
     if (validUsers.length === 0) {
+      console.log(`[DEBUG] No valid users found. Throwing UnauthorizedException.`);
       throw new UnauthorizedException('Invalid credentials');
     }
 
