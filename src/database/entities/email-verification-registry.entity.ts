@@ -1,11 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
 
 @Entity('email_verification_registry')
+@Index(['email', 'user_type'], { unique: true })
 export class EmailVerificationRegistry {
   @PrimaryGeneratedColumn()
   registry_id: number;
 
-  @Index({ unique: true })
   @Column()
   email: string;
 
