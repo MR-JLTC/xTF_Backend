@@ -55,4 +55,8 @@ export class LoginDto {
   @IsNotEmpty()
   @IsString()
   password: string;
+
+  @IsOptional()
+  @IsString()
+  user_type?: 'tutor' | 'tutee' | 'admin' | 'student';
 }

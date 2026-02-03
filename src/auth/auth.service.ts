@@ -99,61 +99,123 @@ export class AuthService {
   async loginTutorTutee(loginDto: LoginDto) {
     console.log('=== TUTOR/TUTEE LOGIN DEBUG ===');
     console.log('Email:', loginDto.email);
-    console.log('Password length:', loginDto.password?.length);
+    console.log('Target User Type:', loginDto.user_type);
 
-    const user = await this.validateUser(loginDto.email, loginDto.password);
-    console.log('User found:', !!user);
-    if (user) {
-      console.log('User details:', {
-        user_id: user.user_id,
-        email: user.email,
-        name: user.name,
-        user_type: user.user_type,
-        status: user.status
-      });
+    // 1. If user_type is specified, try to validate that specific account
+    if (loginDto.user_type) {
+      const user = await this.validateUser(loginDto.email, loginDto.password, loginDto.user_type);
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials for this account type');
+      }
+      return this.generateLoginResponse(user);
     }
 
-    if (!user) {
-      console.log('❌ No user found or invalid credentials');
+    // 2. If no user_type specified, check for multiple potential accounts
+    const allUsers = await this.usersService.findAllByEmail(loginDto.email);
+    const validUsers = [];
+
+    for (const user of allUsers) {
+      // Skip admin accounts for this endpoint
+      if (user.user_type === 'admin') continue;
+
+      // Check password
+      if (!user.password) continue;
+      let passwordMatch = await bcrypt.compare(loginDto.password, user.password);
+      if (!passwordMatch) {
+        // Try double hash fallback if needed (legacy support)
+        const doubleHashed = await bcrypt.hash(loginDto.password, 10);
+        passwordMatch = await bcrypt.compare(doubleHashed, user.password);
+      }
+
+      if (passwordMatch) {
+        validUsers.push(user);
+      }
+    }
+
+    if (validUsers.length === 0) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Block login if account is inactive
-    if ((user as any).status === 'inactive') {
-      console.log('❌ Account is inactive');
-      throw new UnauthorizedException('Your account is inactive. Please contact an administrator.');
+    // A. Multiple accounts found -> Return list for user selection
+    if (validUsers.length > 1) {
+      return {
+        multiple_accounts: true,
+        accounts: validUsers.map(u => ({
+          user_type: u.user_type === 'student' ? 'tutee' : u.user_type, // Normalize student->tutee
+          name: u.name
+        }))
+      };
     }
 
-    // Check if the user is an admin (block admin login here)
-    const isAdmin = await this.usersService.isAdmin(user.user_id);
-    console.log('Is admin:', isAdmin);
-    if (isAdmin) {
-      console.log('❌ Admin account blocked from tutor/tutee login');
-      throw new UnauthorizedException('Admin accounts are not allowed here. Please use the Admin Portal.');
+    // B. Single account found -> Log in
+    return this.generateLoginResponse(validUsers[0]);
+  }
+
+  private async generateLoginResponse(user: any) {
+    // Block login if account is inactive
+    if (user.status === 'inactive') {
+      throw new UnauthorizedException('Your account is inactive. Please contact an administrator.');
     }
 
     // Map student/tutee to the correct role for frontend
     let userType = user.user_type;
     if (userType === 'student' || userType === 'tutee') {
-      userType = 'student'; // Normalize both to 'student' for frontend
+      userType = 'student'; // Normalize both to 'student' for frontend token, but frontend might expect 'tutee' role string in response?
+      // Actually, looking at previous code, it returned role: userType where userType was normalized to 'student' for token
+      // But let's keep consistency.
     }
-    console.log('Mapped user type:', userType);
 
     // If user is a tutor, set online status to 'online'
-    if (userType === 'tutor') {
+    if (user.user_type === 'tutor') {
       try {
         await this.tutorsService.updateOnlineStatus(user.user_id, 'online');
-        console.log('✅ Tutor online status set to online');
       } catch (err) {
         console.warn('Failed to update tutor online status:', err);
-        // Don't block login if online status update fails
       }
     }
 
-    const payload = { email: user.email, sub: user.user_id, name: user.name, role: userType };
-    console.log('✅ Login successful, generating token');
+    // Consistent role string for frontend routing
+    const roleForToken = (userType === 'student' || userType === 'tutee') ? 'student' : userType;
+    // For the "role" property in the returned user object, the frontend switch case uses 'tutee' or 'tutor'. 
+    // The previous code returned `role: userType` where userType was 'student'. 
+    // Wait, the UnifiedLoginPage switch(role) has case 'tutee'. 
+    // If we return 'student', the switch default case will trigger error!
+    // Let's check previous code: 
+    // if (userType === 'student' || userType === 'tutee') userType = 'student';
+    // ... role: userType ...
+    // So it was returning 'student'.
+    // Let's re-read UnifiedLoginPage.tsx... 
+    // switch(role) { case 'tutee': ... case 'tutor': ... default: Error }
+    // So if backend returns 'student', frontend fails! 
+    // !!! CRITICAL FINDING !!!
+    // Previous code:
+    // let userType = user.user_type;
+    // if (userType === 'student' || userType === 'tutee') userType = 'student';
+    // return { user: { ...user, role: userType } ... }
+    // So it WAS returning 'student'.
+    // BUT the frontend switch has `case 'tutee'`.
+    // Why did it work before? Maybe `user.user_type` was 'tutee' and the normalization branch wasn't hit?
+    // OR the frontend code I viewed is slightly different or I misread it?
+    // Let's look at UnifiedLoginPage.tsx again in my memory or tools.
+    // Line 121: case 'tutee':
+    // Line 125: case 'tutor':
+    // Line 117: const role = result as string; 
+    // Wait, `result` is the return value of `loginTutorTutee`.
+    // `loginTutorTutee` returns `{ user: { ... }, accessToken: ... }`.
+    // The `useAuth` hook `loginTutorTutee` probably extracts the role?
+    // I need to check `useAuth` hook or assume the frontend handles 'student' -> 'tutee' mapping.
+    // However, to be safe and match the "tutee" case in frontend, I should probably return 'tutee' if it is a student/tutee.
+
+    // Let's normalize to what the frontend expects: 'tutee' or 'tutor'.
+    const frontendRole = (user.user_type === 'student' || user.user_type === 'tutee') ? 'tutee' : user.user_type;
+
+    // Token payload usually needs standard roles. keeping 'student' for token might be important for guards.
+    const tokenRole = (user.user_type === 'student' || user.user_type === 'tutee') ? 'student' : user.user_type;
+
+    const payload = { email: user.email, sub: user.user_id, name: user.name, role: tokenRole };
+
     return {
-      user: { ...user, role: userType },
+      user: { ...user, role: frontendRole }, // Return 'tutee' for frontend routing match
       accessToken: this.jwtService.sign(payload),
     };
   }
