@@ -47,7 +47,7 @@ export class AppController {
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: Object.values(entities),
-      synchronize: process.env.NODE_ENV !== 'production', // Only synchronize in development
+      synchronize: process.env.DB_SYNC === 'true' || process.env.NODE_ENV !== 'production', // Synchronize if explicitly enabled or in dev
       ssl: process.env.NODE_ENV === 'production',
       extra: process.env.NODE_ENV === 'production'
         ? { ssl: { rejectUnauthorized: false } }
