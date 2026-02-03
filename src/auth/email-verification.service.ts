@@ -313,11 +313,15 @@ export class EmailVerificationService {
           </div>
         `;
 
-      await this.emailService.sendEmail({
+      const sent = await this.emailService.sendEmail({
         to: email,
         subject: 'TutorFriends - Email Verification Code',
         html: html,
       });
+
+      if (!sent) {
+        throw new Error('Email service failed to send email. Check backend logs for Gmail API errors.');
+      }
 
       console.log('✅ Verification email sent successfully via EmailService');
 
