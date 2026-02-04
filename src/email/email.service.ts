@@ -8,7 +8,7 @@ export class EmailService {
   private refreshToken: string;
 
   constructor() {
-    this.gmailUser = process.env.GMAIL_USER || 'jhonlloydtcruz4@gmail.com';
+    this.gmailUser = process.env.GMAIL_USER || 'jactechnologies7@gmail.com';
     this.clientId = process.env.GMAIL_CLIENT_ID || '';
     this.clientSecret = process.env.GMAIL_CLIENT_SECRET || '';
     this.refreshToken = process.env.GMAIL_REFRESH_TOKEN || '';
