@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { google } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class EmailService {
@@ -6,6 +8,7 @@ export class EmailService {
   private clientId: string;
   private clientSecret: string;
   private refreshToken: string;
+  private oauth2Client: OAuth2Client;
 
   constructor() {
     this.gmailUser = process.env.GMAIL_USER || 'jactechnologies7@gmail.com';
@@ -16,41 +19,26 @@ export class EmailService {
     if (!this.clientId || !this.clientSecret || !this.refreshToken) {
       console.error('❌ Gmail API credentials missing (Client ID, Secret, or Refresh Token).');
     }
-  }
 
-  private async getAccessToken(): Promise<string> {
-    try {
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: this.clientId,
-          client_secret: this.clientSecret,
-          refresh_token: this.refreshToken,
-          grant_type: 'refresh_token',
-        }),
-      });
+    this.oauth2Client = new google.auth.OAuth2(
+      this.clientId,
+      this.clientSecret,
+      'https://developers.google.com/oauthplayground', // Common redirect URI used for generating tokens
+    );
 
-      const data = await response.json() as any;
-      if (!response.ok) {
-        throw new Error(data.error_description || 'Failed to refresh access token');
-      }
-      return data.access_token;
-    } catch (error) {
-      console.error('Error refreshing access token:', error);
-      throw error;
-    }
+    this.oauth2Client.setCredentials({
+      refresh_token: this.refreshToken,
+    });
   }
 
   async sendEmail(mailOptions: { to: string; subject: string; html: string }): Promise<boolean> {
     try {
-      console.log(`--- Gmail REST API Request ---`);
+      console.log(`--- Gmail Googleapis Request ---`);
       console.log(`To: ${mailOptions.to}`);
       console.log(`Subject: ${mailOptions.subject}`);
 
-      const accessToken = await this.getAccessToken();
+      const gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
 
-      // Construct a simple MIME message
       const utf8Subject = `=?utf-8?B?${Buffer.from(mailOptions.subject).toString('base64')}?=`;
       const messageParts = [
         `From: "TutorFriends" <${this.gmailUser}>`,
@@ -64,35 +52,20 @@ export class EmailService {
       ];
       const message = messageParts.join('\n');
 
-      // The Gmail API requires base64url encoding
       const encodedMessage = Buffer.from(message)
         .toString('base64')
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 
-      const response = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/send`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            raw: encodedMessage,
-          }),
+      const response = await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: {
+          raw: encodedMessage,
         },
-      );
+      });
 
-      const data = await response.json() as any;
-
-      if (!response.ok) {
-        console.error('❌ Gmail API Error:', data);
-        return false;
-      }
-
-      console.log('✅ Email sent successfully via Gmail REST API:', data.id);
+      console.log('✅ Email sent successfully via Googleapis:', response.data.id);
       return true;
     } catch (error) {
       console.error('EmailService.sendEmail error:', error);
