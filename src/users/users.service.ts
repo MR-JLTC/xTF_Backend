@@ -1,6 +1,8 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, In, Repository } from 'typeorm';
+import { Between, In, Repository, ILike } from 'typeorm';
+
+
 import { User, Admin, Tutor, Course, University, Student, Notification, BookingRequest, Session, Subject } from '../database/entities';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -148,7 +150,7 @@ export class UsersService {
 
   async findAllByEmail(email: string): Promise<User[]> {
     return this.usersRepository.find({
-      where: { email },
+      where: { email: ILike(email) },
       relations: [
         'student_profile',
         'student_profile.university',
