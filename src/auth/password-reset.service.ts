@@ -5,7 +5,7 @@ import { User } from '../database/entities/user.entity';
 import { PasswordResetToken } from '../database/entities/password-reset-token.entity';
 import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcrypt';
-import * as nodemailer from 'nodemailer';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class PasswordResetService {
@@ -291,44 +291,9 @@ export class PasswordResetService {
     verificationCode: string
   ): Promise<boolean> {
     try {
-      // Debug logging
-      console.log('Sending password reset email with details:', {
-        name: name,
-        email: email,
-        verificationCode: verificationCode
-      });
-      // Create a new transporter for this service
-      const gmailUser = process.env.GMAIL_USER || 'johnemmanuel.devera@bisu.edu.ph';
-      const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+      console.log('Sending password reset email via Gmail API...');
 
-      if (!gmailAppPassword) {
-        console.error('GMAIL_APP_PASSWORD is not set. Cannot send password reset email.');
-        return false;
-      }
-
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: gmailUser,
-          pass: gmailAppPassword,
-        },
-      });
-
-      // Debug email addresses
-      console.log('Email configuration:', {
-        from: gmailUser,
-        to: email,
-        sendingFrom: `"TutorLink" <${gmailUser}>`,
-        sendingTo: email
-      });
-
-      const mailOptions = {
-        from: `"TutorLink" <${gmailUser}>`,
-        to: email,
-        subject: '🔐 Password Reset Verification Code',
-        html: `
+      const html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc;">
             <div style="background-color: #0ea5e9; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
               <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 80px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
@@ -373,28 +338,24 @@ export class PasswordResetService {
               <p>This email was sent from TutorLink - Connecting Minds, Building Futures</p>
             </div>
           </div>
-        `,
-      };
+        `;
 
-      // Debug final mail options
-      console.log('Final mail options:', {
-        from: mailOptions.from,
-        to: mailOptions.to,
-        subject: mailOptions.subject
+      const sent = await this.emailService.sendEmail({
+        to: email,
+        subject: '🔐 Password Reset Verification Code',
+        html: html,
       });
 
-      const result = await transporter.sendMail(mailOptions);
-      console.log(`Password reset email sent successfully to ${email}`);
-      console.log('Message ID:', result.messageId);
-      return true;
+      if (sent) {
+        console.log(`Password reset email sent successfully to ${email}`);
+        return true;
+      } else {
+        console.error(`Failed to send password reset email to: ${email}`);
+        return false;
+      }
+
     } catch (error) {
       console.error('Error sending password reset email:', error);
-      console.error('Error details:', {
-        message: error.message,
-        code: error.code,
-        command: error.command,
-        response: error.response
-      });
       return false;
     }
   }
