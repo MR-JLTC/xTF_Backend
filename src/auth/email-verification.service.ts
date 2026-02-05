@@ -266,8 +266,8 @@ export class EmailVerificationService {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
             <!-- Header with Logo -->
             <div style="text-align: center; margin-bottom: 30px; padding: 20px 0; border-bottom: 2px solid #e5e7eb;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 15px 30px; border-radius: 12px; margin-bottom: 15px;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px;">TutorFriends</h1>
+              <div style="display: inline-block; margin-bottom: 15px;">
+                <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 60px;">
               </div>
               <h2 style="color: #374151; margin: 10px 0; font-size: 20px; font-weight: 600;">Email Verification</h2>
             </div>

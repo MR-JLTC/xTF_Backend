@@ -85,7 +85,10 @@ export class EmailService {
         subject: `Contact Form: ${contactData.subject}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #0ea5e9;">New Contact Form Submission</h2>
+            <div style="text-align: center; padding: 20px 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 50px;">
+            </div>
+            <h2 style="color: #0ea5e9; text-align: center;">New Contact Form Submission</h2>
             <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <p><strong>Name:</strong> ${contactData.name}</p>
               <p><strong>Email:</strong> ${contactData.email}</p>
@@ -96,7 +99,6 @@ export class EmailService {
               <p style="line-height: 1.6; color: #475569;">${contactData.message.replace(/\n/g, '<br>')}</p>
             </div>
             <div style="margin-top: 20px; padding: 15px; background-color: #f1f5f9; border-radius: 8px; text-align: center;">
-              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #64748b; font-size: 14px;">
                 This message was sent from the TutorFriends contact form.
               </p>
@@ -122,6 +124,7 @@ export class EmailService {
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #0ea5e9; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 50px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
               <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">Congratulations!</h1>
               <p style="color: #e0f2fe; margin: 10px 0 0 0; font-size: 18px;">You are now a TutorFriends Tutor</p>
             </div>
@@ -138,7 +141,6 @@ export class EmailService {
               </p>
             </div>
             <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
-              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
             </div>
           </div>
@@ -163,6 +165,7 @@ export class EmailService {
         html: `
            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #10b981; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 50px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
               <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Subject Approved</h1>
               <p style="color: #ecfdf5; margin: 8px 0 0 0; font-size: 16px;">Expand your teaching portfolio</p>
             </div>
@@ -176,7 +179,6 @@ export class EmailService {
               </div>
             </div>
              <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
-              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
             </div>
           </div>
@@ -220,6 +222,7 @@ export class EmailService {
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #ef4444; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 50px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
               <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Application Update</h1>
             </div>
             <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
@@ -240,7 +243,6 @@ export class EmailService {
               </p>
             </div>
             <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
-              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
             </div>
           </div>
@@ -266,6 +268,7 @@ export class EmailService {
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #ef4444; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 50px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
               <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Subject Not Approved</h1>
             </div>
             <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
@@ -286,7 +289,6 @@ export class EmailService {
               </p>
             </div>
             <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
-              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
             </div>
           </div>

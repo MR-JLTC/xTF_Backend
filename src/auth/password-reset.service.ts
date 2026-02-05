@@ -15,7 +15,7 @@ export class PasswordResetService {
     @InjectRepository(PasswordResetToken)
     private passwordResetTokenRepository: Repository<PasswordResetToken>,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   private normalizeUserType(userType?: string | null): 'admin' | 'tutor' | 'tutee' | undefined {
     if (!userType) return undefined;
@@ -27,7 +27,7 @@ export class PasswordResetService {
     if (!email || typeof email !== 'string') {
       throw new BadRequestException('Email is required and must be a valid string');
     }
-    
+
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
       throw new BadRequestException('Email cannot be empty');
@@ -53,20 +53,20 @@ export class PasswordResetService {
     console.log('=== PASSWORD RESET REQUEST DEBUG ===');
     console.log('Searching for email:', email);
     console.log('Email type:', typeof email);
-    
+
     // Validate email parameter
     if (!email || typeof email !== 'string') {
       console.log('❌ Invalid email parameter:', email);
       throw new BadRequestException('Email is required and must be a valid string');
     }
-    
+
     // Trim and validate email
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
       console.log('❌ Empty email after trimming');
       throw new BadRequestException('Email cannot be empty');
     }
-    
+
     console.log('Email length:', trimmedEmail.length);
     console.log('Trimmed email:', trimmedEmail);
 
@@ -79,7 +79,7 @@ export class PasswordResetService {
     // Debug: Check if user was found
     if (!user) {
       console.log('❌ No user found with email:', trimmedEmail);
-      
+
       // Let's check if there are any users with similar emails
       const allUsers = await this.userRepository.find({
         select: ['user_id', 'name', 'email', 'status']
@@ -88,12 +88,12 @@ export class PasswordResetService {
       allUsers.forEach((u, index) => {
         console.log(`${index + 1}. ID: ${u.user_id}, Name: "${u.name}", Email: "${u.email}", Status: ${u.status}`);
       });
-      
+
       throw new NotFoundException('User not found with this email address');
     }
 
     const normalizedType = this.normalizeUserType((user as any).user_type);
-    
+
     // Check if user type is excluded
     if (options?.excludeUserType && normalizedType === options.excludeUserType) {
       console.log('❌ User type excluded from password reset:', {
@@ -102,7 +102,7 @@ export class PasswordResetService {
       });
       throw new BadRequestException(`Password reset for ${options.excludeUserType} accounts must be done through the ${options.excludeUserType} portal.`);
     }
-    
+
     // Check if specific user type is required
     if (options?.requiredUserType && normalizedType !== options.requiredUserType) {
       console.log('❌ User type mismatch for password reset:', {
@@ -148,12 +148,12 @@ export class PasswordResetService {
     console.log(`Attempting to send password reset email to: ${user.email}`);
     const displayName = user.name || 'User'; // Fallback if name is null/empty
     const emailSent = await this.sendPasswordResetEmail(displayName, user.email, verificationCode);
-    
+
     if (!emailSent) {
       console.error(`Failed to send password reset email to: ${user.email}`);
       throw new BadRequestException('Failed to send verification code. Please check your email configuration and try again.');
     }
-    
+
     console.log(`Password reset email sent successfully to: ${user.email}`);
 
     return {
@@ -172,20 +172,20 @@ export class PasswordResetService {
     console.log('Verifying for email:', email);
     console.log('Code:', code);
     console.log('Email type:', typeof email);
-    
+
     // Validate email parameter
     if (!email || typeof email !== 'string') {
       console.log('❌ Invalid email parameter:', email);
       throw new BadRequestException('Email is required and must be a valid string');
     }
-    
+
     // Trim and validate email
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
       console.log('❌ Empty email after trimming');
       throw new BadRequestException('Email cannot be empty');
     }
-    
+
     console.log('Trimmed email:', trimmedEmail);
 
     // Find user by email with explicit field selection
@@ -201,7 +201,7 @@ export class PasswordResetService {
     }
 
     const normalizedType = this.normalizeUserType((user as any).user_type);
-    
+
     // Check if user type is excluded
     if (options?.excludeUserType && normalizedType === options.excludeUserType) {
       console.log('❌ User type excluded from password reset:', {
@@ -210,7 +210,7 @@ export class PasswordResetService {
       });
       throw new BadRequestException(`Password reset for ${options.excludeUserType} accounts must be done through the ${options.excludeUserType} portal.`);
     }
-    
+
     // Check if specific user type is required
     if (options?.requiredUserType && normalizedType !== options.requiredUserType) {
       console.log('❌ User type mismatch for password verification:', {
@@ -230,7 +230,7 @@ export class PasswordResetService {
 
     // Find valid token
     console.log('Searching for token with user_id:', user.user_id, 'and code:', code);
-    
+
     const token = await this.passwordResetTokenRepository.findOne({
       where: {
         user_id: user.user_id,
@@ -331,6 +331,7 @@ export class PasswordResetService {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc;">
             <div style="background-color: #0ea5e9; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 50px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
               <h1 style="color: white; margin: 0; font-size: 28px;">🔐 Password Reset</h1>
               <p style="color: white; margin: 10px 0 0 0; font-size: 16px;">Your verification code is ready</p>
             </div>
