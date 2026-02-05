@@ -20,6 +20,12 @@ export class AuthService {
     console.log('Email:', email);
     console.log('Target User Type hint:', targetUserType);
 
+    // Normalize 'tutee' to 'student' to match database enum
+    if (targetUserType === 'tutee') {
+      targetUserType = 'student';
+      console.log('Normalized targetUserType to:', targetUserType);
+    }
+
     // Find all users with this email (can have multiple if user has different roles)
     const users = await this.usersService.findAllByEmail(email);
     console.log('Users found in database:', users.length);
