@@ -5,7 +5,7 @@ import { User } from '../database/entities/user.entity';
 import { PasswordResetToken } from '../database/entities/password-reset-token.entity';
 import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcrypt';
-import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class PasswordResetService {
