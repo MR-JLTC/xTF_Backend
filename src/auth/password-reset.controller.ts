@@ -1,11 +1,15 @@
 import { Controller, Post, Body, HttpException, HttpStatus, Get, Query } from '@nestjs/common';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsOptional, IsEnum } from 'class-validator';
 import { PasswordResetService } from './password-reset.service';
 
 export class RequestPasswordResetDto {
   @IsNotEmpty({ message: 'Email is required' })
   @IsEmail({}, { message: 'Please provide a valid email address' })
   email: string;
+
+  @IsOptional()
+  @IsEnum(['tutor', 'tutee', 'student', 'admin'], { message: 'Invalid user type' })
+  user_type?: 'tutor' | 'tutee' | 'student' | 'admin';
 }
 
 export class VerifyCodeAndResetPasswordDto {
@@ -21,11 +25,15 @@ export class VerifyCodeAndResetPasswordDto {
   @IsString({ message: 'New password must be a string' })
   @MinLength(7, { message: 'New password must be at least 7 characters long' })
   newPassword: string;
+
+  @IsOptional()
+  @IsEnum(['tutor', 'tutee', 'student', 'admin'], { message: 'Invalid user type' })
+  user_type?: 'tutor' | 'tutee' | 'student' | 'admin';
 }
 
 @Controller('auth/password-reset')
 export class PasswordResetController {
-  constructor(private readonly passwordResetService: PasswordResetService) {}
+  constructor(private readonly passwordResetService: PasswordResetService) { }
 
   @Get('check-user-type')
   async checkUserType(@Query('email') email: string) {
@@ -39,8 +47,9 @@ export class PasswordResetController {
           HttpStatus.BAD_REQUEST
         );
       }
-      const userType = await this.passwordResetService.getUserTypeByEmail(email);
-      return { userType };
+      // Service now returns extended object if multiple accounts found
+      const result = await this.passwordResetService.getUserTypeByEmail(email);
+      return result;
     } catch (error) {
       throw new HttpException(
         {
@@ -57,11 +66,7 @@ export class PasswordResetController {
     try {
       console.log('=== CONTROLLER DEBUG ===');
       console.log('Received request body:', requestPasswordResetDto);
-      console.log('Email from DTO:', requestPasswordResetDto.email);
-      console.log('Email type:', typeof requestPasswordResetDto.email);
-      console.log('Email length:', requestPasswordResetDto.email?.length);
-      console.log('=== END CONTROLLER DEBUG ===');
-      
+
       // Validate email in controller
       if (!requestPasswordResetDto.email) {
         throw new HttpException(
@@ -72,11 +77,25 @@ export class PasswordResetController {
           HttpStatus.BAD_REQUEST
         );
       }
-      
+
+      // Map frontend 'student' to 'tutee' or whatever, but primarily just pass it down.
+      // The service expects 'admin' | 'tutor' | 'tutee'.
+      // If frontend sends 'student', let's normalize it to 'tutee' here or let service handle it?
+      // Service handles 'student' -> 'tutee' in some places, but let's be safe.
+      let targetUserType: 'admin' | 'tutor' | 'tutee' | undefined;
+      if (requestPasswordResetDto.user_type) {
+        if (requestPasswordResetDto.user_type === 'student') targetUserType = 'tutee';
+        else targetUserType = requestPasswordResetDto.user_type as any;
+      }
+
       // Only allow tutor/tutee for regular password reset (not admin)
       const result = await this.passwordResetService.requestPasswordReset(
         requestPasswordResetDto.email,
-        { requiredUserType: undefined, excludeUserType: 'admin' }
+        {
+          requiredUserType: undefined,
+          excludeUserType: 'admin',
+          targetUserType: targetUserType
+        }
       );
       return result;
     } catch (error) {
@@ -123,10 +142,7 @@ export class PasswordResetController {
     try {
       console.log('=== VERIFY CONTROLLER DEBUG ===');
       console.log('Received verify request body:', verifyCodeAndResetPasswordDto);
-      console.log('Email from DTO:', verifyCodeAndResetPasswordDto.email);
-      console.log('Code from DTO:', verifyCodeAndResetPasswordDto.code);
-      console.log('=== END VERIFY CONTROLLER DEBUG ===');
-      
+
       // Validate required fields
       if (!verifyCodeAndResetPasswordDto.email) {
         throw new HttpException(
@@ -137,7 +153,7 @@ export class PasswordResetController {
           HttpStatus.BAD_REQUEST
         );
       }
-      
+
       if (!verifyCodeAndResetPasswordDto.code) {
         throw new HttpException(
           {
@@ -147,7 +163,7 @@ export class PasswordResetController {
           HttpStatus.BAD_REQUEST
         );
       }
-      
+
       if (!verifyCodeAndResetPasswordDto.newPassword) {
         throw new HttpException(
           {
@@ -157,13 +173,23 @@ export class PasswordResetController {
           HttpStatus.BAD_REQUEST
         );
       }
-      
+
+      let targetUserType: 'admin' | 'tutor' | 'tutee' | undefined;
+      if (verifyCodeAndResetPasswordDto.user_type) {
+        if (verifyCodeAndResetPasswordDto.user_type === 'student') targetUserType = 'tutee';
+        else targetUserType = verifyCodeAndResetPasswordDto.user_type as any;
+      }
+
       // Only allow tutor/tutee for regular password reset (not admin)
       const result = await this.passwordResetService.verifyCodeAndResetPassword(
         verifyCodeAndResetPasswordDto.email,
         verifyCodeAndResetPasswordDto.code,
         verifyCodeAndResetPasswordDto.newPassword,
-        { requiredUserType: undefined, excludeUserType: 'admin' }
+        {
+          requiredUserType: undefined,
+          excludeUserType: 'admin',
+          targetUserType: targetUserType
+        }
       );
       return result;
     } catch (error) {

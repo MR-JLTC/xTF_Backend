@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { User } from '../database/entities/user.entity';
 import { PasswordResetToken } from '../database/entities/password-reset-token.entity';
 import { EmailService } from '../email/email.service';
@@ -23,7 +23,7 @@ export class PasswordResetService {
     return userType as 'admin' | 'tutor' | 'tutee';
   }
 
-  async getUserTypeByEmail(email: string): Promise<'admin' | 'tutor' | 'tutee' | null> {
+  async getUserTypeByEmail(email: string): Promise<any> {
     if (!email || typeof email !== 'string') {
       throw new BadRequestException('Email is required and must be a valid string');
     }
@@ -33,93 +33,105 @@ export class PasswordResetService {
       throw new BadRequestException('Email cannot be empty');
     }
 
-    const user = await this.userRepository.findOne({
-      where: { email: trimmedEmail },
-      select: ['user_id', 'user_type']
+    // Find all users with this email (case-insensitive)
+    const users = await this.userRepository.find({
+      where: { email: ILike(trimmedEmail) },
+      select: ['user_id', 'user_type', 'name']
     });
 
-    if (!user) {
+    if (!users || users.length === 0) {
       return null;
     }
 
-    return this.normalizeUserType((user as any).user_type) || null;
+    // If multiple users found, return list
+    if (users.length > 1) {
+      return {
+        multiple_accounts: true,
+        accounts: users.map(u => ({
+          user_type: this.normalizeUserType(u.user_type === 'student' ? 'tutee' : u.user_type), // Normalize for frontend
+          name: u.name
+        }))
+      };
+    }
+
+    // Single user
+    return {
+      userType: this.normalizeUserType(users[0].user_type),
+      multiple_accounts: false
+    };
   }
 
   async requestPasswordReset(
     email: string,
-    options?: { requiredUserType?: 'admin' | 'tutor' | 'tutee'; excludeUserType?: 'admin' | 'tutor' | 'tutee' },
+    options?: {
+      requiredUserType?: 'admin' | 'tutor' | 'tutee';
+      excludeUserType?: 'admin' | 'tutor' | 'tutee';
+      targetUserType?: 'admin' | 'tutor' | 'tutee';
+    },
   ): Promise<{ message: string }> {
     // Debug: Log the email being searched
     console.log('=== PASSWORD RESET REQUEST DEBUG ===');
     console.log('Searching for email:', email);
-    console.log('Email type:', typeof email);
+    console.log('Options:', options);
 
     // Validate email parameter
     if (!email || typeof email !== 'string') {
-      console.log('❌ Invalid email parameter:', email);
       throw new BadRequestException('Email is required and must be a valid string');
     }
 
-    // Trim and validate email
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      console.log('❌ Empty email after trimming');
       throw new BadRequestException('Email cannot be empty');
     }
 
-    console.log('Email length:', trimmedEmail.length);
-    console.log('Trimmed email:', trimmedEmail);
-
-    // Find user by email with explicit field selection
-    const user = await this.userRepository.findOne({
-      where: { email: trimmedEmail },
+    // Find users with case-insensitive email
+    let users = await this.userRepository.find({
+      where: { email: ILike(trimmedEmail) },
       select: ['user_id', 'name', 'email', 'status', 'user_type']
     });
 
-    // Debug: Check if user was found
-    if (!user) {
-      console.log('❌ No user found with email:', trimmedEmail);
-
-      // Let's check if there are any users with similar emails
-      const allUsers = await this.userRepository.find({
-        select: ['user_id', 'name', 'email', 'status']
-      });
-      console.log('All users in database:');
-      allUsers.forEach((u, index) => {
-        console.log(`${index + 1}. ID: ${u.user_id}, Name: "${u.name}", Email: "${u.email}", Status: ${u.status}`);
-      });
-
+    if (users.length === 0) {
       throw new NotFoundException('User not found with this email address');
+    }
+
+    let user: User | undefined;
+
+    // Filter by targetUserType if provided
+    if (options?.targetUserType) {
+      // Normalize 'tutee' to 'student' for DB check if needed, but here we check normalized type
+      user = users.find(u => {
+        const type = this.normalizeUserType(u.user_type);
+        return type === options.targetUserType;
+      });
+
+      if (!user) {
+        throw new NotFoundException(`No ${options.targetUserType} account found for this email.`);
+      }
+    } else {
+      // Default behavior: verify single user or throw if ambiguous?
+      // For legacy compatibility, if multiple users exist but no type specified, we can't proceed safely.
+      if (users.length > 1) {
+        throw new BadRequestException('Multiple accounts found. Please specify the account type.');
+      }
+      user = users[0];
     }
 
     const normalizedType = this.normalizeUserType((user as any).user_type);
 
     // Check if user type is excluded
     if (options?.excludeUserType && normalizedType === options.excludeUserType) {
-      console.log('❌ User type excluded from password reset:', {
-        excluded: options.excludeUserType,
-        actual: normalizedType,
-      });
       throw new BadRequestException(`Password reset for ${options.excludeUserType} accounts must be done through the ${options.excludeUserType} portal.`);
     }
 
     // Check if specific user type is required
     if (options?.requiredUserType && normalizedType !== options.requiredUserType) {
-      console.log('❌ User type mismatch for password reset:', {
-        required: options.requiredUserType,
-        actual: normalizedType,
-      });
       throw new BadRequestException('Password reset is not available for this account type.');
     }
 
     console.log('✅ User found for password reset:', {
       user_id: user.user_id,
-      name: user.name,
-      email: user.email,
-      status: user.status,
       user_type: normalizedType,
     });
-    console.log('=== END DEBUG ===');
 
     // Generate 6-digit verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -146,15 +158,12 @@ export class PasswordResetService {
 
     // Send verification code via email
     console.log(`Attempting to send password reset email to: ${user.email}`);
-    const displayName = user.name || 'User'; // Fallback if name is null/empty
+    const displayName = user.name || 'User';
     const emailSent = await this.sendPasswordResetEmail(displayName, user.email, verificationCode);
 
     if (!emailSent) {
-      console.error(`Failed to send password reset email to: ${user.email}`);
       throw new BadRequestException('Failed to send verification code. Please check your email configuration and try again.');
     }
-
-    console.log(`Password reset email sent successfully to: ${user.email}`);
 
     return {
       message: 'Verification code sent to your email address. Please check your inbox and spam folder.'
@@ -165,71 +174,72 @@ export class PasswordResetService {
     email: string,
     code: string,
     newPassword: string,
-    options?: { requiredUserType?: 'admin' | 'tutor' | 'tutee'; excludeUserType?: 'admin' | 'tutor' | 'tutee' },
+    options?: {
+      requiredUserType?: 'admin' | 'tutor' | 'tutee';
+      excludeUserType?: 'admin' | 'tutor' | 'tutee';
+      targetUserType?: 'admin' | 'tutor' | 'tutee';
+    },
   ): Promise<{ message: string }> {
-    // Debug: Log the verification attempt
     console.log('=== PASSWORD RESET VERIFICATION DEBUG ===');
     console.log('Verifying for email:', email);
-    console.log('Code:', code);
-    console.log('Email type:', typeof email);
+    console.log('Target Type:', options?.targetUserType);
 
-    // Validate email parameter
     if (!email || typeof email !== 'string') {
-      console.log('❌ Invalid email parameter:', email);
       throw new BadRequestException('Email is required and must be a valid string');
     }
 
-    // Trim and validate email
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
-      console.log('❌ Empty email after trimming');
       throw new BadRequestException('Email cannot be empty');
     }
 
-    console.log('Trimmed email:', trimmedEmail);
-
-    // Find user by email with explicit field selection
-    const user = await this.userRepository.findOne({
-      where: { email: trimmedEmail },
+    // Find users by email (case insensitive)
+    const users = await this.userRepository.find({
+      where: { email: ILike(trimmedEmail) },
       select: ['user_id', 'name', 'email', 'status', 'user_type']
     });
 
-    // Debug: Check if user was found
-    if (!user) {
-      console.log('❌ No user found for verification with email:', trimmedEmail);
+    if (users.length === 0) {
       throw new NotFoundException('User not found with this email address');
+    }
+
+    let user: User | undefined;
+
+    if (options?.targetUserType) {
+      user = users.find(u => this.normalizeUserType(u.user_type) === options.targetUserType);
+      if (!user) throw new NotFoundException(`No ${options.targetUserType} account found for this email.`);
+    } else {
+      if (users.length > 1) {
+        // Optimization: If multiple users, Try to find which one has the valid code?
+        // Or just throw error asking for specification?
+        // Ideally frontend passes type. If not, we could iterate tokens.
+        // Let's iterate to be friendly if type is missing but code matches one.
+        for (const u of users) {
+          const token = await this.passwordResetTokenRepository.findOne({
+            where: { user_id: u.user_id, changepasscode: code, is_used: false }
+          });
+          if (token && new Date() <= token.expiry_date) {
+            user = u;
+            break;
+          }
+        }
+        if (!user) throw new BadRequestException('Invalid or expired verification code (or ambiguous account).');
+      } else {
+        user = users[0];
+      }
     }
 
     const normalizedType = this.normalizeUserType((user as any).user_type);
 
-    // Check if user type is excluded
     if (options?.excludeUserType && normalizedType === options.excludeUserType) {
-      console.log('❌ User type excluded from password reset:', {
-        excluded: options.excludeUserType,
-        actual: normalizedType,
-      });
       throw new BadRequestException(`Password reset for ${options.excludeUserType} accounts must be done through the ${options.excludeUserType} portal.`);
     }
 
-    // Check if specific user type is required
     if (options?.requiredUserType && normalizedType !== options.requiredUserType) {
-      console.log('❌ User type mismatch for password verification:', {
-        required: options.requiredUserType,
-        actual: normalizedType,
-      });
       throw new BadRequestException('Password reset is not available for this account type.');
     }
 
-    console.log('✅ User found for verification:', {
-      user_id: user.user_id,
-      name: user.name,
-      email: user.email,
-      status: user.status,
-      user_type: normalizedType,
-    });
-
-    // Find valid token
-    console.log('Searching for token with user_id:', user.user_id, 'and code:', code);
+    console.log('✅ User id identified:', user.user_id);
 
     const token = await this.passwordResetTokenRepository.findOne({
       where: {
@@ -239,47 +249,27 @@ export class PasswordResetService {
       },
     });
 
-    console.log('Token found:', token ? {
-      id: token.id,
-      user_id: token.user_id,
-      code: token.changepasscode,
-      expiry_date: token.expiry_date,
-      is_used: token.is_used,
-      is_expired: token.expiry_date < new Date()
-    } : 'No token found');
-
     if (!token) {
-      console.log('❌ Token validation failed - No token found');
       throw new BadRequestException('Invalid or expired verification code');
     }
 
-    // Check if token is expired
     if (new Date() > token.expiry_date) {
-      console.log('❌ Token validation failed - Token expired');
       throw new BadRequestException('Verification code has expired. Please request a new one.');
     }
 
-    console.log('✅ Token validation successful');
-
     // Hash the new password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update user password
-    console.log('Updating password for user_id:', user.user_id);
-    const updateResult = await this.userRepository.update(user.user_id, {
+    await this.userRepository.update(user.user_id, {
       password: hashedPassword,
     });
-    console.log('Password update result:', updateResult);
 
     // Mark token as used
-    console.log('Marking token as used, token_id:', token.id);
-    const tokenUpdateResult = await this.passwordResetTokenRepository.update(token.id, {
+    await this.passwordResetTokenRepository.update(token.id, {
       is_used: true,
     });
-    console.log('Token update result:', tokenUpdateResult);
 
-    console.log('=== PASSWORD RESET COMPLETED SUCCESSFULLY ===');
     return {
       message: 'Password has been successfully reset. You can now log in with your new password.'
     };
