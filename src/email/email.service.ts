@@ -95,7 +95,8 @@ export class EmailService {
               <h3 style="color: #334155; margin-top: 0;">Message:</h3>
               <p style="line-height: 1.6; color: #475569;">${contactData.message.replace(/\n/g, '<br>')}</p>
             </div>
-            <div style="margin-top: 20px; padding: 15px; background-color: #f1f5f9; border-radius: 8px;">
+            <div style="margin-top: 20px; padding: 15px; background-color: #f1f5f9; border-radius: 8px; text-align: center;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #64748b; font-size: 14px;">
                 This message was sent from the TutorFriends contact form.
               </p>
@@ -137,6 +138,7 @@ export class EmailService {
               </p>
             </div>
             <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
             </div>
           </div>
@@ -174,6 +176,7 @@ export class EmailService {
               </div>
             </div>
              <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
             </div>
           </div>
@@ -237,6 +240,7 @@ export class EmailService {
               </p>
             </div>
             <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
             </div>
           </div>
@@ -282,6 +286,7 @@ export class EmailService {
               </p>
             </div>
             <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 40px; margin-bottom: 10px;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
             </div>
           </div>
