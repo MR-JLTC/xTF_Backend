@@ -93,9 +93,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     @SubscribeMessage('joinConversation')
     handleJoinRoom(@MessageBody() data: { conversationId: string }, @ConnectedSocket() client: Socket) {
-        client.join(data.conversationId);
-        console.log(`User ${client.data.user?.sub} joined room ${data.conversationId}`);
-        return { event: 'joinedRoom', data: data.conversationId };
+        const roomId = String(data.conversationId);
+        client.join(roomId);
+        console.log(`User ${client.data.user?.sub} joined room ${roomId}`);
+        return { event: 'joinedRoom', data: roomId };
     }
 
     @SubscribeMessage('sendMessage')
@@ -104,15 +105,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @ConnectedSocket() client: Socket,
     ) {
         const senderId = Number(client.data.user.sub);
-        console.log(`ChatGateway - Received sendMessage from ${senderId} for conv ${data.conversationId}`);
+        const roomName = String(data.conversationId);
+        console.log(`ChatGateway - Received sendMessage from ${senderId} for conv ${roomName}`);
         console.log(`ChatGateway - Client ${client.id} rooms:`, Array.from(client.rooms));
 
         try {
             const message = await this.chatService.sendMessage(senderId, data.conversationId, data.content);
-            console.log(`ChatGateway - Message saved: ${message.message_id}. Broadcasting to room ${data.conversationId}`);
+            console.log(`ChatGateway - Message saved: ${message.message_id}. Broadcasting to room ${roomName}`);
 
             // Emit to the conversation room
-            this.server.to(data.conversationId).emit('newMessage', message);
+            this.server.to(roomName).emit('newMessage', message);
 
             // Also explicitly notify the other participant's private user room
             const conversation = await this.chatService.getConversationById(data.conversationId);
