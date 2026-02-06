@@ -81,10 +81,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
-    handleDisconnect(client: Socket) {
+    async handleDisconnect(client: Socket) {
         const userId = client.data.user?.sub;
         if (userId) {
-            this.server.emit('user_status', { userId, status: 'offline' });
+            const lastActive = new Date();
+            await this.chatService.updateUserLastActive(Number(userId));
+            this.server.emit('user_status', { userId, status: 'offline', lastActive });
         }
         console.log(`Socket - Client disconnected: ${client.id}`);
     }

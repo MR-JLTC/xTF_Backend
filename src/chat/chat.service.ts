@@ -124,3 +124,8 @@ export class ChatService {
         });
     }
 }
+
+    async updateUserLastActive(userId: number) {
+    await this.userRepository.update({ user_id: userId }, { last_active_at: new Date() });
+}
+}

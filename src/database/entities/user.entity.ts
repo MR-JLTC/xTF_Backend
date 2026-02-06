@@ -42,6 +42,9 @@ export class User {
   @Column({ nullable: true })
   profile_image_url: string;
 
+  @Column({ nullable: true })
+  last_active_at: Date;
+
   // Removed university_id and course_id columns from User entity as they are profile-specific
 
   // Removed ManyToOne and JoinColumn for university and course as they are profile-specific
