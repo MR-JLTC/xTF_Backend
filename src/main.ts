@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
 import * as fs from 'fs';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -31,14 +32,16 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Increase body limit to 50mb
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
   // Ensure uploads folder exists and serve static files for tutor documents
   const docsDir = join(process.cwd(), 'tutor_documents');
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
   // Serve at /tutor_documents/* - configure before global prefix
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const express = require('express');
   app.use('/tutor_documents', express.static(docsDir, {
     setHeaders: (res, path) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
