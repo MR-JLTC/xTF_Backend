@@ -66,6 +66,13 @@ export class ChatService {
         return conversation;
     }
 
+    async getConversationById(conversationId: string) {
+        return this.conversationRepository.findOne({
+            where: { conversation_id: conversationId },
+            relations: ['tutor', 'tutee']
+        });
+    }
+
     async getConversations(userId: number) {
         // A user can be either the tutor or the tutee in a conversation
         return this.conversationRepository.find({

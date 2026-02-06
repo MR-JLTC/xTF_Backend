@@ -43,10 +43,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
             console.log(`Socket - User configured: ${userId} (${role})`);
 
-            // Join a room specific to this user for targeted events (like incoming call/message)
+            // Join a room specific to this user for targeted events
             client.join(`user_${userId}`);
 
-            // Update status (optional: can implement online status here)
+            // NEW: Automatically join rooms for all existing conversations for this user
+            const conversations = await this.chatService.getConversations(Number(userId));
+            conversations.forEach(conv => {
+                client.join(conv.conversation_id);
+                console.log(`Socket - User ${userId} auto-joined room ${conv.conversation_id}`);
+            });
+
+            // Update status
             this.server.emit('user_status', { userId, status: 'online' });
 
         } catch (e) {
@@ -82,8 +89,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             const message = await this.chatService.sendMessage(senderId, data.conversationId, data.content);
             console.log(`ChatGateway - Message saved: ${message.message_id}. Broadcasting to room.`);
 
-            // Emit to room (receivers)
+            // Emit to the conversation room
             this.server.to(data.conversationId).emit('newMessage', message);
+
+            // Also explicitly notify the other participant's private user room
+            const conversation = await this.chatService.getConversationById(data.conversationId);
+            if (conversation) {
+                const partnerId = conversation.tutor_id === senderId ? conversation.tutee_id : conversation.tutor_id;
+                this.server.to(`user_${partnerId}`).emit('newMessage', message);
+                console.log(`ChatGateway - Also notified partner room: user_${partnerId}`);
+            }
+
             console.log(`ChatGateway - Broadcast finished for room ${data.conversationId}`);
 
             return message;
