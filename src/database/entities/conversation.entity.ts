@@ -29,6 +29,9 @@ export class Conversation {
     last_message_content: string;
 
     @Column({ nullable: true })
+    last_message_sender_id: number;
+
+    @Column({ nullable: true })
     last_message_at: Date;
 
     @CreateDateColumn()

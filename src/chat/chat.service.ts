@@ -113,6 +113,7 @@ export class ChatService {
 
         // Update conversation last message
         conversation.last_message_content = content;
+        conversation.last_message_sender_id = senderId;
         conversation.last_message_at = new Date();
         await this.conversationRepository.save(conversation);
 
