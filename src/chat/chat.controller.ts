@@ -10,12 +10,12 @@ export class ChatController {
     @Post('conversations')
     async createConversation(@Request() req, @Body() body: { targetUserId: number }) {
         // Current user initiates
-        return this.chatService.createConversation(req.user.userId, body.targetUserId);
+        return this.chatService.createConversation(req.user.user_id, body.targetUserId);
     }
 
     @Get('conversations')
     async getConversations(@Request() req) {
-        return this.chatService.getConversations(req.user.userId);
+        return this.chatService.getConversations(req.user.user_id);
     }
 
     @Get('conversations/:conversationId/messages')
