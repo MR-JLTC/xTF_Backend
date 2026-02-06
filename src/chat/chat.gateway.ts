@@ -75,7 +75,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @MessageBody() data: { conversationId: string; content: string },
         @ConnectedSocket() client: Socket,
     ) {
-        const senderId = client.data.user.sub;
+        const senderId = Number(client.data.user.sub);
         try {
             const message = await this.chatService.sendMessage(senderId, data.conversationId, data.content);
 
