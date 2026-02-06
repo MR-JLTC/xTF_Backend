@@ -72,7 +72,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
         } catch (e) {
             console.log('Socket - Invalid token, disconnecting', e.message);
-            client.disconnect();
+            // Emit error to client before disconnecting so they know WHY
+            client.emit('auth_error', { message: e.message || 'Unauthorized' });
+            // Small delay to ensure packet is sent
+            setTimeout(() => {
+                client.disconnect();
+            }, 500);
         }
     }
 
