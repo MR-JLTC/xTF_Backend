@@ -49,8 +49,7 @@ export class TutorsController {
   }
 
   // Public apply endpoint to create a user+tutor (pending)
-  @Post('apply')
-  async applyTutor(@Body() body: { email: string; password: string; university_id: number; course_id?: number; course_name?: string; name?: string; bio?: string }) {
+  async applyTutor(@Body() body: { email: string; password: string; university_id: number; course_id?: number; course_name?: string; name?: string; bio?: string; year_level?: string; gcash_number?: string; session_rate_per_hour?: number }) {
     return this.tutorsService.applyTutor(body);
   }
 

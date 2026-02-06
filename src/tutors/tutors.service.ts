@@ -368,7 +368,7 @@ export class TutorsService {
     return { success: true };
   }
 
-  async applyTutor(data: { email: string; password: string; university_id: number; course_id?: number; course_name?: string; name?: string; bio?: string; year_level?: string; gcash_number?: string }): Promise<{ success: true; user_id: number; tutor_id: number }> {
+  async applyTutor(data: { email: string; password: string; university_id: number; course_id?: number; course_name?: string; name?: string; bio?: string; year_level?: string; gcash_number?: string; session_rate_per_hour?: number }): Promise<{ success: true; user_id: number; tutor_id: number }> {
     const existing = await this.usersRepository.findOne({ where: { email: data.email } });
     if (existing) {
       throw new Error('Email already registered');
@@ -419,6 +419,7 @@ export class TutorsService {
       gcash_qr_url: `/tutor_documents/gcashQR_${savedUser.user_id}`,
       year_level: Number(data.year_level) || undefined,
       gcash_number: data.gcash_number || '',
+      session_rate_per_hour: data.session_rate_per_hour,
       ...(universityEntity && { university: universityEntity, university_id: universityEntity.university_id }),
       ...(courseEntity && { course: courseEntity, course_id: courseEntity.course_id }),
     });
@@ -444,6 +445,7 @@ export class TutorsService {
   }
 
   async saveDocuments(tutorId: number, files: any[]) {
+    console.log(`[TutorsService] saveDocuments called for tutorId: ${tutorId} with ${files?.length || 0} files`);
     const tutor = await this.tutorsRepository.findOne({ where: { tutor_id: tutorId } });
     if (!tutor) throw new Error('Tutor not found');
     const toSave = files.map((f) => this.documentsRepository.create({
@@ -521,6 +523,7 @@ export class TutorsService {
   }
 
   async saveAvailability(tutorIdOrUserId: number, slots: { day_of_week: string; start_time: string; end_time: string }[]) {
+    console.log(`[TutorsService] saveAvailability called for ID: ${tutorIdOrUserId} with ${slots?.length || 0} slots`);
     // Accept either tutor_id or user_id for flexibility (dashboard passes user_id)
     let tutor = await this.tutorsRepository.findOne({ where: { tutor_id: tutorIdOrUserId }, relations: ['user'] });
     if (!tutor) {
