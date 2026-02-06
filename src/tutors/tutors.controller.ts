@@ -63,6 +63,7 @@ export class TutorsController {
   @Post(':tutorId/documents')
   @UseInterceptors(FilesInterceptor('files', 10))
   async uploadDocuments(@Param('tutorId') tutorId: string, @UploadedFiles() files: Array<any>) {
+    console.log(`[TutorsController] uploadDocuments hit for tutorId: ${tutorId}, files: ${files?.length || 0}`);
     // Determine starting sequence from existing files in Supabase
     const existingFiles = await this.supabaseService.listFiles('tutor_documents', `tutorDocs`);
     // Filter specifically for this tutor's docs to be safe, though search prefix helps
@@ -97,6 +98,7 @@ export class TutorsController {
   @Post(':tutorId/profile-image')
   @UseInterceptors(FileInterceptor('file'))
   async uploadProfileImage(@Param('tutorId') tutorId: string, @UploadedFile() file: any) {
+    console.log(`[TutorsController] uploadProfileImage hit for tutorId: ${tutorId}, file: ${file?.originalname}`);
     const ext = path.extname(file.originalname) || '';
     const tempFilename = `temp_profile_${tutorId}_${Date.now()}${ext}`;
 
@@ -116,11 +118,13 @@ export class TutorsController {
 
   @Post(':tutorId/availability')
   async saveAvailability(@Param('tutorId') tutorId: string, @Body() body: { slots: { day_of_week: string; start_time: string; end_time: string }[] }) {
+    console.log(`[TutorsController] saveAvailability hit for tutorId: ${tutorId}, slots: ${body?.slots?.length}`);
     return this.tutorsService.saveAvailability(+tutorId, body.slots);
   }
 
   @Post(':tutorId/subjects')
   async saveSubjects(@Param('tutorId') tutorId: string, @Body() body: { subjects: string[]; course_id?: number }) {
+    console.log(`[TutorsController] saveSubjects hit for tutorId: ${tutorId}, subjects: ${body?.subjects}, course_id: ${body?.course_id}`);
     return this.tutorsService.saveSubjects(+tutorId, body.subjects, body.course_id);
   }
 
@@ -207,6 +211,7 @@ export class TutorsController {
     @Body() body: any,
     @UploadedFiles() files?: Array<any>
   ) {
+    console.log(`[TutorsController] submitSubjectApplication hit for tutorId: ${tutorId}`);
     // FormData fields are available in req.body when using multer
     const subjectName = body?.subject_name || body?.subjectName || '';
     const isReapplication = body?.is_reapplication === 'true' || body?.is_reapplication === true;
@@ -357,6 +362,7 @@ export class TutorsController {
   @Post(':tutorId/gcash-qr')
   @UseInterceptors(FileInterceptor('file'))
   async uploadGcashQR(@Param('tutorId') tutorId: string, @UploadedFile() file: any) {
+    console.log(`[TutorsController] uploadGcashQR hit for tutorId: ${tutorId}`);
     const ext = path.extname(file.originalname) || '';
     const tempFilename = `temp_gcash_${tutorId}_${Date.now()}${ext}`;
 
@@ -375,12 +381,14 @@ export class TutorsController {
   // Set placeholder profile image when no file is uploaded
   @Post(':tutorId/profile-image-placeholder')
   async setProfileImagePlaceholder(@Param('tutorId') tutorId: string) {
+    console.log(`[TutorsController] setProfileImagePlaceholder hit for tutorId: ${tutorId}`);
     return this.tutorsService.saveProfileImage(+tutorId, null);
   }
 
   // Set placeholder GCash QR when no file is uploaded
   @Post(':tutorId/gcash-qr-placeholder')
   async setGcashQRPlaceholder(@Param('tutorId') tutorId: string) {
+    console.log(`[TutorsController] setGcashQRPlaceholder hit for tutorId: ${tutorId}`);
     return this.tutorsService.saveGcashQR(+tutorId, null);
   }
 }

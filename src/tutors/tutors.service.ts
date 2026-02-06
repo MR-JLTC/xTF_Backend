@@ -459,6 +459,7 @@ export class TutorsService {
   }
 
   async saveProfileImage(tutorId: number, file: any) {
+    console.log(`[TutorsService] saveProfileImage called for tutorId: ${tutorId}, file provided: ${!!file}`);
     // First try to find tutor by tutor_id, if not found, try by user_id
     let tutor = await this.tutorsRepository.findOne({ where: { tutor_id: tutorId }, relations: ['user'] });
     if (!tutor) {
@@ -492,6 +493,7 @@ export class TutorsService {
   }
 
   async saveGcashQR(tutorId: number, file: any) {
+    console.log(`[TutorsService] saveGcashQR called for tutorId: ${tutorId}, file provided: ${!!file}`);
     // First try to find tutor by tutor_id, if not found, try by user_id
     let tutor = await this.tutorsRepository.findOne({ where: { tutor_id: tutorId }, relations: ['user'] });
     if (!tutor) {
