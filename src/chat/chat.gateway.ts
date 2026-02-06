@@ -37,7 +37,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     ) { }
 
     async handleConnection(client: Socket) {
-        console.log(`\n=== Socket - New Connection Attempt: ${client.id} ===`);
+        const BUILD_ID = '2026-02-06-1805';
+        console.log(`\n=== Socket - [Build ${BUILD_ID}] Connection Attempt: ${client.id} ===`);
         try {
             const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
             console.log('Socket - Handshake Auth Token Present:', !!token);
