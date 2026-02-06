@@ -34,6 +34,7 @@ export class UsersController {
       status: u.status,
       created_at: u.created_at,
       role: u.admin_profile ? 'admin' : (u.tutor_profile ? 'tutor' : 'student'),
+      last_active_at: u.last_active_at, // Exposed for Chat Last Seen feature
       tutor_profile: u.tutor_profile ? {
         tutor_id: u.tutor_profile.tutor_id,
         status: u.tutor_profile.status,
