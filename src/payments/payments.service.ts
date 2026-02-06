@@ -24,7 +24,7 @@ export class PaymentsService {
     private notificationRepository: Repository<Notification>,
     @InjectRepository(Subject)
     private subjectRepository: Repository<Subject>,
-  ) {}
+  ) { }
 
   findAll(): Promise<Payment[]> {
     return this.paymentsRepository.find({
@@ -308,7 +308,7 @@ export class PaymentsService {
       where: { user: { user_id: studentUser.user_id } },
       relations: ['user']
     } as any);
-    
+
     if (!student) {
       // Create a Student record if it doesn't exist
       // The Student entity has a OneToOne relationship with User via user_id
@@ -321,7 +321,7 @@ export class PaymentsService {
     }
 
     const fileUrl = `/tutor_documents/${file.filename}`;
-    
+
     // Get subject_id from subject name if needed
     let subjectId: number | null = null;
     if ((booking as any).subject) {
@@ -427,7 +427,7 @@ export class PaymentsService {
   }
 
   async verifyPayment(id: number, status: 'confirmed' | 'rejected', adminProofFile?: any, rejectionReason?: string) {
-    const payment = await this.paymentsRepository.findOne({ 
+    const payment = await this.paymentsRepository.findOne({
       where: { payment_id: id },
       relations: ['tutor', 'tutor.user', 'student', 'student.user', 'bookingRequest']
     });
@@ -437,6 +437,15 @@ export class PaymentsService {
       (payment as any).status = 'confirmed';
     } else {
       (payment as any).status = 'refunded'; // Use 'refunded' instead of 'rejected' for rejected payments
+    }
+
+    if (adminProofFile) {
+      const fileUrl = `/tutor_documents/${adminProofFile.filename}`;
+      (payment as any).admin_payment_proof_url = fileUrl;
+    }
+
+    if (rejectionReason) {
+      (payment as any).rejection_reason = rejectionReason;
     }
 
     await this.paymentsRepository.save(payment);
@@ -540,7 +549,7 @@ export class PaymentsService {
   }
 
   async confirmByTutor(id: number, tutorUserId: number) {
-    const payment = await this.paymentsRepository.findOne({ 
+    const payment = await this.paymentsRepository.findOne({
       where: { payment_id: id },
       relations: ['tutor', 'tutor.user', 'student', 'student.user']
     });

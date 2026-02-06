@@ -42,6 +42,12 @@ export class Payment {
   @Column({ type: 'text', nullable: true })
   payment_proof_url?: string;
 
+  @Column({ type: 'text', nullable: true })
+  admin_payment_proof_url?: string;
+
+  @Column({ type: 'text', nullable: true })
+  rejection_reason?: string;
+
   @CreateDateColumn()
   created_at: Date;
 
