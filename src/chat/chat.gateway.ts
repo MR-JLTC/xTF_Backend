@@ -14,8 +14,18 @@ import { UseGuards } from '@nestjs/common';
 
 @WebSocketGateway({
     cors: {
-        origin: '*', // Adjust production CORS later
+        origin: [
+            'http://localhost:3001',
+            'http://192.168.41.24:3001',
+            'https://tutorfriends.online',
+            'https://www.tutorfriends.online',
+            'https://tutorfriends.onrender.com',
+            'https://xtf-backend-1.onrender.com'
+        ],
+        credentials: true,
+        methods: ['GET', 'POST'],
     },
+    transports: ['websocket', 'polling'], // Explicitly allow both
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
@@ -27,8 +37,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     ) { }
 
     async handleConnection(client: Socket) {
+        console.log(`\n=== Socket - New Connection Attempt: ${client.id} ===`);
         try {
             const token = client.handshake.auth.token || client.handshake.headers.authorization?.split(' ')[1];
+            console.log('Socket - Handshake Auth Token Present:', !!token);
+
             if (!token) {
                 console.log('Socket - No token provided, disconnecting');
                 client.disconnect();
