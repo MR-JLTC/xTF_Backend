@@ -20,3 +20,5 @@ export * from './password-reset-token.entity';
 export * from './email-verification-registry.entity';
 export * from './notification.entity';
 export * from './reschedule.entity';
+export * from './conversation.entity';
+export * from './message.entity';

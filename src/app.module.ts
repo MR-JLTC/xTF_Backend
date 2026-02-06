@@ -17,6 +17,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ReschedulesModule } from './reschedules/reschedules.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { DebugController } from './debug/debug.controller';
+import { ChatModule } from './chat/chat.module';
 
 @Controller()
 export class AppController {
@@ -67,6 +68,7 @@ export class AppController {
     NotificationsModule,
     ReschedulesModule,
     SupabaseModule,
+    ChatModule,
   ],
   controllers: [AppController, DebugController],
   providers: [],
