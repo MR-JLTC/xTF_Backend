@@ -83,11 +83,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @ConnectedSocket() client: Socket,
     ) {
         const senderId = Number(client.data.user.sub);
-        console.log(`ChatGateway - Received sendMessage from ${senderId} for conv ${data.conversationId}: ${data.content.substring(0, 20)}...`);
+        console.log(`ChatGateway - Received sendMessage from ${senderId} for conv ${data.conversationId}`);
+        console.log(`ChatGateway - Client ${client.id} rooms:`, Array.from(client.rooms));
 
         try {
             const message = await this.chatService.sendMessage(senderId, data.conversationId, data.content);
-            console.log(`ChatGateway - Message saved: ${message.message_id}. Broadcasting to room.`);
+            console.log(`ChatGateway - Message saved: ${message.message_id}. Broadcasting to room ${data.conversationId}`);
 
             // Emit to the conversation room
             this.server.to(data.conversationId).emit('newMessage', message);
@@ -95,12 +96,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             // Also explicitly notify the other participant's private user room
             const conversation = await this.chatService.getConversationById(data.conversationId);
             if (conversation) {
-                const partnerId = conversation.tutor_id === senderId ? conversation.tutee_id : conversation.tutor_id;
-                this.server.to(`user_${partnerId}`).emit('newMessage', message);
-                console.log(`ChatGateway - Also notified partner room: user_${partnerId}`);
-            }
+                const partnerId = Number(conversation.tutor_id) === Number(senderId)
+                    ? Number(conversation.tutee_id)
+                    : Number(conversation.tutor_id);
 
-            console.log(`ChatGateway - Broadcast finished for room ${data.conversationId}`);
+                console.log(`ChatGateway - Detected partnerId: ${partnerId} (Sender: ${senderId})`);
+                this.server.to(`user_${partnerId}`).emit('newMessage', message);
+                console.log(`ChatGateway - Explicitly notified partner room: user_${partnerId}`);
+            }
 
             return message;
         } catch (error) {
