@@ -25,7 +25,7 @@ import { UseGuards } from '@nestjs/common';
         credentials: true,
         methods: ['GET', 'POST'],
     },
-    transports: ['websocket', 'polling'], // Explicitly allow both
+    transports: ['websocket'], // Force WebSocket to avoid polling issues on Render
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
