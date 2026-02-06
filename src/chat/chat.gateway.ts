@@ -76,11 +76,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         @ConnectedSocket() client: Socket,
     ) {
         const senderId = Number(client.data.user.sub);
+        console.log(`ChatGateway - Received sendMessage from ${senderId} for conv ${data.conversationId}: ${data.content.substring(0, 20)}...`);
+
         try {
             const message = await this.chatService.sendMessage(senderId, data.conversationId, data.content);
+            console.log(`ChatGateway - Message saved: ${message.message_id}. Broadcasting to room.`);
 
             // Emit to room (receivers)
             this.server.to(data.conversationId).emit('newMessage', message);
+            console.log(`ChatGateway - Broadcast finished for room ${data.conversationId}`);
 
             return message;
         } catch (error) {
