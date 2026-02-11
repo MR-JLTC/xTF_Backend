@@ -70,6 +70,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             // Update status
             this.server.emit('user_status', { userId, status: 'online' });
 
+            // **NEW: Mark pending messages as DELIVERED**
+            const deliveredMessages = await this.chatService.markMessagesAsDelivered(Number(userId));
+            if (deliveredMessages.length > 0) {
+                console.log(`Socket - Marked ${deliveredMessages.length} messages as delivered for user ${userId}`);
+                // Notify senders that their messages were delivered
+                // We need to group by sender to emit efficiently, or just emit to each message's sender
+                deliveredMessages.forEach(msg => {
+                    this.server.to(`user_${msg.sender_id}`).emit('messageStatusUpdate', {
+                        messageId: msg.message_id,
+                        conversationId: msg.conversation_id,
+                        status: 'delivered'
+                    });
+                });
+            }
+
         } catch (e) {
             console.log('Socket - Invalid token, disconnecting', e.message);
             // Emit error to client before disconnecting so they know WHY
@@ -107,31 +122,75 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const senderId = Number(client.data.user.sub);
         const roomName = String(data.conversationId);
         console.log(`ChatGateway - Received sendMessage from ${senderId} for conv ${roomName}`);
-        console.log(`ChatGateway - Client ${client.id} rooms:`, Array.from(client.rooms));
 
         try {
-            const message = await this.chatService.sendMessage(senderId, data.conversationId, data.content);
-            console.log(`ChatGateway - Message saved: ${message.message_id}. Broadcasting to room ${roomName}`);
+            // Determine Partner ID to check online status
+            const conversation = await this.chatService.getConversationById(data.conversationId);
+            if (!conversation) throw new Error('Conversation not found');
+
+            const partnerId = Number(conversation.tutor_id) === Number(senderId)
+                ? Number(conversation.tutee_id)
+                : Number(conversation.tutor_id);
+
+            // Check if partner is online (in their personal room)
+            // Note: This check relies on the partner being joined to 'user_{partnerId}' which we do in handleConnection
+            const isPartnerOnline = this.server.sockets.adapter.rooms.get(`user_${partnerId}`)?.size > 0;
+            const initialStatus = isPartnerOnline ? 'delivered' : 'sent';
+
+            const message = await this.chatService.sendMessage(senderId, data.conversationId, data.content, initialStatus);
+            console.log(`ChatGateway - Message saved: ${message.message_id} (${initialStatus}). Broadcasting...`);
 
             // Emit to the conversation room
             this.server.to(roomName).emit('newMessage', message);
 
             // Also explicitly notify the other participant's private user room
-            const conversation = await this.chatService.getConversationById(data.conversationId);
             if (conversation) {
-                const partnerId = Number(conversation.tutor_id) === Number(senderId)
-                    ? Number(conversation.tutee_id)
-                    : Number(conversation.tutor_id);
-
-                console.log(`ChatGateway - Detected partnerId: ${partnerId} (Sender: ${senderId})`);
                 this.server.to(`user_${partnerId}`).emit('newMessage', message);
-                console.log(`ChatGateway - Explicitly notified partner room: user_${partnerId}`);
             }
 
             return message;
         } catch (error) {
             console.error('SendMessage error:', error);
             return { error: error.message };
+        }
+    }
+
+    @SubscribeMessage('markSeen')
+    async handleMarkSeen(
+        @MessageBody() data: { conversationId: string },
+        @ConnectedSocket() client: Socket,
+    ) {
+        const userId = Number(client.data.user.sub);
+        const conversationId = data.conversationId;
+        console.log(`ChatGateway - Marking messages seen for conv ${conversationId} by user ${userId}`);
+
+        const seenMessages = await this.chatService.markMessagesAsSeen(conversationId, userId);
+
+        if (seenMessages.length > 0) {
+            // Notify the SENDER of these messages that they have been seen
+            // The sender of these messages is the OTHER person in the conversation
+            // We can iterate or just emit to the conversation room (but filter out self?)
+            // Or emit to the specific user room of the message sender.
+
+            // Since all these messages likely belong to the partner, we can just find one message and get sender_id,
+            // or just broadcast to the conversation room "messagesSeen" event.
+
+            // Broadcasting to conversation room is easiest for real-time update on both ends
+            this.server.to(conversationId).emit('messagesSeen', {
+                conversationId,
+                messageIds: seenMessages.map(m => m.message_id),
+                seenBy: userId,
+                seenAt: new Date()
+            });
+
+            // Also notify the specific partner room if they are not in the conversation room for some reason (e.g. browsing list)
+            const partnerId = seenMessages[0].sender_id; // Sender of the message is the one who needs to know it's seen
+            this.server.to(`user_${partnerId}`).emit('messagesSeen', {
+                conversationId,
+                messageIds: seenMessages.map(m => m.message_id),
+                seenBy: userId,
+                seenAt: new Date()
+            });
         }
     }
 

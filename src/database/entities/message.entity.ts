@@ -27,6 +27,9 @@ export class Message {
     @Column({ default: false })
     is_read: boolean;
 
+    @Column({ default: 'sent' }) // sent, delivered, seen
+    status: string;
+
     @CreateDateColumn()
     created_at: Date;
 }
