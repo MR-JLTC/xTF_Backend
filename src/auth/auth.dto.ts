@@ -20,7 +20,7 @@ export class RegisterDto {
 
   @IsOptional()
   @IsString()
-  user_type?: 'tutor' | 'tutee' | 'admin';
+  user_type?: 'tutor' | 'tutee' | 'admin' | 'student';
 
   @IsOptional()
   @IsInt()

@@ -273,6 +273,15 @@ export class AuthService {
     // Normalize email to lowercase
     registerDto.email = registerDto.email.toLowerCase();
 
+    // Capture the original user type for verification checking later
+    // Frontend verifies as 'tutee', so we must check verification as 'tutee'
+    const verificationUserType = registerDto.user_type;
+
+    // Normalize user_type: frontend sends 'tutee', backend uses 'student'
+    if (registerDto.user_type === 'tutee') {
+      registerDto.user_type = 'student';
+    }
+
     // Check if user with same email and user_type already exists
     const existingUserWithType = await this.usersService.findOneByEmailAndType(registerDto.email, registerDto.user_type);
     if (existingUserWithType) {
@@ -280,7 +289,9 @@ export class AuthService {
     }
 
     // Check if email has been verified for the given user type
-    const emailVerificationStatus = await this.emailVerificationService.getEmailVerificationStatus(registerDto.email, registerDto.user_type);
+    // Use the ORIGINAL user type (verificationUserType) because the verification entry
+    // was created with 'tutee' (from frontend), not 'student'.
+    const emailVerificationStatus = await this.emailVerificationService.getEmailVerificationStatus(registerDto.email, verificationUserType as 'tutor' | 'tutee' | 'admin');
     console.log('Email verification status:', emailVerificationStatus);
 
     if (!emailVerificationStatus.is_verified) {
@@ -298,7 +309,7 @@ export class AuthService {
     let user;
     if (registerDto.user_type === 'admin') {
       user = await this.usersService.createAdmin({ ...registerDto, password: hashedPassword });
-    } else if (registerDto.user_type === 'tutee') {
+    } else if (registerDto.user_type === 'student') {
       user = await this.usersService.createStudent({ ...registerDto, password: hashedPassword });
     } else if (registerDto.user_type === 'tutor') {
       user = await this.usersService.createTutor({ ...registerDto, password: hashedPassword });
