@@ -118,7 +118,7 @@ export class UsersService {
 
   async findOneByEmail(email: string): Promise<User | undefined> {
     return this.usersRepository.findOne({
-      where: { email },
+      where: { email: ILike(email) },
       relations: [
         'student_profile',
         'student_profile.university',
@@ -134,7 +134,7 @@ export class UsersService {
 
   async findOneByEmailAndType(email: string, user_type: string): Promise<User | undefined> {
     return this.usersRepository.findOne({
-      where: { email, user_type: user_type as any },
+      where: { email: ILike(email), user_type: user_type as any },
       relations: [
         'student_profile',
         'student_profile.university',
@@ -184,7 +184,7 @@ export class UsersService {
 
     const newUser = this.usersRepository.create({
       name: registerDto.name,
-      email: registerDto.email,
+      email: registerDto.email.toLowerCase(),
       password: registerDto.password,
       user_type: 'admin',
       status: 'active',
@@ -369,7 +369,7 @@ export class UsersService {
       throw new Error('User not found');
     }
     if (body.name !== undefined) user.name = body.name;
-    if (body.email !== undefined) user.email = body.email as any;
+    if (body.email !== undefined) user.email = body.email.toLowerCase();
     if (body.status !== undefined) (user as any).status = body.status;
     if (body.year_level !== undefined) (user as any).year_level = body.year_level as any;
     if (body.university_id !== undefined) (user as any).university_id = body.university_id as any;
@@ -412,7 +412,7 @@ export class UsersService {
 
     const user = this.usersRepository.create({
       name: body.name,
-      email: body.email,
+      email: body.email.toLowerCase(),
       password: body.password, // Use the already hashed password
       user_type: 'student', // Changed from 'tutee' to 'student' for consistency
       status: 'active', // Assuming registration only happens after email is verified
@@ -469,7 +469,7 @@ export class UsersService {
 
     const user = this.usersRepository.create({
       name: body.name,
-      email: body.email,
+      email: body.email.toLowerCase(),
       password: body.password, // Use the already hashed password
       user_type: 'tutor',
       status: 'active',

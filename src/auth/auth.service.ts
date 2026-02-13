@@ -18,12 +18,20 @@ export class AuthService {
   ) { }
 
   async validateUser(email: string, pass: string, targetUserType?: string): Promise<any> {
+    const lowerEmail = email.toLowerCase();
+
     console.log('\n=== VALIDATE USER DEBUG ===');
-    console.log('Email:', email);
-    console.log('Target User Type hint:', targetUserType);
+    console.log('Email:', lowerEmail);
+    console.log('Target Type:', targetUserType);
+
+    // Normalize target user type
+    let normalizedTargetType = targetUserType;
+    if (targetUserType === 'tutee' || targetUserType === 'student') {
+      normalizedTargetType = 'student'; // Backend uses 'student' for tutees
+    }
 
     // Find all users with this email (can have multiple if user has different roles)
-    const users = await this.usersService.findAllByEmail(email);
+    const users = await this.usersService.findAllByEmail(lowerEmail);
     console.log('Users found in database:', users.length);
 
     if (users.length === 0) {
@@ -261,6 +269,9 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     console.log('=== REGISTRATION DEBUG ===');
     console.log('Register DTO:', registerDto);
+
+    // Normalize email to lowercase
+    registerDto.email = registerDto.email.toLowerCase();
 
     // Check if user with same email and user_type already exists
     const existingUserWithType = await this.usersService.findOneByEmailAndType(registerDto.email, registerDto.user_type);
