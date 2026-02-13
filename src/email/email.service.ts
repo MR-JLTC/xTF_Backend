@@ -300,4 +300,41 @@ export class EmailService {
       return false;
     }
   }
+
+  async sendRegistrationNotification(userData: {
+    name: string;
+    email: string;
+    userType: string;
+  }): Promise<boolean> {
+    try {
+      const mailOptions = {
+        to: 'jactechnologies7@gmail.com',
+        subject: 'New User Registration Alert',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #3b82f6; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 24px;">New Registration</h1>
+            </div>
+            <div style="padding: 30px; background-color: white;">
+              <p style="font-size: 16px; color: #374151;">A new user has successfully registered on TutorFriends.</p>
+              
+              <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 10px 0;"><strong>Name:</strong> ${userData.name}</p>
+                <p style="margin: 10px 0;"><strong>Email:</strong> ${userData.email}</p>
+                <p style="margin: 10px 0;"><strong>Account Type:</strong> <span style="text-transform: capitalize;">${userData.userType}</span></p>
+              </div>
+
+              <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+                This is an automated notification from the TutorFriends platform.
+              </p>
+            </div>
+          </div>
+        `,
+      };
+      return await this.sendEmail(mailOptions);
+    } catch (error) {
+      console.error('Failed to send registration notification email:', error);
+      return false;
+    }
+  }
 }

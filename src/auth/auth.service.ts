@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { LoginDto, RegisterDto } from './auth.dto';
 import { EmailVerificationService } from './email-verification.service';
 import { TutorsService } from '../tutors/tutors.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,7 @@ export class AuthService {
     private jwtService: JwtService,
     private emailVerificationService: EmailVerificationService,
     private tutorsService: TutorsService,
+    private emailService: EmailService,
   ) { }
 
   async validateUser(email: string, pass: string, targetUserType?: string): Promise<any> {
@@ -301,6 +303,14 @@ export class AuthService {
 
     console.log('JWT Payload:', payload);
     console.log('Access Token generated:', !!accessToken);
+
+    // Send notification to admin
+    this.emailService.sendRegistrationNotification({
+      name: user.name,
+      email: user.email,
+      userType: user.user_type,
+    }).catch(err => console.error('Failed to send admin notification:', err));
+
     console.log('=== END REGISTRATION DEBUG ===');
 
     return {
