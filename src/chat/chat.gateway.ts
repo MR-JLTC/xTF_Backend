@@ -114,6 +114,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return { event: 'joinedRoom', data: roomId };
     }
 
+    @SubscribeMessage('ping_online_users')
+    handlePingOnlineUsers(@MessageBody() data: { userIds: number[] }, @ConnectedSocket() client: Socket) {
+        if (!data.userIds || !Array.isArray(data.userIds)) return [];
+
+        // Find which of the requested users are currently online based on their room
+        const online = data.userIds.filter(id => {
+            const room = this.server.sockets.adapter.rooms.get(`user_${id}`);
+            return room && room.size > 0;
+        });
+
+        console.log(`ChatGateway - User ${client.data.user?.sub} requested online status for ${data.userIds.length} users. ${online.length} are online.`);
+        return online;
+    }
+
     @SubscribeMessage('sendMessage')
     async handleMessage(
         @MessageBody() data: { conversationId: string; content: string },
