@@ -13,7 +13,6 @@ async function bootstrap() {
   //1 allowed origin disabled 'https://tutorfriends.onrender.com',
   const defaultAllowedOrigins = [
     'http://localhost:3001',
-    'http://192.168.41.24:3001',
     'https://tutorfriends.online',
     'https://www.tutorfriends.online',
     'https://tutorfriends.onrender.com',
