@@ -58,7 +58,7 @@ export class AppController {
     }),
     ThrottlerModule.forRoot([{
       ttl: 60000,
-      limit: 15,
+      limit: 200,
     }]),
     ScheduleModule.forRoot(),
     AuthModule,
