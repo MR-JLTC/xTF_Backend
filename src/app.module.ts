@@ -1,5 +1,6 @@
 import { Module, Controller, Get } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
@@ -54,6 +55,10 @@ export class AppController {
         ? { ssl: { rejectUnauthorized: false } }
         : {},
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 15,
+    }]),
     ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,

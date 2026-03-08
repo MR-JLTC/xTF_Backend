@@ -28,10 +28,11 @@ import { EmailModule } from '../email/email.module';
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'SECRET_KEY_REPLACE_IN_PROD',
-      signOptions: { expiresIn: '1d' },
+      signOptions: { expiresIn: '1d', algorithm: 'HS256' },
+      verifyOptions: { algorithms: ['HS256'] },
     }),
   ],
   controllers: [AuthController, PasswordResetController, ChangePasswordController, TestPasswordResetController, EmailVerificationController],
   providers: [AuthService, PasswordResetService, ChangePasswordService, EmailVerificationService, JwtStrategy],
 })
-export class AuthModule {}
+export class AuthModule { }

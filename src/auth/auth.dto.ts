@@ -1,8 +1,9 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsInt, IsOptional, IsNumber } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsInt, IsOptional, IsNumber, Matches } from 'class-validator';
 
 export class RegisterDto {
   @IsNotEmpty()
   @IsString()
+  @Matches(/^[^<>]*$/, { message: 'Name must not contain HTML tags like < or >.' })
   name: string;
 
   @IsNotEmpty()
