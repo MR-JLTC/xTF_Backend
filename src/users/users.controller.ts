@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, Delete, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, UseGuards, Delete, Post, UploadedFile, UseInterceptors, NotFoundException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as path from 'path';
 import { UsersService } from './users.service';
@@ -205,5 +205,15 @@ export class UsersController {
     const publicUrl = await this.supabaseService.uploadFile('admin_qr', filename, file.buffer, file.mimetype);
 
     return this.usersService.updateAdminQr(userId, publicUrl);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const user = await this.usersService.findOneById(+id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const { password, ...result } = user as any;
+    return result;
   }
 }
