@@ -69,7 +69,7 @@ export class UsersController {
   @Patch(':id')
   async updateUser(
     @Param('id') id: string,
-    @Body() body: { name?: string; email?: string; status?: 'active' | 'inactive'; year_level?: number; university_id?: number; profile_image_url?: string },
+    @Body() body: { name?: string; email?: string; status?: 'active' | 'inactive'; year_level?: number; university_id?: number; profile_image_url?: string; course_id?: number; course_name?: string },
   ) {
     return this.usersService.updateUser(+id, body);
   }

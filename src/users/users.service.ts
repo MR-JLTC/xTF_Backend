@@ -363,7 +363,7 @@ export class UsersService {
     return { success: true };
   }
 
-  async updateUser(userId: number, body: { name?: string; email?: string; status?: 'active' | 'inactive'; year_level?: number; university_id?: number; profile_image_url?: string }): Promise<User> {
+  async updateUser(userId: number, body: { name?: string; email?: string; status?: 'active' | 'inactive'; year_level?: number; university_id?: number; profile_image_url?: string; course_id?: number; course_name?: string }): Promise<User> {
     const user = await this.findOneById(userId);
     if (!user) {
       throw new Error('User not found');
@@ -371,10 +371,62 @@ export class UsersService {
     if (body.name !== undefined) user.name = body.name;
     if (body.email !== undefined) user.email = body.email.toLowerCase();
     if (body.status !== undefined) (user as any).status = body.status;
-    if (body.year_level !== undefined) (user as any).year_level = body.year_level as any;
-    if (body.university_id !== undefined) (user as any).university_id = body.university_id as any;
     if (body.profile_image_url !== undefined) user.profile_image_url = body.profile_image_url;
-    return this.usersRepository.save(user);
+    
+    await this.usersRepository.save(user);
+
+    const updateProfile = async (profile: any, repo: any) => {
+      let changed = false;
+      if (body.year_level !== undefined) {
+        profile.year_level = body.year_level;
+        changed = true;
+      }
+      if (body.university_id !== undefined) {
+        const uni = await this.universitiesRepository.findOne({ where: { university_id: body.university_id } });
+        if (uni) {
+           profile.university = uni;
+           profile.university_id = uni.university_id;
+           changed = true;
+        }
+      }
+      
+      let resolvedCourseId = body.course_id ?? null;
+      if (!resolvedCourseId && body.course_name && body.course_name.trim().length > 0 && profile.university_id) {
+        const existingCourse = await this.coursesRepository.findOne({ where: { course_name: body.course_name.trim(), university: { university_id: profile.university_id } } });
+        if (existingCourse) {
+          resolvedCourseId = existingCourse.course_id;
+        } else {
+          const uni = await this.universitiesRepository.findOne({ where: { university_id: profile.university_id } });
+          if (uni) {
+            const newCourse = this.coursesRepository.create({ course_name: body.course_name.trim(), university: uni });
+            const savedCourse = await this.coursesRepository.save(newCourse);
+            resolvedCourseId = savedCourse.course_id;
+          }
+        }
+      }
+
+      if (resolvedCourseId !== null) {
+        const course = await this.coursesRepository.findOne({ where: { course_id: resolvedCourseId } });
+        if (course) {
+          profile.course = course;
+          profile.course_id = course.course_id;
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        await repo.save(profile);
+      }
+    };
+
+    if (user.student_profile) {
+      await updateProfile(user.student_profile, this.studentRepository);
+    }
+    if (user.tutor_profile) {
+      await updateProfile(user.tutor_profile, this.tutorRepository);
+    }
+
+    return this.findOneById(userId) as unknown as User;
   }
 
   async deleteUser(userId: number): Promise<{ success: true }> {
