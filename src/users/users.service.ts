@@ -308,7 +308,21 @@ export class UsersService {
       university_id: admin.university_id || null,
       university_name: admin.university?.name || null,
       qr_code_url: admin.qr_code_url || null,
+      gcash_number: admin.gcash_number || null,
     };
+  }
+
+  async updateAdminGcashNumber(userId: number, gcashNumber: string) {
+    const admin = await this.adminRepository.findOne({
+      where: { user: { user_id: userId } },
+      relations: ['user']
+    });
+    if (!admin) {
+      throw new BadRequestException('Admin not found');
+    }
+    (admin as any).gcash_number = gcashNumber;
+    await this.adminRepository.save(admin);
+    return { success: true, gcash_number: gcashNumber };
   }
 
   async updateAdminQr(userId: number, qrUrl: string) {

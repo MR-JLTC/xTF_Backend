@@ -66,6 +66,12 @@ export class UsersController {
     return this.usersService.resetPassword(+id, body.newPassword);
   }
 
+  // Update Admin GCash number
+  @Patch(':id/admin-gcash-number')
+  async updateAdminGcashNumber(@Param('id') id: string, @Body() body: { gcash_number: string }) {
+    return this.usersService.updateAdminGcashNumber(+id, body.gcash_number);
+  }
+
   @Patch(':id')
   async updateUser(
     @Param('id') id: string,
