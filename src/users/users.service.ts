@@ -324,7 +324,7 @@ export class UsersService {
     return { success: true, qr_code_url: qrUrl };
   }
 
-  async getAdminsWithQr(): Promise<Array<{ user_id: number; name: string; qr_code_url: string }>> {
+  async getAdminsWithQr(): Promise<Array<{ user_id: number; name: string; qr_code_url: string; gcash_number?: string }>> {
     const admins = await this.adminRepository.find({ relations: ['user'] });
     return admins
       .filter((a: any) => !!a.qr_code_url)
@@ -332,6 +332,7 @@ export class UsersService {
         user_id: a.user?.user_id,
         name: a.user?.name,
         qr_code_url: a.qr_code_url,
+        gcash_number: a.gcash_number,
       }));
   }
 
@@ -372,7 +373,7 @@ export class UsersService {
     if (body.email !== undefined) user.email = body.email.toLowerCase();
     if (body.status !== undefined) (user as any).status = body.status;
     if (body.profile_image_url !== undefined) user.profile_image_url = body.profile_image_url;
-    
+
     await this.usersRepository.save(user);
 
     const updateProfile = async (profile: any, repo: any) => {
@@ -384,12 +385,12 @@ export class UsersService {
       if (body.university_id !== undefined) {
         const uni = await this.universitiesRepository.findOne({ where: { university_id: body.university_id } });
         if (uni) {
-           profile.university = uni;
-           profile.university_id = uni.university_id;
-           changed = true;
+          profile.university = uni;
+          profile.university_id = uni.university_id;
+          changed = true;
         }
       }
-      
+
       let resolvedCourseId = body.course_id ?? null;
       if (!resolvedCourseId && body.course_name && body.course_name.trim().length > 0 && profile.university_id) {
         const existingCourse = await this.coursesRepository.findOne({ where: { course_name: body.course_name.trim(), university: { university_id: profile.university_id } } });

@@ -20,4 +20,7 @@ export class Admin {
 
   @Column({ type: 'text', nullable: true })
   qr_code_url?: string;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  gcash_number?: string;
 }
