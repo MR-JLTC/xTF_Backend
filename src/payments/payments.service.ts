@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Payment, Payout } from '../database/entities';
 import { BookingRequest, Tutor, User, Student, Notification, Subject } from '../database/entities';
 import { UpdatePaymentDisputeDto } from './payment.dto';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class PaymentsService {
@@ -24,6 +25,7 @@ export class PaymentsService {
     private notificationRepository: Repository<Notification>,
     @InjectRepository(Subject)
     private subjectRepository: Repository<Subject>,
+    private emailService: EmailService,
   ) { }
 
   findAll(): Promise<Payment[]> {
