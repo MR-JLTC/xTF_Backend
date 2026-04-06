@@ -425,6 +425,37 @@ export class PaymentsService {
       console.warn('submitProof: Failed to notify admins of payment submission', e);
     }
 
+    // Send email notification to admin about pending tutee payment approval
+    try {
+      const studentName = (booking as any)?.student?.name || studentUser?.name || 'A student';
+      const subjectName = (booking as any).subject || 'a session';
+      await this.emailService.sendEmail({
+        to: 'jactechnologies7@gmail.com',
+        subject: '🔔 New Pending Tutee Payment Approval - TutorFriends',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 22px;">📋 Pending Payment Approval</h1>
+            </div>
+            <div style="background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px;">
+              <p style="color: #334155; font-size: 16px; margin-bottom: 16px;">
+                A new payment proof has been submitted and is awaiting your review in <strong>Tutee Payments (Pending/Paid/Confirmed)</strong>.
+              </p>
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <p style="margin: 4px 0; color: #475569;"><strong>Student:</strong> ${studentName}</p>
+                <p style="margin: 4px 0; color: #475569;"><strong>Subject:</strong> ${subjectName}</p>
+                <p style="margin: 4px 0; color: #475569;"><strong>Amount:</strong> ₱${Number(amount).toFixed(2)}</p>
+              </div>
+              <p style="color: #64748b; font-size: 14px;">Please log in to the admin dashboard to review and confirm or reject this payment.</p>
+            </div>
+          </div>
+        `,
+      });
+      console.log('submitProof: Sent email notification to admin for pending tutee payment');
+    } catch (e) {
+      console.warn('submitProof: Failed to send email notification to admin', e);
+    }
+
     return { success: true, payment_id: savedId, booking_id: (booking as any).id };
   }
 
@@ -720,6 +751,41 @@ export class PaymentsService {
         }
       } catch (e) {
         console.warn('requestPayment: Failed to notify admins', e);
+      }
+
+      // Send email notification to admin about completed session waiting for payment
+      try {
+        const tutorName = tutor.user?.name || 'A tutor';
+        const bookingSubjectName = subject || (booking as any).subject || 'a session';
+        const sessionRate = Number((tutor as any)?.session_rate_per_hour || 0);
+        const sessionDuration = Number(booking.duration || 0);
+        const sessionAmount = sessionRate * sessionDuration;
+        await this.emailService.sendEmail({
+          to: 'jactechnologies7@gmail.com',
+          subject: '🔔 Completed Session Waiting for Payment - TutorFriends',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 22px;">⏳ Completed Session Awaiting Payment</h1>
+              </div>
+              <div style="background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px;">
+                <p style="color: #334155; font-size: 16px; margin-bottom: 16px;">
+                  A completed session is now waiting for admin payment in <strong>Completed Sessions Waiting for Payment</strong>.
+                </p>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                  <p style="margin: 4px 0; color: #475569;"><strong>Tutor:</strong> ${tutorName}</p>
+                  <p style="margin: 4px 0; color: #475569;"><strong>Subject:</strong> ${bookingSubjectName}</p>
+                  <p style="margin: 4px 0; color: #475569;"><strong>Amount:</strong> ₱${sessionAmount.toFixed(2)}</p>
+                  <p style="margin: 4px 0; color: #475569;"><strong>Net Payout (87%):</strong> ₱${(sessionAmount * 0.87).toFixed(2)}</p>
+                </div>
+                <p style="color: #64748b; font-size: 14px;">Please log in to the admin dashboard to process the tutor payout.</p>
+              </div>
+            </div>
+          `,
+        });
+        console.log('requestPayment: Sent email notification to admin for completed session waiting for payment');
+      } catch (e) {
+        console.warn('requestPayment: Failed to send email notification to admin', e);
       }
 
       return { success: true, payment_id: savedId, booking_id: (booking as any).id };
