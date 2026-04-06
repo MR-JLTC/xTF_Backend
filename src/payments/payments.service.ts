@@ -247,7 +247,7 @@ export class PaymentsService {
     }
 
     // Save receipt file and get URL
-    const receiptUrl = `/tutor_documents/${receipt.filename}`;
+    const receiptUrl = `/tutor_documents/payment_proofs/${receipt.filename}`;
 
     // Calculate amount to release (87% of payment amount after 13% platform fee)
     const amountReleased = Number((Number(payment.amount) * 0.87).toFixed(2));
@@ -322,7 +322,7 @@ export class PaymentsService {
       console.log(`submitProof: Created new Student record with student_id=${(student as any).student_id} for user_id=${studentUser.user_id}`);
     }
 
-    const fileUrl = `/tutor_documents/${file.filename}`;
+    const fileUrl = `/tutor_documents/payment_proofs/${file.filename}`;
 
     // Get subject_id from subject name if needed
     let subjectId: number | null = null;
@@ -473,7 +473,7 @@ export class PaymentsService {
     }
 
     if (adminProofFile) {
-      const fileUrl = `/tutor_documents/${adminProofFile.filename}`;
+      const fileUrl = `/tutor_documents/payment_proofs/${adminProofFile.filename}`;
       (payment as any).admin_payment_proof_url = fileUrl;
     }
 
