@@ -50,14 +50,37 @@ async function bootstrap() {
   }));
 
   // Fallback redirect for missing tutor documents (files uploaded to Supabase but path stored as local)
-  app.use('/tutor_documents/*', (req, res, next) => {
-    const filePath = req.params[0]; // captures everything after /tutor_documents/
+  app.use('/tutor_documents/:filename', (req, res, next) => {
+    const filename = req.params.filename;
     const supabaseUrl = process.env.SUPABASE_URL || 'https://lvoimpgeoslbfnlaudci.supabase.co'; // Fallback to known Supabase URL if env missing
-    if (filePath && supabaseUrl) {
-      // Construct Supabase public storage URL (supports nested paths like payment_proofs/file.jpg)
-      const bucketName = process.env.SUPABASE_BUCKET || 'tutorfriends-uploads';
-      const redirectUrl = `${supabaseUrl}/storage/v1/object/public/${bucketName}/tutor_documents/${filePath}`;
-      // console.log(`Redirecting missing local file ${filePath} to ${redirectUrl}`);
+    if (filename && supabaseUrl) {
+      // Construct Supabase public storage URL
+      const redirectUrl = `${supabaseUrl}/storage/v1/object/public/tutor_documents/${filename}`;
+      // console.log(`Redirecting missing local file ${filename} to ${redirectUrl}`);
+      return res.redirect(redirectUrl);
+    }
+    next();
+  });
+
+  // Ensure payment_proofs folder exists and serve static files for payment proofs
+  const paymentProofsDir = join(process.cwd(), 'payment_proofs');
+  if (!fs.existsSync(paymentProofsDir)) {
+    fs.mkdirSync(paymentProofsDir, { recursive: true });
+  }
+  app.use('/payment_proofs', express.static(paymentProofsDir, {
+    setHeaders: (res, path) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    }
+  }));
+
+  // Fallback redirect for missing payment proofs (files uploaded to Supabase but path stored as local)
+  app.use('/payment_proofs/:filename', (req, res, next) => {
+    const filename = req.params.filename;
+    const supabaseUrl = process.env.SUPABASE_URL || 'https://lvoimpgeoslbfnlaudci.supabase.co';
+    if (filename && supabaseUrl) {
+      const redirectUrl = `${supabaseUrl}/storage/v1/object/public/payment_proofs/${filename}`;
       return res.redirect(redirectUrl);
     }
     next();

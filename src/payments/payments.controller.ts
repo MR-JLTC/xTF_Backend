@@ -46,12 +46,12 @@ export class PaymentsController {
     const ext = path.extname(file.originalname) || '.jpg';
     const filename = `paymentProof_${Date.now()}${ext}`;
 
-    const publicUrl = await this.supabaseService.uploadFile('tutor_documents/payment_proofs', filename, file.buffer, file.mimetype);
+    const publicUrl = await this.supabaseService.uploadFile('payment_proofs', filename, file.buffer, file.mimetype);
 
     const fileForService = {
       ...file,
       filename: filename,
-      destination: 'tutor_documents/payment_proofs',
+      destination: 'payment_proofs',
       path: publicUrl,
     };
 
@@ -72,12 +72,12 @@ export class PaymentsController {
         const filename = `adminPaymentProof_${Date.now()}${ext}`;
         console.log(`PaymentsController.verifyPayment: Uploading adminProof to Supabase as ${filename}`);
 
-        await this.supabaseService.uploadFile('tutor_documents/payment_proofs', filename, adminProof.buffer, adminProof.mimetype);
+        await this.supabaseService.uploadFile('payment_proofs', filename, adminProof.buffer, adminProof.mimetype);
 
         fileForService = {
           ...adminProof,
           filename: filename,
-          destination: 'tutor_documents/payment_proofs',
+          destination: 'payment_proofs',
         };
       } else {
         console.log('PaymentsController.verifyPayment: No adminProof file received in request');
@@ -121,12 +121,12 @@ export class PaymentsController {
     const ext = path.extname(receipt.originalname) || '.jpg';
     const filename = `adminPaymentReceipt_${Date.now()}${ext}`;
 
-    await this.supabaseService.uploadFile('tutor_documents/payment_proofs', filename, receipt.buffer, receipt.mimetype);
+    await this.supabaseService.uploadFile('payment_proofs', filename, receipt.buffer, receipt.mimetype);
 
     const fileForService = {
       ...receipt,
       filename: filename,
-      destination: 'tutor_documents/payment_proofs',
+      destination: 'payment_proofs',
     };
 
     return this.paymentsService.processAdminPayment(+bookingId, fileForService);
