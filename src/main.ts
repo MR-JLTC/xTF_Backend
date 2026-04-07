@@ -16,7 +16,7 @@ async function bootstrap() {
     'https://tutorfriends.online',
     'https://www.tutorfriends.online',
     'https://tutorfriends.onrender.com',
-    'https://xtf-backend-1.onrender.com'
+    'https://xtf-backend-ett0.onrender.com'
   ];
 
   const allowedOrigins = process.env.FRONTEND_URL
