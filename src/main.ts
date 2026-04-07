@@ -52,10 +52,17 @@ async function bootstrap() {
   // Fallback redirect for missing tutor documents (files uploaded to Supabase but path stored as local)
   const supabaseBucket = process.env.SUPABASE_BUCKET || 'tutorfriends-uploads';
   const supabaseFallbackUrl = process.env.SUPABASE_URL || 'https://lvoimpgeoslbfnlaudci.supabase.co';
-  app.use('/tutor_documents/:filename', (req, res, next) => {
-    const filename = req.params.filename;
-    if (filename && supabaseFallbackUrl) {
-      const redirectUrl = `${supabaseFallbackUrl}/storage/v1/object/public/${supabaseBucket}/tutor_documents/${filename}`;
+  app.use('/tutor_documents', (req: any, res: any, next: any) => {
+    if (req.method !== 'GET') return next();
+    const filePath = req.path.replace(/^\//, '');
+    if (filePath && supabaseFallbackUrl) {
+      // Nested payment_proofs path: redirect to payment_proofs folder in Supabase
+      if (filePath.startsWith('payment_proofs/')) {
+        const redirectUrl = `${supabaseFallbackUrl}/storage/v1/object/public/${supabaseBucket}/${filePath}`;
+        return res.redirect(redirectUrl);
+      }
+      // Regular tutor document
+      const redirectUrl = `${supabaseFallbackUrl}/storage/v1/object/public/${supabaseBucket}/tutor_documents/${filePath}`;
       return res.redirect(redirectUrl);
     }
     next();
