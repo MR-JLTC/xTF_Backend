@@ -6,6 +6,7 @@ import { Between, In, Repository, ILike } from 'typeorm';
 import { User, Admin, Tutor, Course, University, Student, Notification, BookingRequest, Session, Subject } from '../database/entities';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SupabaseService } from '../supabase/supabase.service';
+import { EmailService } from '../email/email.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from '../auth/auth.dto';
@@ -36,6 +37,7 @@ export class UsersService {
     private subjectRepository: Repository<Subject>,
     private notificationsService: NotificationsService,
     private readonly supabaseService: SupabaseService,
+    private readonly emailService: EmailService,
   ) { }
 
   async findAll(): Promise<User[]> {
@@ -280,6 +282,39 @@ export class UsersService {
       }
     } catch (e) {
       console.warn('confirmBookingCompletion: failed to notify tutor', e);
+    }
+
+    // Send email notification to admin about newly completed session waiting for payout
+    try {
+      const tutorName = (booking.tutor as any)?.user?.name || 'A tutor';
+      const sessionRate = Number((booking.tutor as any)?.session_rate_per_hour || 0);
+      const sessionDuration = Number(booking.duration || 0);
+      const sessionAmount = sessionRate * sessionDuration;
+      await this.emailService.sendEmail({
+        to: 'jactechnologies7@gmail.com',
+        subject: '🔔 Completed Session Waiting for Payment - TutorFriends',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 22px;">⏳ Completed Session Awaiting Payment</h1>
+            </div>
+            <div style="background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px;">
+              <p style="color: #334155; font-size: 16px; margin-bottom: 16px;">
+                A student has confirmed session completion. This booking now appears in <strong>Completed Sessions Waiting for Payment</strong>.
+              </p>
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                <p style="margin: 4px 0; color: #475569;"><strong>Tutor:</strong> ${tutorName}</p>
+                <p style="margin: 4px 0; color: #475569;"><strong>Subject:</strong> ${booking.subject || 'N/A'}</p>
+                <p style="margin: 4px 0; color: #475569;"><strong>Amount:</strong> ₱${sessionAmount.toFixed(2)}</p>
+                <p style="margin: 4px 0; color: #475569;"><strong>Net Payout (87%):</strong> ₱${(sessionAmount * 0.87).toFixed(2)}</p>
+              </div>
+              <p style="color: #64748b; font-size: 14px;">Please log in to the admin dashboard to process the tutor payout.</p>
+            </div>
+          </div>
+        `,
+      });
+    } catch (e) {
+      console.warn('confirmBookingCompletion: Failed to send email notification to admin', e);
     }
 
     return { success: true };
