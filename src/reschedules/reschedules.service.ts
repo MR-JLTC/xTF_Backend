@@ -44,7 +44,6 @@ export class ReschedulesService {
     const res = this.rescheduleRepo.create({
       booking: booking as any,
       proposer_user_id: userId,
-      proposer: proposer || undefined,
       proposedDate: new Date(dto.proposedDate),
       proposedTime: dto.proposedTime,
       proposedDuration: dto.proposedDuration,
