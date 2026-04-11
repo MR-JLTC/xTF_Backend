@@ -106,9 +106,9 @@ export class PaymentsService {
 
           // Only include bookings that are:
           // 1. admin_payment_pending (need payment), OR
-          // 2. completed with released payout (to show release proof)
-          if (booking.status !== 'admin_payment_pending' && payoutStatus !== 'released') {
-            continue; // Skip bookings that are completed but don't have released payout
+          // 2. completed (tutee confirmed session — needs admin payout, or already released)
+          if (booking.status !== 'admin_payment_pending' && booking.status !== 'completed') {
+            continue;
           }
 
           // Get tutor_id safely
@@ -150,6 +150,7 @@ export class PaymentsService {
               user_id: studentUser?.user_id || null,
               name: studentUser?.name || 'Unknown',
             },
+            status: booking.status || null,
             subject: booking.subject || null,
             date: booking.date || null,
             time: booking.time || null,
