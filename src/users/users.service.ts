@@ -295,8 +295,8 @@ export class UsersService {
         subject: '🔔 Completed Session Waiting for Payment - TutorFriends',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 22px;">⏳ Completed Session Awaiting Payment</h1>
+            <div style="background: linear-gradient(135deg, #4481e2, #3b82f6); padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 22px;">Pending Payout</h1>
             </div>
             <div style="background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px;">
               <p style="color: #334155; font-size: 16px; margin-bottom: 16px;">
