@@ -794,7 +794,7 @@ export class UsersService {
       duration: b.duration,
       status: b.status,
       created_at: b.created_at,
-      tutor_id: (b as any).tutor_id ?? b.tutor?.tutor_id,
+      tutor_id: b.tutor_id ?? b.tutor?.tutor_id,
       tutor_name: b.tutor?.user?.name,
       student_name: b.student?.name
     }));

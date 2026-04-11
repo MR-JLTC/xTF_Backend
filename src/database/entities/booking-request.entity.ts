@@ -8,6 +8,9 @@ export class BookingRequest {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ name: 'tutor_id', nullable: true, insert: false, update: false })
+  tutor_id: number;
+
   @ManyToOne(() => Tutor, tutor => tutor.bookingRequests)
   @JoinColumn({ name: 'tutor_id' })
   tutor: Tutor;
