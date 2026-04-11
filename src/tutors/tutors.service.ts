@@ -1585,6 +1585,43 @@ export class TutorsService {
       console.warn('Failed to create completion notification:', e);
     }
 
+    // Send email to tutee notifying them to confirm the session
+    try {
+      const tuteeEmail = (request.student as any).email;
+      const tuteeName = (request.student as any).name || 'Student';
+      const tutorName = (request.tutor as any)?.user?.name || 'Your tutor';
+      const sessionDate = new Date(request.date).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+      if (tuteeEmail) {
+        await this.emailService.sendEmail({
+          to: tuteeEmail,
+          subject: '✅ Session Completion — Please Confirm Your Session',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #0651ed, #3b82f6); padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 22px;">Session Awaiting Your Confirmation</h1>
+              </div>
+              <div style="background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px;">
+                <p style="color: #334155; font-size: 16px; margin-bottom: 16px;">
+                  Hi <strong>${tuteeName}</strong>, your tutor <strong>${tutorName}</strong> has marked your session as completed and uploaded a session proof.
+                </p>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                  <p style="margin: 4px 0; color: #475569;"><strong>Subject:</strong> ${request.subject || 'N/A'}</p>
+                  <p style="margin: 4px 0; color: #475569;"><strong>Date:</strong> ${sessionDate}</p>
+                  <p style="margin: 4px 0; color: #475569;"><strong>Duration:</strong> ${request.duration || 'N/A'} hour(s)</p>
+                </div>
+                <p style="color: #334155; font-size: 15px; margin-bottom: 12px;">
+                  Please log in to <strong>TutorFriends</strong> and confirm that the session took place so the tutor can receive their payout.
+                </p>
+                <p style="color: #64748b; font-size: 13px;">If you did not attend this session, please contact support.</p>
+              </div>
+            </div>
+          `,
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to send awaiting_confirmation email to tutee:', e);
+    }
+
     return { success: true };
   }
 
