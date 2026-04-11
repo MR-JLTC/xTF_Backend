@@ -1473,6 +1473,25 @@ export class TutorsService {
     console.log(`updateBookingRequestStatus: Notification ID=${savedNotification.notification_id}, userId=${savedNotification.userId}, userType=${savedNotification.userType}`);
     console.log(`updateBookingRequestStatus: Message=${notificationMessage.substring(0, 100)}...`);
 
+    // Send booking approval email to the tutee
+    if (status === 'accepted') {
+      try {
+        await this.emailService.sendBookingApprovalEmail({
+          tuteeName: (student as any).name || 'Student',
+          tuteeEmail: (student as any).email,
+          tutorName,
+          subject: request.subject,
+          date: formattedDate,
+          time: request.time,
+          duration,
+          totalAmount,
+        });
+        console.log(`updateBookingRequestStatus: Booking approval email sent to ${(student as any).email}`);
+      } catch (emailErr) {
+        console.error('updateBookingRequestStatus: Failed to send booking approval email', emailErr);
+      }
+    }
+
     // Also create a notification for the tutor about the accepted booking (separate, tutor-scoped)
     if (status === 'accepted') {
       const tutorNotification = this.notificationRepository.create({

@@ -301,6 +301,67 @@ export class EmailService {
     }
   }
 
+  async sendBookingApprovalEmail(data: {
+    tuteeName: string;
+    tuteeEmail: string;
+    tutorName: string;
+    subject: string;
+    date: string;
+    time: string;
+    duration: number;
+    totalAmount: number;
+  }): Promise<boolean> {
+    try {
+      const durationLabel = data.duration === 1 ? '1 hour' : `${data.duration} hours`;
+      const mailOptions = {
+        to: data.tuteeEmail,
+        subject: '✅ Booking Approved — Please Proceed to Payment',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #0ea5e9; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 80px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Booking Approved!</h1>
+              <p style="color: #e0f2fe; margin: 8px 0 0 0; font-size: 16px;">Your session is confirmed — complete payment to secure your slot</p>
+            </div>
+            <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 20px;">Hello ${data.tuteeName},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px;">
+                Great news! <strong>${data.tutorName}</strong> has approved your tutoring session. Please complete the payment to confirm your booking.
+              </p>
+              <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                <h3 style="color: #0369a1; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Session Details</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 15px; color: #334155;">
+                  <tr><td style="padding: 6px 0; color: #64748b;">Tutor</td><td style="padding: 6px 0; font-weight: 600;">${data.tutorName}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Subject</td><td style="padding: 6px 0; font-weight: 600;">${data.subject}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Date</td><td style="padding: 6px 0; font-weight: 600;">${data.date}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Time</td><td style="padding: 6px 0; font-weight: 600;">${data.time}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Duration</td><td style="padding: 6px 0; font-weight: 600;">${durationLabel}</td></tr>
+                  <tr style="border-top: 1px solid #bae6fd;">
+                    <td style="padding: 10px 0 6px 0; color: #0369a1; font-weight: 700; font-size: 16px;">Amount Due</td>
+                    <td style="padding: 10px 0 6px 0; font-weight: 700; font-size: 18px; color: #0369a1;">₱${data.totalAmount.toFixed(2)}</td>
+                  </tr>
+                </table>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://tutorfriends.online/tutee-dashboard/payment" style="background-color: #0ea5e9; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">Pay Now</a>
+              </div>
+              <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 0;">
+                Please complete the payment as soon as possible to secure your session slot.
+              </p>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      };
+      return await this.sendEmail(mailOptions);
+    } catch (error) {
+      console.error('Failed to send booking approval email:', error);
+      return false;
+    }
+  }
+
   async sendRegistrationNotification(userData: {
     name: string;
     email: string;
