@@ -807,6 +807,27 @@ export class TutorsService {
       // Don't throw - booking succeeded; but log for debugging and continue
     }
 
+    // Send email to tutor about the new booking request
+    const tutorEmail = (tutor.user as any)?.email;
+    if (tutorEmail) {
+      const bookingDate = new Date(data.date);
+      const formattedDate = bookingDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      try {
+        await this.emailService.sendNewBookingRequestEmail({
+          tutorName: (tutor.user as any)?.name || 'Tutor',
+          tutorEmail,
+          tuteeName: studentUserName,
+          subject: data.subject,
+          date: formattedDate,
+          time: data.time,
+          duration: Number(data.duration),
+        });
+        console.log(`createBookingRequest: New booking request email sent to tutor ${tutorEmail}`);
+      } catch (emailErr) {
+        console.error('createBookingRequest: Failed to send new booking request email to tutor', emailErr);
+      }
+    }
+
     return { success: true, bookingId: (saved as any).id };
   }
 
@@ -1489,6 +1510,44 @@ export class TutorsService {
         console.log(`updateBookingRequestStatus: Booking approval email sent to ${(student as any).email}`);
       } catch (emailErr) {
         console.error('updateBookingRequestStatus: Failed to send booking approval email', emailErr);
+      }
+    }
+
+    // Send decline email to the tutee
+    if (status === 'declined') {
+      try {
+        await this.emailService.sendBookingDeclinedEmail({
+          tuteeName: (student as any).name || 'Student',
+          tuteeEmail: (student as any).email,
+          tutorName,
+          subject: request.subject,
+          date: formattedDate,
+          time: request.time,
+          duration,
+        });
+        console.log(`updateBookingRequestStatus: Booking declined email sent to ${(student as any).email}`);
+      } catch (emailErr) {
+        console.error('updateBookingRequestStatus: Failed to send booking declined email', emailErr);
+      }
+    }
+
+    // Send confirmation email to the tutor about their accept/decline action
+    const tutorUserEmail = (tutor.user as any)?.email;
+    if (tutorUserEmail) {
+      try {
+        await this.emailService.sendBookingActionConfirmationEmail({
+          tutorName,
+          tutorEmail: tutorUserEmail,
+          tuteeName: (student as any).name || 'Student',
+          subject: request.subject,
+          date: formattedDate,
+          time: request.time,
+          duration,
+          action: status === 'accepted' ? 'approved' : 'declined',
+        });
+        console.log(`updateBookingRequestStatus: Booking action confirmation email sent to tutor ${tutorUserEmail}`);
+      } catch (emailErr) {
+        console.error('updateBookingRequestStatus: Failed to send booking action confirmation email to tutor', emailErr);
       }
     }
 

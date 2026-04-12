@@ -521,6 +521,185 @@ export class EmailService {
     }
   }
 
+  async sendNewBookingRequestEmail(data: {
+    tutorName: string;
+    tutorEmail: string;
+    tuteeName: string;
+    subject: string;
+    date: string;
+    time: string;
+    duration: number;
+  }): Promise<boolean> {
+    try {
+      const durationLabel = data.duration === 1 ? '1 hour' : `${data.duration} hours`;
+      const mailOptions = {
+        to: data.tutorEmail,
+        subject: '📩 New Booking Request — Action Required',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #6366f1; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 80px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">New Booking Request!</h1>
+              <p style="color: #e0e7ff; margin: 8px 0 0 0; font-size: 16px;">A student wants to book a session with you</p>
+            </div>
+            <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 20px;">Hello ${data.tutorName},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px;">
+                <strong>${data.tuteeName}</strong> has submitted a booking request for a tutoring session. Please review and approve or decline it at your earliest convenience.
+              </p>
+              <div style="background-color: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                <h3 style="color: #4338ca; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">📋 Booking Details</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 15px; color: #334155;">
+                  <tr><td style="padding: 6px 0; color: #64748b; width: 40%;">Student</td><td style="padding: 6px 0; font-weight: 600;">${data.tuteeName}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Subject</td><td style="padding: 6px 0; font-weight: 600;">${data.subject}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Date</td><td style="padding: 6px 0; font-weight: 600;">${data.date}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Time</td><td style="padding: 6px 0; font-weight: 600;">${data.time}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Duration</td><td style="padding: 6px 0; font-weight: 600;">${durationLabel}</td></tr>
+                </table>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://tutorfriends.online/tutor-dashboard/sessions" style="background-color: #6366f1; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">Review Request</a>
+              </div>
+              <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 0;">
+                Log in to your TutorFriends dashboard to approve or decline this request.
+              </p>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      };
+      return await this.sendEmail(mailOptions);
+    } catch (error) {
+      console.error('Failed to send new booking request email:', error);
+      return false;
+    }
+  }
+
+  async sendBookingDeclinedEmail(data: {
+    tuteeName: string;
+    tuteeEmail: string;
+    tutorName: string;
+    subject: string;
+    date: string;
+    time: string;
+    duration: number;
+  }): Promise<boolean> {
+    try {
+      const durationLabel = data.duration === 1 ? '1 hour' : `${data.duration} hours`;
+      const mailOptions = {
+        to: data.tuteeEmail,
+        subject: '❌ Booking Request Declined',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #ef4444; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 80px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Booking Declined</h1>
+              <p style="color: #fee2e2; margin: 8px 0 0 0; font-size: 16px;">Your session request was not accepted</p>
+            </div>
+            <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 20px;">Hello ${data.tuteeName},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px;">
+                We're sorry to inform you that <strong>${data.tutorName}</strong> has declined your booking request for the session below. You can browse other available tutors and try booking again.
+              </p>
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                <h3 style="color: #991b1b; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Declined Session Details</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 15px; color: #334155;">
+                  <tr><td style="padding: 6px 0; color: #64748b; width: 40%;">Tutor</td><td style="padding: 6px 0; font-weight: 600;">${data.tutorName}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Subject</td><td style="padding: 6px 0; font-weight: 600;">${data.subject}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Date</td><td style="padding: 6px 0; font-weight: 600;">${data.date}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Time</td><td style="padding: 6px 0; font-weight: 600;">${data.time}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Duration</td><td style="padding: 6px 0; font-weight: 600;">${durationLabel}</td></tr>
+                </table>
+              </div>
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; border-radius: 8px; padding: 16px; margin: 0 0 24px 0;">
+                <p style="color: #991b1b; font-size: 14px; margin: 0; line-height: 1.6;">
+                  The tutor may be unavailable or fully booked. Please try booking another tutor for the same subject.
+                </p>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://tutorfriends.online/tutee-dashboard/find-tutor" style="background-color: #0ea5e9; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">Find Another Tutor</a>
+              </div>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      };
+      return await this.sendEmail(mailOptions);
+    } catch (error) {
+      console.error('Failed to send booking declined email:', error);
+      return false;
+    }
+  }
+
+  async sendBookingActionConfirmationEmail(data: {
+    tutorName: string;
+    tutorEmail: string;
+    tuteeName: string;
+    subject: string;
+    date: string;
+    time: string;
+    duration: number;
+    action: 'approved' | 'declined';
+  }): Promise<boolean> {
+    try {
+      const durationLabel = data.duration === 1 ? '1 hour' : `${data.duration} hours`;
+      const isApproved = data.action === 'approved';
+      const headerColor = isApproved ? '#10b981' : '#ef4444';
+      const actionLabel = isApproved ? 'Approved' : 'Declined';
+      const actionEmoji = isApproved ? '✅' : '❌';
+      const bodyBg = isApproved ? '#ecfdf5' : '#fef2f2';
+      const bodyBorder = isApproved ? '#6ee7b7' : '#fecaca';
+      const labelColor = isApproved ? '#065f46' : '#991b1b';
+      const subText = isApproved
+        ? 'The student will be notified to proceed with payment.'
+        : 'The student has been notified of the decision.';
+      const mailOptions = {
+        to: data.tutorEmail,
+        subject: `${actionEmoji} Booking ${actionLabel} — ${data.subject}`,
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: ${headerColor}; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 80px; margin-bottom: 15px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Booking ${actionLabel}</h1>
+              <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0 0; font-size: 16px;">${subText}</p>
+            </div>
+            <div style="background-color: white; padding: 40px; border-radius: 0 0 8px 8px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 20px;">Hello ${data.tutorName},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px;">
+                This is a confirmation that you have <strong>${actionLabel.toLowerCase()}</strong> the booking request from <strong>${data.tuteeName}</strong> for the session below.
+              </p>
+              <div style="background-color: ${bodyBg}; border: 1px solid ${bodyBorder}; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                <h3 style="color: ${labelColor}; margin: 0 0 16px 0; font-size: 16px; font-weight: 600;">Session Details</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 15px; color: #334155;">
+                  <tr><td style="padding: 6px 0; color: #64748b; width: 40%;">Student</td><td style="padding: 6px 0; font-weight: 600;">${data.tuteeName}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Subject</td><td style="padding: 6px 0; font-weight: 600;">${data.subject}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Date</td><td style="padding: 6px 0; font-weight: 600;">${data.date}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Time</td><td style="padding: 6px 0; font-weight: 600;">${data.time}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #64748b;">Duration</td><td style="padding: 6px 0; font-weight: 600;">${durationLabel}</td></tr>
+                  <tr style="border-top: 1px solid ${bodyBorder};"><td style="padding: 10px 0 6px 0; color: ${labelColor}; font-weight: 700;">Status</td><td style="padding: 10px 0 6px 0; font-weight: 700; color: ${labelColor};">${actionLabel}</td></tr>
+                </table>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="https://tutorfriends.online/tutor-dashboard/sessions" style="background-color: ${headerColor}; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">View Dashboard</a>
+              </div>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      };
+      return await this.sendEmail(mailOptions);
+    } catch (error) {
+      console.error('Failed to send booking action confirmation email:', error);
+      return false;
+    }
+  }
+
   async sendRegistrationNotification(userData: {
     name: string;
     email: string;
