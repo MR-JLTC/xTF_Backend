@@ -30,15 +30,14 @@ export class ReschedulesService {
 
     const proposer = await this.userRepo.findOne({ where: { user_id: userId } });
 
-    // Record original booking values so we can revert if needed
+    // Record original values so we can revert on rejection
     const originalDate = booking.date;
     const originalTime = booking.time;
     const originalDuration = booking.duration;
+    const originalBookingStatus = booking.status;
 
-    // Immediately apply the proposed date/time/duration to the booking
-    booking.date = new Date(dto.proposedDate);
-    booking.time = dto.proposedTime;
-    if (dto.proposedDuration) booking.duration = dto.proposedDuration;
+    // Mark the booking as awaiting reschedule confirmation — do NOT change date/time yet
+    booking.status = 'reschedule_confirmation' as any;
     await this.bookingRepo.save(booking as any);
 
     const res = this.rescheduleRepo.create({
@@ -53,6 +52,7 @@ export class ReschedulesService {
       originalDate: originalDate,
       originalTime: originalTime,
       originalDuration: originalDuration,
+      originalBookingStatus,
     });
 
     const saved = await this.rescheduleRepo.save(res);
@@ -101,16 +101,25 @@ export class ReschedulesService {
     if (res.receiver_user_id !== userId) throw new ForbiddenException('Only the receiver can accept this proposal');
 
 
-    // Booking was already updated at proposal time. Accept simply confirms the proposal.
+    // Apply proposed date/time/duration to the booking now that it's approved
+    const booking = await this.bookingRepo.findOne({ where: { id: res.booking.id } });
+    if (booking) {
+      booking.date = new Date(res.proposedDate);
+      booking.time = res.proposedTime;
+      if (res.proposedDuration) booking.duration = Number(res.proposedDuration);
+      booking.status = 'reschedule_approved' as any;
+      await this.bookingRepo.save(booking as any);
+    }
+
     res.status = 'accepted';
     await this.rescheduleRepo.save(res as any);
 
     // Notify proposer that receiver accepted
     const proposerUser = await this.userRepo.findOne({ where: { user_id: res.proposer_user_id } });
     const receiverUser = await this.userRepo.findOne({ where: { user_id: userId } });
-    const booking = await this.bookingRepo.findOne({ where: { id: res.booking.id } });
     const subjectName = booking?.subject || 'Session';
-    const message = `${receiverUser?.name || 'User'} accepted the reschedule to ${res.proposedDate.toISOString().split('T')[0]} ${res.proposedTime}`;
+    const proposedDateStr = new Date(res.proposedDate).toISOString().split('T')[0];
+    const message = `${receiverUser?.name || 'User'} approved the reschedule to ${proposedDateStr} ${res.proposedTime}${res.reason ? ` — ${res.reason}` : ''}`;
 
     try {
       await this.notificationRepo.save(this.notificationRepo.create({
@@ -127,7 +136,7 @@ export class ReschedulesService {
       console.error('Accept notification failed (non-fatal):', notifErr?.message || notifErr);
     }
 
-    return { success: true, data: res };
+    return { success: true, data: { ...res, booking } };
   }
 
   async reject(userId: number, rescheduleId: number) {
@@ -138,23 +147,20 @@ export class ReschedulesService {
     // Only receiver may reject
     if (res.receiver_user_id !== userId) throw new ForbiddenException('Only the receiver can reject this proposal');
 
-    // Revert booking to original values if available
+    // Revert booking status to what it was before the proposal (date/time were never changed)
     const booking = await this.bookingRepo.findOne({ where: { id: res.booking.id } });
-    if (booking && (res.originalDate || res.originalTime || res.originalDuration)) {
-      if (res.originalDate) booking.date = res.originalDate;
-      if (res.originalTime) booking.time = res.originalTime;
-      if (res.originalDuration) booking.duration = res.originalDuration;
+    if (booking) {
+      booking.status = (res.originalBookingStatus || 'upcoming') as any;
       await this.bookingRepo.save(booking as any);
     }
 
     res.status = 'rejected';
     await this.rescheduleRepo.save(res as any);
 
-    // Notify proposer that the proposal was rejected and booking reverted
-    const proposerUser = await this.userRepo.findOne({ where: { user_id: res.proposer_user_id } });
+    // Notify proposer that the proposal was rejected
     const receiverUser = await this.userRepo.findOne({ where: { user_id: userId } });
     const subjectName = booking?.subject || 'Session';
-    const message = `${receiverUser?.name || 'User'} rejected the reschedule proposal`;
+    const message = `${receiverUser?.name || 'User'} declined the reschedule proposal${res.reason ? ` (${res.reason})` : ''}`;
 
     try {
       await this.notificationRepo.save(this.notificationRepo.create({
@@ -184,9 +190,15 @@ export class ReschedulesService {
     res.status = 'cancelled';
     await this.rescheduleRepo.save(res as any);
 
+    // Revert booking status if it was put into reschedule_confirmation
+    const booking = await this.bookingRepo.findOne({ where: { id: res.booking.id } });
+    if (booking && booking.status === ('reschedule_confirmation' as any)) {
+      booking.status = (res.originalBookingStatus || 'upcoming') as any;
+      await this.bookingRepo.save(booking as any);
+    }
+
     // Notify receiver
     const receiverUser = await this.userRepo.findOne({ where: { user_id: res.receiver_user_id } });
-    const booking = await this.bookingRepo.findOne({ where: { id: res.booking.id } });
     const message = `${res.proposer?.name || 'User'} cancelled the reschedule proposal`;
 
     try {

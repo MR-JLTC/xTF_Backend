@@ -790,7 +790,7 @@ export class UsersService {
     const thirtyDaysFromNow = new Date(startOfDay.getTime() + 30 * 24 * 60 * 60 * 1000);
     const endOfThirtyDays = new Date(thirtyDaysFromNow);
     endOfThirtyDays.setHours(23, 59, 59, 999);
-    const statuses: any[] = ['upcoming'];
+    const statuses: any[] = ['upcoming', 'reschedule_confirmation', 'reschedule_approved'];
 
     let bookings: BookingRequest[] = [];
     if (isTutor) {

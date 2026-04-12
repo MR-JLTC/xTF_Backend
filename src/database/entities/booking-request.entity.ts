@@ -44,7 +44,9 @@ export class BookingRequest {
       'awaiting_confirmation',
       'upcoming',
       'completed',
-      'cancelled'
+      'cancelled',
+      'reschedule_confirmation',
+      'reschedule_approved'
     ],
     default: 'pending',
   })
@@ -60,7 +62,9 @@ export class BookingRequest {
     | 'awaiting_confirmation'
     | 'upcoming'
     | 'completed'
-    | 'cancelled';
+    | 'cancelled'
+    | 'reschedule_confirmation'
+    | 'reschedule_approved';
 
   @Column({ type: 'text', nullable: true })
   payment_proof: string;

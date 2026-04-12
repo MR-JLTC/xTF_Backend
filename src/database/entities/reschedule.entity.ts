@@ -37,6 +37,9 @@ export class Reschedule {
   @Column({ type: 'decimal', precision: 3, scale: 1, nullable: true })
   originalDuration?: number;
 
+  @Column({ nullable: true })
+  originalBookingStatus?: string;
+
   @Column({ type: 'text', nullable: true })
   reason?: string;
 
