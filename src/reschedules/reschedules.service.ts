@@ -56,32 +56,29 @@ export class ReschedulesService {
     });
 
     const saved = await this.rescheduleRepo.save(res);
+    console.log('Reschedule proposal saved:', { rescheduleId: saved.reschedule_id, bookingId: dto.booking_id, proposer: userId, receiver: receiverUserId });
 
-    // create notification for receiver (inform them there's a proposed change already applied)
-    const receiver = await this.userRepo.findOne({ where: { user_id: receiverUserId } });
-    const subjectName = booking.subject || 'Session';
-    const proposerName = proposer?.name || 'Someone';
-    const message = `${proposerName} proposed rescheduling ${subjectName} to ${dto.proposedDate} ${dto.proposedTime}${dto.reason ? ` — ${dto.reason}` : ''}`;
-
-    const userType = isStudent ? 'tutor' : 'tutee';
-
-    await this.notificationRepo.save(this.notificationRepo.create({
-      userId: receiverUserId.toString(),
-      receiver_id: receiverUserId,
-      userType: userType as any,
-      booking: booking as any,
-      message,
-      sessionDate: booking.date,
-      subjectName,
-      read: false,
-    } as any));
-
-    // Debug log: show reschedule and notification info so we can trace delivery
+    // Notification is non-fatal — wrap so a schema mismatch does not crash the reschedule
     try {
-      console.log('Reschedule proposal saved:', { rescheduleId: saved.reschedule_id, bookingId: dto.booking_id, proposer: userId, receiver: receiverUserId });
-      console.log('Reschedule notification created for receiver:', { receiver_id: receiverUserId, userType, message });
-    } catch (err) {
-      console.error('Failed to log reschedule debug info', err);
+      const subjectName = booking.subject || 'Session';
+      const proposerName = proposer?.name || 'Someone';
+      const message = `${proposerName} proposed rescheduling ${subjectName} to ${dto.proposedDate} ${dto.proposedTime}${dto.reason ? ` — ${dto.reason}` : ''}`;
+      const userType = isStudent ? 'tutor' : 'tutee';
+      const sessionDate = booking.date ? new Date(booking.date as any) : new Date();
+
+      await this.notificationRepo.save(this.notificationRepo.create({
+        userId: receiverUserId.toString(),
+        receiver_id: receiverUserId,
+        userType: userType as any,
+        booking: booking as any,
+        message,
+        sessionDate,
+        subjectName,
+        read: false,
+      } as any));
+      console.log('Reschedule notification sent to receiver:', { receiver_id: receiverUserId, userType, message });
+    } catch (notifErr) {
+      console.error('Reschedule notification failed (non-fatal):', notifErr?.message || notifErr);
     }
 
     return { success: true, data: saved };
@@ -115,16 +112,20 @@ export class ReschedulesService {
     const subjectName = booking?.subject || 'Session';
     const message = `${receiverUser?.name || 'User'} accepted the reschedule to ${res.proposedDate.toISOString().split('T')[0]} ${res.proposedTime}`;
 
-    await this.notificationRepo.save(this.notificationRepo.create({
-      userId: res.proposer_user_id.toString(),
-      receiver_id: res.proposer_user_id,
-      userType: 'tutee' as any,
-      booking: booking as any,
-      message,
-      sessionDate: booking?.date,
-      subjectName,
-      read: false,
-    } as any));
+    try {
+      await this.notificationRepo.save(this.notificationRepo.create({
+        userId: res.proposer_user_id.toString(),
+        receiver_id: res.proposer_user_id,
+        userType: 'tutee' as any,
+        booking: booking as any,
+        message,
+        sessionDate: booking?.date ? new Date(booking.date as any) : new Date(),
+        subjectName,
+        read: false,
+      } as any));
+    } catch (notifErr) {
+      console.error('Accept notification failed (non-fatal):', notifErr?.message || notifErr);
+    }
 
     return { success: true, data: res };
   }
@@ -155,16 +156,20 @@ export class ReschedulesService {
     const subjectName = booking?.subject || 'Session';
     const message = `${receiverUser?.name || 'User'} rejected the reschedule proposal`;
 
-    await this.notificationRepo.save(this.notificationRepo.create({
-      userId: res.proposer_user_id.toString(),
-      receiver_id: res.proposer_user_id,
-      userType: 'tutee' as any,
-      booking: booking as any,
-      message,
-      sessionDate: booking?.date,
-      subjectName,
-      read: false,
-    } as any));
+    try {
+      await this.notificationRepo.save(this.notificationRepo.create({
+        userId: res.proposer_user_id.toString(),
+        receiver_id: res.proposer_user_id,
+        userType: 'tutee' as any,
+        booking: booking as any,
+        message,
+        sessionDate: booking?.date ? new Date(booking.date as any) : new Date(),
+        subjectName,
+        read: false,
+      } as any));
+    } catch (notifErr) {
+      console.error('Reject notification failed (non-fatal):', notifErr?.message || notifErr);
+    }
 
     return { success: true };
   }
@@ -184,16 +189,20 @@ export class ReschedulesService {
     const booking = await this.bookingRepo.findOne({ where: { id: res.booking.id } });
     const message = `${res.proposer?.name || 'User'} cancelled the reschedule proposal`;
 
-    await this.notificationRepo.save(this.notificationRepo.create({
-      userId: res.receiver_user_id?.toString() || '',
-      receiver_id: res.receiver_user_id,
-      userType: 'tutor' as any,
-      booking: booking as any,
-      message,
-      sessionDate: booking?.date,
-      subjectName: booking?.subject || 'Session',
-      read: false,
-    } as any));
+    try {
+      await this.notificationRepo.save(this.notificationRepo.create({
+        userId: res.receiver_user_id?.toString() || '',
+        receiver_id: res.receiver_user_id,
+        userType: 'tutor' as any,
+        booking: booking as any,
+        message,
+        sessionDate: booking?.date ? new Date(booking.date as any) : new Date(),
+        subjectName: booking?.subject || 'Session',
+        read: false,
+      } as any));
+    } catch (notifErr) {
+      console.error('Cancel notification failed (non-fatal):', notifErr?.message || notifErr);
+    }
 
     return { success: true };
   }
