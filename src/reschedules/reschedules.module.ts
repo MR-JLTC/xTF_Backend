@@ -6,9 +6,10 @@ import { ReschedulesController } from './reschedules.controller';
 import { BookingRequest } from '../database/entities/booking-request.entity';
 import { User } from '../database/entities/user.entity';
 import { Notification } from '../database/entities/notification.entity';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Reschedule, BookingRequest, User, Notification])],
+  imports: [TypeOrmModule.forFeature([Reschedule, BookingRequest, User, Notification]), EmailModule],
   providers: [ReschedulesService],
   controllers: [ReschedulesController],
   exports: [ReschedulesService]

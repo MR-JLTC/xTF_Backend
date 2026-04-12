@@ -362,6 +362,65 @@ export class EmailService {
     }
   }
 
+  async sendRescheduleProposalEmail(data: {
+    receiverName: string;
+    receiverEmail: string;
+    proposerName: string;
+    subject: string;
+    proposedDate: string;
+    proposedTime: string;
+    reason?: string;
+    isReceiverTutor: boolean;
+  }): Promise<boolean> {
+    try {
+      const dashboardLink = data.isReceiverTutor
+        ? 'https://tutorfriends.online/tutor-dashboard/sessions'
+        : 'https://tutorfriends.online/tutee-dashboard/upcoming-sessions';
+      const mailOptions = {
+        to: data.receiverEmail,
+        subject: `📅 Reschedule Requested — ${data.subject}`,
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #f59e0b; padding: 36px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 70px; margin-bottom: 14px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Reschedule Requested</h1>
+              <p style="color: #fef3c7; margin: 8px 0 0 0; font-size: 16px;">You have a pending reschedule proposal to review</p>
+            </div>
+            <div style="background-color: white; padding: 36px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 20px;">Hello ${data.receiverName},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px; margin-bottom: 24px;">
+                <strong>${data.proposerName}</strong> has proposed a reschedule for your <strong>${data.subject}</strong> session. Please review the proposed changes and accept or decline.
+              </p>
+              <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                <h3 style="color: #92400e; margin: 0 0 16px 0; font-size: 15px; font-weight: 600;">📋 Proposed New Schedule</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 15px; color: #334155;">
+                  <tr><td style="padding: 6px 0; color: #78350f; width: 40%;">Subject</td><td style="padding: 6px 0; font-weight: 600;">${data.subject}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #78350f;">Proposed by</td><td style="padding: 6px 0; font-weight: 600;">${data.proposerName}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #78350f;">New Date</td><td style="padding: 6px 0; font-weight: 600;">${data.proposedDate}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #78350f;">New Time</td><td style="padding: 6px 0; font-weight: 600;">${data.proposedTime}</td></tr>
+                  ${data.reason ? `<tr><td style="padding: 6px 0; color: #78350f; vertical-align: top;">Reason</td><td style="padding: 6px 0; font-style: italic; color: #92400e;">"${data.reason}"</td></tr>` : ''}
+                </table>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${dashboardLink}" style="background-color: #f59e0b; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">Review Proposal</a>
+              </div>
+              <p style="color: #94a3b8; font-size: 13px; text-align: center; margin: 0;">
+                Log in to your TutorFriends dashboard to accept or decline this reschedule request.
+              </p>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      };
+      return await this.sendEmail(mailOptions);
+    } catch (error) {
+      console.error('Failed to send reschedule proposal email:', error);
+      return false;
+    }
+  }
+
   async sendRegistrationNotification(userData: {
     name: string;
     email: string;

@@ -6,6 +6,7 @@ import { BookingRequest } from '../database/entities/booking-request.entity';
 import { User } from '../database/entities/user.entity';
 import { Notification } from '../database/entities/notification.entity';
 import { CreateRescheduleDto } from './dto/create-reschedule.dto';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class ReschedulesService {
@@ -14,6 +15,7 @@ export class ReschedulesService {
     @InjectRepository(BookingRequest) private bookingRepo: Repository<BookingRequest>,
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Notification) private notificationRepo: Repository<Notification>,
+    private emailService: EmailService,
   ) {}
 
   async propose(userId: number, dto: CreateRescheduleDto) {
@@ -79,6 +81,26 @@ export class ReschedulesService {
       console.log('Reschedule notification sent to receiver:', { receiver_id: receiverUserId, userType, message });
     } catch (notifErr) {
       console.error('Reschedule notification failed (non-fatal):', notifErr?.message || notifErr);
+    }
+
+    // Send email notification to receiver — non-fatal
+    try {
+      const receiverUser = await this.userRepo.findOne({ where: { user_id: receiverUserId } });
+      if (receiverUser?.email) {
+        await this.emailService.sendRescheduleProposalEmail({
+          receiverName: receiverUser.name || 'User',
+          receiverEmail: receiverUser.email,
+          proposerName: proposer?.name || 'Someone',
+          subject: booking.subject || 'Session',
+          proposedDate: new Date(dto.proposedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+          proposedTime: dto.proposedTime,
+          reason: dto.reason,
+          isReceiverTutor: !isStudent,
+        });
+        console.log('Reschedule proposal email sent to:', receiverUser.email);
+      }
+    } catch (emailErr) {
+      console.error('Reschedule proposal email failed (non-fatal):', emailErr?.message || emailErr);
     }
 
     return { success: true, data: saved };
