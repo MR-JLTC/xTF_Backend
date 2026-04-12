@@ -158,6 +158,25 @@ export class ReschedulesService {
       console.error('Accept notification failed (non-fatal):', notifErr?.message || notifErr);
     }
 
+    // Email the proposer that their reschedule was approved — non-fatal
+    try {
+      if (proposerUser?.email) {
+        const isProposerTutor = res.proposer_user_id !== res.booking?.student?.user_id;
+        await this.emailService.sendRescheduleApprovedEmail({
+          proposerName: proposerUser.name || 'User',
+          proposerEmail: proposerUser.email,
+          approverName: receiverUser?.name || 'User',
+          subject: subjectName,
+          proposedDate: new Date(res.proposedDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+          proposedTime: res.proposedTime,
+          isProposerTutor,
+        });
+        console.log('Reschedule approved email sent to proposer:', proposerUser.email);
+      }
+    } catch (emailErr) {
+      console.error('Reschedule approved email failed (non-fatal):', emailErr?.message || emailErr);
+    }
+
     return { success: true, data: { ...res, booking } };
   }
 
@@ -197,6 +216,24 @@ export class ReschedulesService {
       } as any));
     } catch (notifErr) {
       console.error('Reject notification failed (non-fatal):', notifErr?.message || notifErr);
+    }
+
+    // Email the proposer that their reschedule was declined — non-fatal
+    try {
+      const proposerUser = await this.userRepo.findOne({ where: { user_id: res.proposer_user_id } });
+      if (proposerUser?.email) {
+        const isProposerTutor = res.proposer_user_id !== res.booking?.student?.user_id;
+        await this.emailService.sendRescheduleDeclinedEmail({
+          proposerName: proposerUser.name || 'User',
+          proposerEmail: proposerUser.email,
+          declinerName: receiverUser?.name || 'User',
+          subject: subjectName,
+          isProposerTutor,
+        });
+        console.log('Reschedule declined email sent to proposer:', proposerUser.email);
+      }
+    } catch (emailErr) {
+      console.error('Reschedule declined email failed (non-fatal):', emailErr?.message || emailErr);
     }
 
     return { success: true };

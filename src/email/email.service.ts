@@ -421,6 +421,106 @@ export class EmailService {
     }
   }
 
+  async sendRescheduleApprovedEmail(data: {
+    proposerName: string;
+    proposerEmail: string;
+    approverName: string;
+    subject: string;
+    proposedDate: string;
+    proposedTime: string;
+    isProposerTutor: boolean;
+  }): Promise<boolean> {
+    try {
+      const dashboardLink = data.isProposerTutor
+        ? 'https://tutorfriends.online/tutor-dashboard/sessions'
+        : 'https://tutorfriends.online/tutee-dashboard/upcoming-sessions';
+      return await this.sendEmail({
+        to: data.proposerEmail,
+        subject: `✅ Reschedule Approved — ${data.subject}`,
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #10b981; padding: 36px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 70px; margin-bottom: 14px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Reschedule Approved!</h1>
+              <p style="color: #d1fae5; margin: 8px 0 0 0; font-size: 16px;">Your reschedule proposal has been accepted</p>
+            </div>
+            <div style="background-color: white; padding: 36px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 20px;">Hello ${data.proposerName},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px; margin-bottom: 24px;">
+                Great news! <strong>${data.approverName}</strong> has <strong>approved</strong> your reschedule request for the <strong>${data.subject}</strong> session. The session has been updated to the new schedule below.
+              </p>
+              <div style="background-color: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 8px; padding: 24px; margin: 24px 0;">
+                <h3 style="color: #065f46; margin: 0 0 16px 0; font-size: 15px; font-weight: 600;">📅 Updated Schedule</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 15px; color: #334155;">
+                  <tr><td style="padding: 6px 0; color: #047857; width: 40%;">Subject</td><td style="padding: 6px 0; font-weight: 600;">${data.subject}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #047857;">New Date</td><td style="padding: 6px 0; font-weight: 600;">${data.proposedDate}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #047857;">New Time</td><td style="padding: 6px 0; font-weight: 600;">${data.proposedTime}</td></tr>
+                  <tr><td style="padding: 6px 0; color: #047857;">Approved by</td><td style="padding: 6px 0; font-weight: 600;">${data.approverName}</td></tr>
+                </table>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${dashboardLink}" style="background-color: #10b981; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">View Session</a>
+              </div>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error('Failed to send reschedule approved email:', error);
+      return false;
+    }
+  }
+
+  async sendRescheduleDeclinedEmail(data: {
+    proposerName: string;
+    proposerEmail: string;
+    declinerName: string;
+    subject: string;
+    isProposerTutor: boolean;
+  }): Promise<boolean> {
+    try {
+      const dashboardLink = data.isProposerTutor
+        ? 'https://tutorfriends.online/tutor-dashboard/sessions'
+        : 'https://tutorfriends.online/tutee-dashboard/upcoming-sessions';
+      return await this.sendEmail({
+        to: data.proposerEmail,
+        subject: `❌ Reschedule Declined — ${data.subject}`,
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="background-color: #ef4444; padding: 36px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <img src="https://tutorfriends.online/assets/images/tutorfriends-logo.png" alt="TutorFriends" style="height: 70px; margin-bottom: 14px; background-color: rgba(255,255,255,0.9); padding: 5px 10px; border-radius: 8px;">
+              <h1 style="color: white; margin: 0; font-size: 26px; font-weight: 700;">Reschedule Declined</h1>
+              <p style="color: #fee2e2; margin: 8px 0 0 0; font-size: 16px;">Your reschedule proposal was not accepted</p>
+            </div>
+            <div style="background-color: white; padding: 36px;">
+              <h2 style="color: #1e293b; margin-top: 0; font-size: 20px;">Hello ${data.proposerName},</h2>
+              <p style="color: #475569; line-height: 1.8; font-size: 16px; margin-bottom: 24px;">
+                Unfortunately, <strong>${data.declinerName}</strong> has <strong>declined</strong> your reschedule request for the <strong>${data.subject}</strong> session. The session has been reverted to its original schedule.
+              </p>
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; border-radius: 8px; padding: 20px; margin: 24px 0;">
+                <p style="color: #991b1b; font-size: 14px; margin: 0; line-height: 1.6;">
+                  The session remains at its original date and time. You may propose a new reschedule if needed.
+                </p>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${dashboardLink}" style="background-color: #ef4444; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; display: inline-block;">View Session</a>
+              </div>
+            </div>
+            <div style="background-color: #f1f5f9; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">&copy; ${new Date().getFullYear()} TutorFriends. All rights reserved.</p>
+            </div>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error('Failed to send reschedule declined email:', error);
+      return false;
+    }
+  }
+
   async sendRegistrationNotification(userData: {
     name: string;
     email: string;
