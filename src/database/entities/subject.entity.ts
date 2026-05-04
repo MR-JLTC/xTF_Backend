@@ -1,8 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { Course } from './course.entity';
-import { TutorSubject } from './tutor-subject.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from "typeorm";
+import { Course } from "./course.entity";
+import { TutorSubject } from "./tutor-subject.entity";
 
-@Entity('subjects')
+@Entity("subjects")
 export class Subject {
   @PrimaryGeneratedColumn()
   subject_id: number;
@@ -11,7 +18,7 @@ export class Subject {
   subject_name: string;
 
   @ManyToOne(() => Course, (course) => course.subjects)
-  @JoinColumn({ name: 'course_id' })
+  @JoinColumn({ name: "course_id" })
   course: Course;
 
   @OneToMany(() => TutorSubject, (tutorSubject) => tutorSubject.subject)

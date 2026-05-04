@@ -1,7 +1,7 @@
-import { IsIn, IsNotEmpty } from 'class-validator';
+import { IsIn, IsNotEmpty } from "class-validator";
 
 export class UpdateTutorStatusDto {
   @IsNotEmpty()
-  @IsIn(['approved', 'rejected'])
-  status: 'approved' | 'rejected';
+  @IsIn(["approved", "rejected"])
+  status: "approved" | "rejected";
 }

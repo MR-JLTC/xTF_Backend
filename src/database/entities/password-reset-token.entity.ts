@@ -1,7 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from './user.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
+import { User } from "./user.entity";
 
-@Entity('password_reset_tokens')
+@Entity("password_reset_tokens")
 export class PasswordResetToken {
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,6 +29,6 @@ export class PasswordResetToken {
   created_at: Date;
 
   @ManyToOne(() => User, (user) => user.passwordResetTokens)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: "user_id" })
   user: User;
 }

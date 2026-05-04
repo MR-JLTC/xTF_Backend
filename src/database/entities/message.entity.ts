@@ -1,35 +1,44 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Conversation } from './conversation.entity';
-import { User } from './user.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
+import { Conversation } from "./conversation.entity";
+import { User } from "./user.entity";
 
-@Entity('messages')
+@Entity("messages")
 export class Message {
-    @PrimaryGeneratedColumn('uuid')
-    message_id: string;
+  @PrimaryGeneratedColumn("uuid")
+  message_id: string;
 
-    @Column()
-    conversation_id: string;
+  @Column()
+  conversation_id: string;
 
-    @ManyToOne(() => Conversation, (conversation) => conversation.messages, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'conversation_id' })
-    conversation: Conversation;
+  @ManyToOne(() => Conversation, (conversation) => conversation.messages, {
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "conversation_id" })
+  conversation: Conversation;
 
-    @Column()
-    sender_id: number;
+  @Column()
+  sender_id: number;
 
-    @ManyToOne(() => User)
-    @JoinColumn({ name: 'sender_id' })
-    sender: User;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: "sender_id" })
+  sender: User;
 
-    @Column('text')
-    content: string;
+  @Column("text")
+  content: string;
 
-    @Column({ default: false })
-    is_read: boolean;
+  @Column({ default: false })
+  is_read: boolean;
 
-    @Column({ default: 'sent' }) // sent, delivered, seen
-    status: string;
+  @Column({ default: "sent" }) // sent, delivered, seen
+  status: string;
 
-    @CreateDateColumn()
-    created_at: Date;
+  @CreateDateColumn()
+  created_at: Date;
 }

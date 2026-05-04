@@ -1,28 +1,33 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from "typeorm";
 
-@Entity('traffic_logs')
+@Entity("traffic_logs")
 export class TrafficLog {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    ip_address: string;
+  @Column()
+  ip_address: string;
 
-    @Column()
-    activity: string;
+  @Column()
+  activity: string;
 
-    @Column({ nullable: true })
-    user_email: string;
+  @Column({ nullable: true })
+  user_email: string;
 
-    @Column({ nullable: true })
-    method: string;
+  @Column({ nullable: true })
+  method: string;
 
-    @Column({ nullable: true })
-    url: string;
+  @Column({ nullable: true })
+  url: string;
 
-    @Column({ nullable: true })
-    user_agent: string;
+  @Column({ nullable: true })
+  user_agent: string;
 
-    @CreateDateColumn()
-    timestamp: Date;
+  @CreateDateColumn()
+  timestamp: Date;
 }

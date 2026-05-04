@@ -1,11 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { User } from './user.entity';
-import { Course } from './course.entity';
-import { Admin } from './admin.entity';
-import { Student } from './student.entity';
-import { Tutor } from './tutor.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { User } from "./user.entity";
+import { Course } from "./course.entity";
+import { Admin } from "./admin.entity";
+import { Student } from "./student.entity";
+import { Tutor } from "./tutor.entity";
 
-@Entity('universities')
+@Entity("universities")
 export class University {
   @PrimaryGeneratedColumn()
   university_id: number;
@@ -23,11 +23,11 @@ export class University {
   logo_url: string;
 
   @Column({
-    type: 'enum',
-    enum: ['active', 'inactive'],
-    default: 'active',
+    type: "enum",
+    enum: ["active", "inactive"],
+    default: "active",
   })
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 
   @OneToMany(() => Admin, (admin) => admin.university)
   admins: Admin[];

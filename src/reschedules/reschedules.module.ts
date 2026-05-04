@@ -1,17 +1,20 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Reschedule } from '../database/entities/reschedule.entity';
-import { ReschedulesService } from './reschedules.service';
-import { ReschedulesController } from './reschedules.controller';
-import { BookingRequest } from '../database/entities/booking-request.entity';
-import { User } from '../database/entities/user.entity';
-import { Notification } from '../database/entities/notification.entity';
-import { EmailModule } from '../email/email.module';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { Reschedule } from "../database/entities/reschedule.entity";
+import { ReschedulesService } from "./reschedules.service";
+import { ReschedulesController } from "./reschedules.controller";
+import { BookingRequest } from "../database/entities/booking-request.entity";
+import { User } from "../database/entities/user.entity";
+import { Notification } from "../database/entities/notification.entity";
+import { EmailModule } from "../email/email.module";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Reschedule, BookingRequest, User, Notification]), EmailModule],
+  imports: [
+    TypeOrmModule.forFeature([Reschedule, BookingRequest, User, Notification]),
+    EmailModule,
+  ],
   providers: [ReschedulesService],
   controllers: [ReschedulesController],
-  exports: [ReschedulesService]
+  exports: [ReschedulesService],
 })
 export class ReschedulesModule {}

@@ -1,9 +1,20 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsInt, IsOptional, IsNumber, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  IsInt,
+  IsOptional,
+  IsNumber,
+  Matches,
+} from "class-validator";
 
 export class RegisterDto {
   @IsNotEmpty()
   @IsString()
-  @Matches(/^[^<>]*$/, { message: 'Name must not contain HTML tags like < or >.' })
+  @Matches(/^[^<>]*$/, {
+    message: "Name must not contain HTML tags like < or >.",
+  })
   name: string;
 
   @IsNotEmpty()
@@ -12,7 +23,7 @@ export class RegisterDto {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(7, { message: 'Password must be at least 7 characters long' })
+  @MinLength(7, { message: "Password must be at least 7 characters long" })
   password: string;
 
   @IsOptional()
@@ -21,7 +32,7 @@ export class RegisterDto {
 
   @IsOptional()
   @IsString()
-  user_type?: 'tutor' | 'tutee' | 'admin' | 'student';
+  user_type?: "tutor" | "tutee" | "admin" | "student";
 
   @IsOptional()
   @IsInt()
@@ -59,5 +70,5 @@ export class LoginDto {
 
   @IsOptional()
   @IsString()
-  user_type?: 'tutor' | 'tutee' | 'admin' | 'student';
+  user_type?: "tutor" | "tutee" | "admin" | "student";
 }

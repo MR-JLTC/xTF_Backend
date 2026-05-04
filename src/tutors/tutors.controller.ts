@@ -1,91 +1,146 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, Post, Put, Req } from '@nestjs/common';
-import type { Express } from 'express';
-import { TutorsService } from './tutors.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { UpdateTutorStatusDto } from './tutor.dto';
-import { UseInterceptors, UploadedFiles, UploadedFile } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import * as path from 'path';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { BookingRequest } from '../database/entities';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  Post,
+  Put,
+  Req,
+} from "@nestjs/common";
+import type { Express } from "express";
+import { TutorsService } from "./tutors.service";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { UpdateTutorStatusDto } from "./tutor.dto";
+import { UseInterceptors, UploadedFiles, UploadedFile } from "@nestjs/common";
+import { FilesInterceptor } from "@nestjs/platform-express";
+import * as path from "path";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { BookingRequest } from "../database/entities";
 
-import { SupabaseService } from '../supabase/supabase.service';
+import { SupabaseService } from "../supabase/supabase.service";
 
-@Controller('tutors')
+@Controller("tutors")
 export class TutorsController {
   constructor(
     private readonly tutorsService: TutorsService,
-    private readonly supabaseService: SupabaseService
-  ) { }
+    private readonly supabaseService: SupabaseService,
+  ) {}
 
-  @Get('applications')
+  @Get("applications")
   @UseGuards(JwtAuthGuard)
   findPendingApplications() {
     return this.tutorsService.findPendingApplications();
   }
 
-  @Get('pending-subjects')
+  @Get("pending-subjects")
   @UseGuards(JwtAuthGuard)
   getAllPendingTutorSubjects() {
     return this.tutorsService.getAllPendingTutorSubjects();
   }
 
-  @Patch(':id/status')
+  @Patch(":id/status")
   @UseGuards(JwtAuthGuard)
-  updateStatus(@Param('id') id: string, @Body() body: { status: 'approved' | 'rejected'; adminNotes?: string }) {
-    console.log(`[TutorController] Received PATCH request for tutor ${id} - Status: ${body.status}`);
-    console.log(`[TutorController] Admin notes in request body:`, body.adminNotes ? `"${body.adminNotes.substring(0, 50)}${body.adminNotes.length > 50 ? '...' : ''}"` : 'none');
-    console.log(`[TutorController] Passing adminNotes to service - will be saved to tutors.admin_notes column`);
+  updateStatus(
+    @Param("id") id: string,
+    @Body() body: { status: "approved" | "rejected"; adminNotes?: string },
+  ) {
+    console.log(
+      `[TutorController] Received PATCH request for tutor ${id} - Status: ${body.status}`,
+    );
+    console.log(
+      `[TutorController] Admin notes in request body:`,
+      body.adminNotes
+        ? `"${body.adminNotes.substring(0, 50)}${body.adminNotes.length > 50 ? "..." : ""}"`
+        : "none",
+    );
+    console.log(
+      `[TutorController] Passing adminNotes to service - will be saved to tutors.admin_notes column`,
+    );
     return this.tutorsService.updateStatus(+id, body.status, body.adminNotes);
   }
 
-  @Patch('tutor-subjects/:tutorSubjectId/status')
+  @Patch("tutor-subjects/:tutorSubjectId/status")
   @UseGuards(JwtAuthGuard)
   updateTutorSubjectStatus(
-    @Param('tutorSubjectId') tutorSubjectId: string,
-    @Body() body: { status: 'approved' | 'rejected'; adminNotes?: string }
+    @Param("tutorSubjectId") tutorSubjectId: string,
+    @Body() body: { status: "approved" | "rejected"; adminNotes?: string },
   ) {
-    return this.tutorsService.updateTutorSubjectStatus(+tutorSubjectId, body.status, body.adminNotes);
+    return this.tutorsService.updateTutorSubjectStatus(
+      +tutorSubjectId,
+      body.status,
+      body.adminNotes,
+    );
   }
 
   // Public apply endpoint to create a user+tutor (pending)
-  async applyTutor(@Body() body: { email: string; password: string; university_id: number; course_id?: number; course_name?: string; name?: string; bio?: string; year_level?: string; gcash_number?: string; session_rate_per_hour?: number }) {
+  async applyTutor(
+    @Body()
+    body: {
+      email: string;
+      password: string;
+      university_id: number;
+      course_id?: number;
+      course_name?: string;
+      name?: string;
+      bio?: string;
+      year_level?: string;
+      gcash_number?: string;
+      session_rate_per_hour?: number;
+    },
+  ) {
     return this.tutorsService.applyTutor(body);
   }
 
   // Public upload of tutor documents after receiving tutor_id (pre-approval)
-  @Get(':tutorId/documents')
+  @Get(":tutorId/documents")
   @UseGuards(JwtAuthGuard)
-  async getDocuments(@Param('tutorId') tutorId: string) {
+  async getDocuments(@Param("tutorId") tutorId: string) {
     return this.tutorsService.getDocuments(+tutorId);
   }
 
-  @Post(':tutorId/documents')
-  @UseInterceptors(FilesInterceptor('files', 10))
-  async uploadDocuments(@Param('tutorId') tutorId: string, @UploadedFiles() files: Array<any>) {
-    console.log(`[TutorsController] uploadDocuments hit for tutorId: ${tutorId}, files: ${files?.length || 0}`);
+  @Post(":tutorId/documents")
+  @UseInterceptors(FilesInterceptor("files", 10))
+  async uploadDocuments(
+    @Param("tutorId") tutorId: string,
+    @UploadedFiles() files: Array<any>,
+  ) {
+    console.log(
+      `[TutorsController] uploadDocuments hit for tutorId: ${tutorId}, files: ${files?.length || 0}`,
+    );
     // Determine starting sequence from existing files in Supabase
-    const existingFiles = await this.supabaseService.listFiles('tutor_documents', `tutorDocs`);
+    const existingFiles = await this.supabaseService.listFiles(
+      "tutor_documents",
+      `tutorDocs`,
+    );
     // Filter specifically for this tutor's docs to be safe, though search prefix helps
-    const tutorDocsCount = existingFiles.filter(f => f.includes(`_${tutorId}.`) || f.includes(`_${tutorId}_`)).length;
+    const tutorDocsCount = existingFiles.filter(
+      (f) => f.includes(`_${tutorId}.`) || f.includes(`_${tutorId}_`),
+    ).length;
 
     let seq = tutorDocsCount + 1;
     const uploadedFiles = [];
 
     for (const file of files) {
-      const originalExt = path.extname(file.originalname) || '';
+      const originalExt = path.extname(file.originalname) || "";
       // filename format: tutorDocs<Seq>_<TutorId>.<Ext>
       const filename = `tutorDocs${seq}_${tutorId}${originalExt}`;
-      const publicUrl = await this.supabaseService.uploadFile('tutor_documents', filename, file.buffer, file.mimetype);
+      const publicUrl = await this.supabaseService.uploadFile(
+        "tutor_documents",
+        filename,
+        file.buffer,
+        file.mimetype,
+      );
 
-      // Mocking the file object structure expected by the service if needed, 
+      // Mocking the file object structure expected by the service if needed,
       // or just passing what the service expects. Existing service likely expects multer file objects with 'filename' property.
       // We will modify the file object to have the new filename and destination (which is now a URL or virtual path)
       const fileForService = {
         ...file,
         filename: filename,
-        destination: 'tutor_documents', // Virtual destination
-        path: publicUrl // Use public URL as path
+        destination: "tutor_documents", // Virtual destination
+        path: publicUrl, // Use public URL as path
       };
       uploadedFiles.push(fileForService);
       seq++;
@@ -95,300 +150,432 @@ export class TutorsController {
   }
 
   // Upload of tutor profile image
-  @Post(':tutorId/profile-image')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadProfileImage(@Param('tutorId') tutorId: string, @UploadedFile() file: any) {
-    console.log(`[TutorsController] uploadProfileImage hit for tutorId: ${tutorId}, file: ${file?.originalname}`);
-    const ext = path.extname(file.originalname) || '';
+  @Post(":tutorId/profile-image")
+  @UseInterceptors(FileInterceptor("file"))
+  async uploadProfileImage(
+    @Param("tutorId") tutorId: string,
+    @UploadedFile() file: any,
+  ) {
+    console.log(
+      `[TutorsController] uploadProfileImage hit for tutorId: ${tutorId}, file: ${file?.originalname}`,
+    );
+    const ext = path.extname(file.originalname) || "";
     const tempFilename = `temp_profile_${tutorId}_${Date.now()}${ext}`;
 
     // Upload to Supabase
-    const publicUrl = await this.supabaseService.uploadFile('tutor_documents', tempFilename, file.buffer, file.mimetype);
+    const publicUrl = await this.supabaseService.uploadFile(
+      "tutor_documents",
+      tempFilename,
+      file.buffer,
+      file.mimetype,
+    );
 
     // Create a modified file object to pass to the service
     const fileForService = {
       ...file,
       filename: tempFilename,
-      destination: 'tutor_documents',
-      path: publicUrl
+      destination: "tutor_documents",
+      path: publicUrl,
     };
 
     return this.tutorsService.saveProfileImage(+tutorId, fileForService);
   }
 
-  @Post(':tutorId/availability')
-  async saveAvailability(@Param('tutorId') tutorId: string, @Body() body: { slots: { day_of_week: string; start_time: string; end_time: string }[] }) {
-    console.log(`[TutorsController] saveAvailability hit for tutorId: ${tutorId}, slots: ${body?.slots?.length}`);
+  @Post(":tutorId/availability")
+  async saveAvailability(
+    @Param("tutorId") tutorId: string,
+    @Body()
+    body: {
+      slots: { day_of_week: string; start_time: string; end_time: string }[];
+    },
+  ) {
+    console.log(
+      `[TutorsController] saveAvailability hit for tutorId: ${tutorId}, slots: ${body?.slots?.length}`,
+    );
     return this.tutorsService.saveAvailability(+tutorId, body.slots);
   }
 
-  @Post(':tutorId/subjects')
-  async saveSubjects(@Param('tutorId') tutorId: string, @Body() body: { subjects: string[]; course_id?: number }) {
-    console.log(`[TutorsController] saveSubjects hit for tutorId: ${tutorId}, subjects: ${body?.subjects}, course_id: ${body?.course_id}`);
-    return this.tutorsService.saveSubjects(+tutorId, body.subjects, body.course_id);
+  @Post(":tutorId/subjects")
+  async saveSubjects(
+    @Param("tutorId") tutorId: string,
+    @Body() body: { subjects: string[]; course_id?: number },
+  ) {
+    console.log(
+      `[TutorsController] saveSubjects hit for tutorId: ${tutorId}, subjects: ${body?.subjects}, course_id: ${body?.course_id}`,
+    );
+    return this.tutorsService.saveSubjects(
+      +tutorId,
+      body.subjects,
+      body.course_id,
+    );
   }
 
   // New endpoints for tutor dashboard functionality
 
-  @Get('by-user/:userId/tutor-id')
+  @Get("by-user/:userId/tutor-id")
   @UseGuards(JwtAuthGuard)
-  async getTutorIdByUserId(@Param('userId') userId: string) {
+  async getTutorIdByUserId(@Param("userId") userId: string) {
     const tutorId = await this.tutorsService.getTutorId(+userId);
     return { tutor_id: tutorId };
   }
 
-  @Patch('by-user/:userId/online-status')
+  @Patch("by-user/:userId/online-status")
   @UseGuards(JwtAuthGuard)
-  async updateOnlineStatus(@Param('userId') userId: string, @Body() body: { status: 'online' | 'offline' }) {
+  async updateOnlineStatus(
+    @Param("userId") userId: string,
+    @Body() body: { status: "online" | "offline" },
+  ) {
     await this.tutorsService.updateOnlineStatus(+userId, body.status);
-    return { success: true, message: `Online status updated to ${body.status}` };
+    return {
+      success: true,
+      message: `Online status updated to ${body.status}`,
+    };
   }
 
-  @Get('by-email/:email')
-  async getTutorByEmail(@Param('email') email: string) {
+  @Get("by-email/:email")
+  async getTutorByEmail(@Param("email") email: string) {
     return this.tutorsService.getTutorByEmail(email);
   }
 
-  @Put(':tutorId')
-  async updateTutor(@Param('tutorId') tutorId: string, @Body() body: { full_name?: string; university_id?: number; course_id?: number; course_name?: string; bio?: string; year_level?: string; gcash_number?: string; session_rate_per_hour?: number }) {
-    return this.tutorsService.updateTutor(+tutorId, { ...body, year_level: body.year_level ? Number(body.year_level) : undefined });
+  @Put(":tutorId")
+  async updateTutor(
+    @Param("tutorId") tutorId: string,
+    @Body()
+    body: {
+      full_name?: string;
+      university_id?: number;
+      course_id?: number;
+      course_name?: string;
+      bio?: string;
+      year_level?: string;
+      gcash_number?: string;
+      session_rate_per_hour?: number;
+    },
+  ) {
+    return this.tutorsService.updateTutor(+tutorId, {
+      ...body,
+      year_level: body.year_level ? Number(body.year_level) : undefined,
+    });
   }
 
-  @Put('update-existing-user/:userId')
-  async updateExistingUserToTutor(@Param('userId') userId: string, @Body() body: { full_name?: string; university_id?: number; course_id?: number; course_name?: string; bio?: string; year_level?: string; gcash_number?: string }) {
-    return this.tutorsService.updateExistingUserToTutor(+userId, { ...body, year_level: body.year_level ? Number(body.year_level) : undefined });
+  @Put("update-existing-user/:userId")
+  async updateExistingUserToTutor(
+    @Param("userId") userId: string,
+    @Body()
+    body: {
+      full_name?: string;
+      university_id?: number;
+      course_id?: number;
+      course_name?: string;
+      bio?: string;
+      year_level?: string;
+      gcash_number?: string;
+    },
+  ) {
+    return this.tutorsService.updateExistingUserToTutor(+userId, {
+      ...body,
+      year_level: body.year_level ? Number(body.year_level) : undefined,
+    });
   }
 
-  @Get('status/:userId')
+  @Get("status/:userId")
   @UseGuards(JwtAuthGuard)
-  async getTutorStatusByUserId(@Param('userId') userId: string) {
+  async getTutorStatusByUserId(@Param("userId") userId: string) {
     return this.tutorsService.getTutorStatus(+userId);
   }
 
-  @Get(':tutorId/status')
+  @Get(":tutorId/status")
   @UseGuards(JwtAuthGuard)
-  async getTutorStatus(@Param('tutorId') tutorId: string) {
+  async getTutorStatus(@Param("tutorId") tutorId: string) {
     // Delegate to service which supports both user_id and tutor_id
     return this.tutorsService.getTutorStatus(+tutorId);
   }
 
-  @Get(':tutorId/profile')
+  @Get(":tutorId/profile")
   @UseGuards(JwtAuthGuard)
-  async getTutorProfile(@Param('tutorId') tutorId: string) {
+  async getTutorProfile(@Param("tutorId") tutorId: string) {
     return this.tutorsService.getTutorProfile(+tutorId);
   }
 
-  @Put(':tutorId/profile')
+  @Put(":tutorId/profile")
   @UseGuards(JwtAuthGuard)
-  async updateTutorProfile(@Param('tutorId') tutorId: string, @Body() body: { bio?: string; gcash_number?: string }) {
+  async updateTutorProfile(
+    @Param("tutorId") tutorId: string,
+    @Body() body: { bio?: string; gcash_number?: string },
+  ) {
     return this.tutorsService.updateTutorProfile(+tutorId, body);
   }
 
   // Match frontend call: GET /tutors/by-user/:userId/status
-  @Get('by-user/:userId/status')
+  @Get("by-user/:userId/status")
   @UseGuards(JwtAuthGuard)
-  async getTutorStatusByUserIdAlias(@Param('userId') userId: string) {
+  async getTutorStatusByUserIdAlias(@Param("userId") userId: string) {
     return this.tutorsService.getTutorStatus(+userId);
   }
 
-  @Get(':tutorId/availability')
+  @Get(":tutorId/availability")
   @UseGuards(JwtAuthGuard)
-  async getTutorAvailability(@Param('tutorId') tutorId: string) {
+  async getTutorAvailability(@Param("tutorId") tutorId: string) {
     return this.tutorsService.getTutorAvailability(+tutorId);
   }
 
-  @Get(':tutorId/subject-applications')
+  @Get(":tutorId/subject-applications")
   @UseGuards(JwtAuthGuard)
-  async getSubjectApplications(@Param('tutorId') tutorId: string) {
+  async getSubjectApplications(@Param("tutorId") tutorId: string) {
     return this.tutorsService.getTutorSubjectApplications(+tutorId);
   }
 
-  @Post(':tutorId/subject-application')
+  @Post(":tutorId/subject-application")
   // JWT guard removed to allow registration flow, can be called during registration before full auth
-  @UseInterceptors(FilesInterceptor('files', 10))
+  @UseInterceptors(FilesInterceptor("files", 10))
   async submitSubjectApplication(
-    @Param('tutorId') tutorId: string,
+    @Param("tutorId") tutorId: string,
     @Body() body: any,
-    @UploadedFiles() files?: Array<any>
+    @UploadedFiles() files?: Array<any>,
   ) {
-    console.log(`[TutorsController] submitSubjectApplication hit for tutorId: ${tutorId}`);
+    console.log(
+      `[TutorsController] submitSubjectApplication hit for tutorId: ${tutorId}`,
+    );
     // FormData fields are available in req.body when using multer
-    const subjectName = body?.subject_name || body?.subjectName || '';
-    const isReapplication = body?.is_reapplication === 'true' || body?.is_reapplication === true;
-    console.log('Received subject application:', { tutorId, subjectName, filesCount: files?.length || 0, isReapplication, bodyKeys: Object.keys(body || {}) });
+    const subjectName = body?.subject_name || body?.subjectName || "";
+    const isReapplication =
+      body?.is_reapplication === "true" || body?.is_reapplication === true;
+    console.log("Received subject application:", {
+      tutorId,
+      subjectName,
+      filesCount: files?.length || 0,
+      isReapplication,
+      bodyKeys: Object.keys(body || {}),
+    });
 
     if (!subjectName || !subjectName.trim()) {
-      throw new Error('Subject name is required');
+      throw new Error("Subject name is required");
     }
 
     // Allow reapplying rejected subjects even without new files (they may have existing documents)
     // For new applications, files are still required
     if ((!files || files.length === 0) && !isReapplication) {
-      throw new Error('At least one file is required for subject application');
+      throw new Error("At least one file is required for subject application");
     }
 
     const uploadedFiles = [];
     if (files && files.length > 0) {
       for (const file of files) {
-        const originalExt = path.extname(file.originalname) || '';
+        const originalExt = path.extname(file.originalname) || "";
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8);
         const filename = `subjectApp_${tutorId}_${timestamp}_${random}${originalExt}`;
 
-        const publicUrl = await this.supabaseService.uploadFile('tutor_documents', filename, file.buffer, file.mimetype);
+        const publicUrl = await this.supabaseService.uploadFile(
+          "tutor_documents",
+          filename,
+          file.buffer,
+          file.mimetype,
+        );
 
         const fileForService = {
           ...file,
           filename: filename,
-          destination: 'tutor_documents',
-          path: publicUrl
+          destination: "tutor_documents",
+          path: publicUrl,
         };
         uploadedFiles.push(fileForService);
       }
     }
 
-    return this.tutorsService.submitSubjectApplication(+tutorId, subjectName, uploadedFiles, isReapplication);
+    return this.tutorsService.submitSubjectApplication(
+      +tutorId,
+      subjectName,
+      uploadedFiles,
+      isReapplication,
+    );
   }
 
   // Availability change request endpoints removed as redundant
 
-  @Get(':tutorId/booking-requests')
+  @Get(":tutorId/booking-requests")
   @UseGuards(JwtAuthGuard)
-  async getBookingRequests(@Param('tutorId') tutorId: string) {
+  async getBookingRequests(@Param("tutorId") tutorId: string) {
     return this.tutorsService.getBookingRequests(+tutorId);
   }
 
-  @Post(':tutorId/booking-requests')
+  @Post(":tutorId/booking-requests")
   @UseGuards(JwtAuthGuard)
-  async createBookingRequest(@Param('tutorId') tutorId: string, @Body() body: { subject: string; date: string; time: string; duration: number; student_notes?: string }, @Req() req: any) {
+  async createBookingRequest(
+    @Param("tutorId") tutorId: string,
+    @Body()
+    body: {
+      subject: string;
+      date: string;
+      time: string;
+      duration: number;
+      student_notes?: string;
+    },
+    @Req() req: any,
+  ) {
     const userId = req.user?.user_id;
     return this.tutorsService.createBookingRequest(+tutorId, userId, body);
   }
 
-  @Post('booking-requests/:bookingId/accept')
+  @Post("booking-requests/:bookingId/accept")
   @UseGuards(JwtAuthGuard)
-  async acceptBookingRequest(@Param('bookingId') bookingId: string) {
-    return this.tutorsService.updateBookingRequestStatus(+bookingId, 'accepted');
+  async acceptBookingRequest(@Param("bookingId") bookingId: string) {
+    return this.tutorsService.updateBookingRequestStatus(
+      +bookingId,
+      "accepted",
+    );
   }
 
-  @Post('booking-requests/:bookingId/decline')
+  @Post("booking-requests/:bookingId/decline")
   @UseGuards(JwtAuthGuard)
-  async declineBookingRequest(@Param('bookingId') bookingId: string) {
-    return this.tutorsService.updateBookingRequestStatus(+bookingId, 'declined');
+  async declineBookingRequest(@Param("bookingId") bookingId: string) {
+    return this.tutorsService.updateBookingRequestStatus(
+      +bookingId,
+      "declined",
+    );
   }
 
-  @Post('booking-requests/:bookingId/payment-approve')
+  @Post("booking-requests/:bookingId/payment-approve")
   @UseGuards(JwtAuthGuard)
-  async approvePayment(@Param('bookingId') bookingId: string) {
-    return this.tutorsService.updatePaymentStatus(+bookingId, 'approved');
+  async approvePayment(@Param("bookingId") bookingId: string) {
+    return this.tutorsService.updatePaymentStatus(+bookingId, "approved");
   }
 
-  @Post('booking-requests/:bookingId/payment-reject')
+  @Post("booking-requests/:bookingId/payment-reject")
   @UseGuards(JwtAuthGuard)
-  async rejectPayment(@Param('bookingId') bookingId: string) {
-    return this.tutorsService.updatePaymentStatus(+bookingId, 'rejected');
+  async rejectPayment(@Param("bookingId") bookingId: string) {
+    return this.tutorsService.updatePaymentStatus(+bookingId, "rejected");
   }
 
   // Tutee uploads payment proof image
-  @Post('booking-requests/:bookingId/payment-proof')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadPaymentProof(@Param('bookingId') bookingId: string, @UploadedFile() file: any) {
-    const ext = path.extname(file.originalname) || '';
-    const safeExt = ext || '.jpg';
+  @Post("booking-requests/:bookingId/payment-proof")
+  @UseInterceptors(FileInterceptor("file"))
+  async uploadPaymentProof(
+    @Param("bookingId") bookingId: string,
+    @UploadedFile() file: any,
+  ) {
+    const ext = path.extname(file.originalname) || "";
+    const safeExt = ext || ".jpg";
     const filename = `paymentProof_${bookingId}_${Date.now()}${safeExt}`;
 
-    const publicUrl = await this.supabaseService.uploadFile('tutor_documents', filename, file.buffer, file.mimetype);
+    const publicUrl = await this.supabaseService.uploadFile(
+      "tutor_documents",
+      filename,
+      file.buffer,
+      file.mimetype,
+    );
 
     const fileForService = {
       ...file,
       filename: filename,
-      destination: 'tutor_documents',
-      path: publicUrl
+      destination: "tutor_documents",
+      path: publicUrl,
     };
 
     return this.tutorsService.uploadPaymentProof(+bookingId, fileForService);
   }
 
-  @Post('booking-requests/:bookingId/complete')
+  @Post("booking-requests/:bookingId/complete")
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor("file"))
   async completeBooking(
-    @Param('bookingId') bookingId: string,
+    @Param("bookingId") bookingId: string,
     @UploadedFile() file: any,
-    @Body() body: { status?: string }
+    @Body() body: { status?: string },
   ) {
-    const status = (body.status || 'awaiting_confirmation') as BookingRequest['status'];
+    const status = (body.status ||
+      "awaiting_confirmation") as BookingRequest["status"];
 
-    const ext = path.extname(file.originalname) || '';
+    const ext = path.extname(file.originalname) || "";
     const filename = `sessionProof_${bookingId}_${Date.now()}${ext}`;
 
-    const publicUrl = await this.supabaseService.uploadFile('tutor_documents', filename, file.buffer, file.mimetype);
+    const publicUrl = await this.supabaseService.uploadFile(
+      "tutor_documents",
+      filename,
+      file.buffer,
+      file.mimetype,
+    );
 
     const fileForService = {
       ...file,
       filename: filename,
-      destination: 'tutor_documents',
-      path: publicUrl
+      destination: "tutor_documents",
+      path: publicUrl,
     };
 
-    return this.tutorsService.markBookingAsCompleted(+bookingId, status, fileForService);
+    return this.tutorsService.markBookingAsCompleted(
+      +bookingId,
+      status,
+      fileForService,
+    );
   }
 
-  @Get(':tutorId/sessions')
+  @Get(":tutorId/sessions")
   @UseGuards(JwtAuthGuard)
-  async getTutorSessions(@Param('tutorId') tutorId: string) {
+  async getTutorSessions(@Param("tutorId") tutorId: string) {
     return this.tutorsService.getTutorSessions(+tutorId);
   }
 
-  @Get(':tutorId/payments')
+  @Get(":tutorId/payments")
   @UseGuards(JwtAuthGuard)
-  async getTutorPayments(@Param('tutorId') tutorId: string) {
+  async getTutorPayments(@Param("tutorId") tutorId: string) {
     return this.tutorsService.getTutorPayments(+tutorId);
   }
 
-  @Get(':tutorId/payouts')
+  @Get(":tutorId/payouts")
   @UseGuards(JwtAuthGuard)
-  async getTutorPayouts(@Param('tutorId') tutorId: string) {
+  async getTutorPayouts(@Param("tutorId") tutorId: string) {
     return this.tutorsService.getTutorPayouts(+tutorId);
   }
 
-  @Get(':tutorId/earnings-stats')
+  @Get(":tutorId/earnings-stats")
   @UseGuards(JwtAuthGuard)
-  async getTutorEarningsStats(@Param('tutorId') tutorId: string) {
+  async getTutorEarningsStats(@Param("tutorId") tutorId: string) {
     return this.tutorsService.getTutorEarningsStats(+tutorId);
   }
 
-
-  @Post(':tutorId/gcash-qr')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadGcashQR(@Param('tutorId') tutorId: string, @UploadedFile() file: any) {
+  @Post(":tutorId/gcash-qr")
+  @UseInterceptors(FileInterceptor("file"))
+  async uploadGcashQR(
+    @Param("tutorId") tutorId: string,
+    @UploadedFile() file: any,
+  ) {
     console.log(`[TutorsController] uploadGcashQR hit for tutorId: ${tutorId}`);
-    const ext = path.extname(file.originalname) || '';
+    const ext = path.extname(file.originalname) || "";
     const tempFilename = `temp_gcash_${tutorId}_${Date.now()}${ext}`;
 
-    const publicUrl = await this.supabaseService.uploadFile('tutor_documents', tempFilename, file.buffer, file.mimetype);
+    const publicUrl = await this.supabaseService.uploadFile(
+      "tutor_documents",
+      tempFilename,
+      file.buffer,
+      file.mimetype,
+    );
 
     const fileForService = {
       ...file,
       filename: tempFilename,
-      destination: 'tutor_documents',
-      path: publicUrl
+      destination: "tutor_documents",
+      path: publicUrl,
     };
 
     return this.tutorsService.saveGcashQR(+tutorId, fileForService);
   }
 
   // Set placeholder profile image when no file is uploaded
-  @Post(':tutorId/profile-image-placeholder')
-  async setProfileImagePlaceholder(@Param('tutorId') tutorId: string) {
-    console.log(`[TutorsController] setProfileImagePlaceholder hit for tutorId: ${tutorId}`);
+  @Post(":tutorId/profile-image-placeholder")
+  async setProfileImagePlaceholder(@Param("tutorId") tutorId: string) {
+    console.log(
+      `[TutorsController] setProfileImagePlaceholder hit for tutorId: ${tutorId}`,
+    );
     return this.tutorsService.saveProfileImage(+tutorId, null);
   }
 
   // Set placeholder GCash QR when no file is uploaded
-  @Post(':tutorId/gcash-qr-placeholder')
-  async setGcashQRPlaceholder(@Param('tutorId') tutorId: string) {
-    console.log(`[TutorsController] setGcashQRPlaceholder hit for tutorId: ${tutorId}`);
+  @Post(":tutorId/gcash-qr-placeholder")
+  async setGcashQRPlaceholder(@Param("tutorId") tutorId: string) {
+    console.log(
+      `[TutorsController] setGcashQRPlaceholder hit for tutorId: ${tutorId}`,
+    );
     return this.tutorsService.saveGcashQR(+tutorId, null);
   }
 }

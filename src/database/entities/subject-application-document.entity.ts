@@ -1,13 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { SubjectApplication } from './subject-application.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
+import { SubjectApplication } from "./subject-application.entity";
 
-@Entity('subject_application_documents')
+@Entity("subject_application_documents")
 export class SubjectApplicationDocument {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => SubjectApplication, application => application.documents)
-  @JoinColumn({ name: 'subject_application_id' })
+  @ManyToOne(() => SubjectApplication, (application) => application.documents)
+  @JoinColumn({ name: "subject_application_id" })
   subjectApplication: SubjectApplication;
 
   @Column()
@@ -19,6 +25,6 @@ export class SubjectApplicationDocument {
   @Column()
   file_type: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   created_at: Date;
 }

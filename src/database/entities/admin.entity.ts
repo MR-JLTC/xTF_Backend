@@ -1,8 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne, Column } from 'typeorm';
-import { User } from './user.entity';
-import { University } from './university.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+  ManyToOne,
+  Column,
+} from "typeorm";
+import { User } from "./user.entity";
+import { University } from "./university.entity";
 
-@Entity('admins')
+@Entity("admins")
 export class Admin {
   @PrimaryGeneratedColumn()
   admin_id: number;
@@ -11,16 +18,16 @@ export class Admin {
   university_id: number;
 
   @OneToOne(() => User, (user) => user.admin_profile)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: "user_id" })
   user: User;
 
   @ManyToOne(() => University, (university) => university.admins)
-  @JoinColumn({ name: 'university_id' })
+  @JoinColumn({ name: "university_id" })
   university: University;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   qr_code_url?: string;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
+  @Column({ type: "varchar", length: 20, nullable: true })
   gcash_number?: string;
 }

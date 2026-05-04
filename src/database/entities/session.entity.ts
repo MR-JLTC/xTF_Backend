@@ -6,41 +6,41 @@ import {
   JoinColumn,
   CreateDateColumn,
   OneToMany,
-} from 'typeorm';
-import { Student } from './student.entity';
-import { Tutor } from './tutor.entity';
-import { Subject } from './subject.entity';
-import { Rating } from './rating.entity';
+} from "typeorm";
+import { Student } from "./student.entity";
+import { Tutor } from "./tutor.entity";
+import { Subject } from "./subject.entity";
+import { Rating } from "./rating.entity";
 
-@Entity('session_history')
+@Entity("session_history")
 export class Session {
   @PrimaryGeneratedColumn()
   session_id: number;
 
   @ManyToOne(() => Student, (student) => student.sessions)
-  @JoinColumn({ name: 'student_id' })
+  @JoinColumn({ name: "student_id" })
   student: Student;
 
   @ManyToOne(() => Tutor, (tutor) => tutor.sessions)
-  @JoinColumn({ name: 'tutor_id' })
+  @JoinColumn({ name: "tutor_id" })
   tutor: Tutor;
 
   @ManyToOne(() => Subject)
-  @JoinColumn({ name: 'subject_id' })
+  @JoinColumn({ name: "subject_id" })
   subject: Subject;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: "timestamp" })
   start_time: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: "timestamp" })
   end_time: Date;
 
   @Column({
-    type: 'enum',
-    enum: ['scheduled', 'completed', 'cancelled'],
-    default: 'scheduled',
+    type: "enum",
+    enum: ["scheduled", "completed", "cancelled"],
+    default: "scheduled",
   })
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: "scheduled" | "completed" | "cancelled";
 
   @CreateDateColumn()
   created_at: Date;

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsIn, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsIn, IsOptional } from "class-validator";
 
 export class CreateUniversityDto {
   @IsString()
@@ -13,8 +13,8 @@ export class CreateUniversityDto {
   @IsNotEmpty()
   email_domain: string;
 
-  @IsIn(['active', 'inactive'])
-  status: 'active' | 'inactive';
+  @IsIn(["active", "inactive"])
+  status: "active" | "inactive";
 
   @IsString()
   @IsOptional()
@@ -36,9 +36,9 @@ export class UpdateUniversityDto {
   @IsOptional()
   email_domain?: string;
 
-  @IsIn(['active', 'inactive'])
+  @IsIn(["active", "inactive"])
   @IsOptional()
-  status?: 'active' | 'inactive';
+  status?: "active" | "inactive";
 
   @IsString()
   @IsOptional()

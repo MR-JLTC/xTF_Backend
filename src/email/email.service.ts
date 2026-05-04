@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
+import { Injectable } from "@nestjs/common";
+import { google } from "googleapis";
+import { OAuth2Client } from "google-auth-library";
 
 @Injectable()
 export class EmailService {
@@ -11,19 +11,21 @@ export class EmailService {
   private oauth2Client: OAuth2Client;
 
   constructor() {
-    this.gmailUser = process.env.GMAIL_USER || 'jactechnologies7@gmail.com';
-    this.clientId = process.env.GMAIL_CLIENT_ID || '';
-    this.clientSecret = process.env.GMAIL_CLIENT_SECRET || '';
-    this.refreshToken = process.env.GMAIL_REFRESH_TOKEN || '';
+    this.gmailUser = process.env.GMAIL_USER || "jactechnologies7@gmail.com";
+    this.clientId = process.env.GMAIL_CLIENT_ID || "";
+    this.clientSecret = process.env.GMAIL_CLIENT_SECRET || "";
+    this.refreshToken = process.env.GMAIL_REFRESH_TOKEN || "";
 
     if (!this.clientId || !this.clientSecret || !this.refreshToken) {
-      console.error('❌ Gmail API credentials missing (Client ID, Secret, or Refresh Token).');
+      console.error(
+        "❌ Gmail API credentials missing (Client ID, Secret, or Refresh Token).",
+      );
     }
 
     this.oauth2Client = new google.auth.OAuth2(
       this.clientId,
       this.clientSecret,
-      'https://developers.google.com/oauthplayground', // Common redirect URI used for generating tokens
+      "https://developers.google.com/oauthplayground", // Common redirect URI used for generating tokens
     );
 
     this.oauth2Client.setCredentials({
@@ -31,44 +33,51 @@ export class EmailService {
     });
   }
 
-  async sendEmail(mailOptions: { to: string; subject: string; html: string }): Promise<boolean> {
+  async sendEmail(mailOptions: {
+    to: string;
+    subject: string;
+    html: string;
+  }): Promise<boolean> {
     try {
       console.log(`--- Gmail Googleapis Request ---`);
       console.log(`To: ${mailOptions.to}`);
       console.log(`Subject: ${mailOptions.subject}`);
 
-      const gmail = google.gmail({ version: 'v1', auth: this.oauth2Client });
+      const gmail = google.gmail({ version: "v1", auth: this.oauth2Client });
 
-      const utf8Subject = `=?utf-8?B?${Buffer.from(mailOptions.subject).toString('base64')}?=`;
+      const utf8Subject = `=?utf-8?B?${Buffer.from(mailOptions.subject).toString("base64")}?=`;
       const messageParts = [
         `From: "TutorFriends" <${this.gmailUser}>`,
         `To: ${mailOptions.to}`,
         `Subject: ${utf8Subject}`,
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=utf-8',
-        'Content-Transfer-Encoding: base64',
-        '',
-        Buffer.from(mailOptions.html).toString('base64'),
+        "MIME-Version: 1.0",
+        "Content-Type: text/html; charset=utf-8",
+        "Content-Transfer-Encoding: base64",
+        "",
+        Buffer.from(mailOptions.html).toString("base64"),
       ];
-      const message = messageParts.join('\n');
+      const message = messageParts.join("\n");
 
       const encodedMessage = Buffer.from(message)
-        .toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
 
       const response = await gmail.users.messages.send({
-        userId: 'me',
+        userId: "me",
         requestBody: {
           raw: encodedMessage,
         },
       });
 
-      console.log('✅ Email sent successfully via Googleapis:', response.data.id);
+      console.log(
+        "✅ Email sent successfully via Googleapis:",
+        response.data.id,
+      );
       return true;
     } catch (error) {
-      console.error('EmailService.sendEmail error:', error);
+      console.error("EmailService.sendEmail error:", error);
       return false;
     }
   }
@@ -96,7 +105,7 @@ export class EmailService {
             </div>
             <div style="background-color: #ffffff; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
               <h3 style="color: #334155; margin-top: 0;">Message:</h3>
-              <p style="line-height: 1.6; color: #475569;">${contactData.message.replace(/\n/g, '<br>')}</p>
+              <p style="line-height: 1.6; color: #475569;">${contactData.message.replace(/\n/g, "<br>")}</p>
             </div>
             <div style="margin-top: 20px; padding: 15px; background-color: #f1f5f9; border-radius: 8px; text-align: center;">
               <p style="margin: 0; color: #64748b; font-size: 14px;">
@@ -108,7 +117,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Error sending contact email:', error);
+      console.error("Error sending contact email:", error);
       return false;
     }
   }
@@ -120,7 +129,7 @@ export class EmailService {
     try {
       const mailOptions = {
         to: tutorData.email,
-        subject: '🎉 Welcome to TutorFriends! Your Application is Approved',
+        subject: "🎉 Welcome to TutorFriends! Your Application is Approved",
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #0ea5e9; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -148,7 +157,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send tutor application approval email:', error);
+      console.error("Failed to send tutor application approval email:", error);
       return false;
     }
   }
@@ -161,7 +170,7 @@ export class EmailService {
     try {
       const mailOptions = {
         to: tutorData.email,
-        subject: '✅ Subject Expertise Approved',
+        subject: "✅ Subject Expertise Approved",
         html: `
            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #10b981; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -186,17 +195,17 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send subject approval email:', error);
+      console.error("Failed to send subject approval email:", error);
       return false;
     }
   }
 
   async sendTestEmail(to: string): Promise<boolean> {
     try {
-      console.log('Attempting to send test email to:', to);
+      console.log("Attempting to send test email to:", to);
       const mailOptions = {
         to: to,
-        subject: 'TutorFriends Gmail API Test',
+        subject: "TutorFriends Gmail API Test",
         html: `
           <div style="font-family: sans-serif; padding: 20px;">
             <h2 style="color: #0ea5e9;">✅ Gmail API is Working!</h2>
@@ -218,7 +227,7 @@ export class EmailService {
     try {
       const mailOptions = {
         to: tutorData.email,
-        subject: 'Update on Your Tutor Application',
+        subject: "Update on Your Tutor Application",
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #ef4444; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -231,12 +240,16 @@ export class EmailService {
                 Thank you for your interest in joining TutorFriends. After carefully reviewing your application, we regret to inform you that we cannot approve your moderator/tutor account at this time.
               </p>
               
-              ${tutorData.adminNotes ? `
+              ${
+                tutorData.adminNotes
+                  ? `
               <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 20px; margin: 25px 0; border-radius: 4px;">
                 <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">Reason for Rejection:</h3>
                 <p style="color: #7f1d1d; margin: 0; line-height: 1.6; font-size: 15px;">${tutorData.adminNotes}</p>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
 
               <p style="color: #475569; line-height: 1.8; font-size: 16px;">
                 You are welcome to update your profile information and documents to address the feedback above, and then re-apply.
@@ -250,7 +263,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send tutor rejection email:', error);
+      console.error("Failed to send tutor rejection email:", error);
       return false;
     }
   }
@@ -264,7 +277,7 @@ export class EmailService {
     try {
       const mailOptions = {
         to: tutorData.email,
-        subject: 'Update on Your Subject Application',
+        subject: "Update on Your Subject Application",
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #ef4444; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -277,12 +290,16 @@ export class EmailService {
                 We have reviewed your request to teach <strong>${tutorData.subjectName}</strong>. Unfortunately, we are unable to approve this subject at this time.
               </p>
               
-              ${tutorData.adminNotes ? `
+              ${
+                tutorData.adminNotes
+                  ? `
               <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 20px; margin: 25px 0; border-radius: 4px;">
                 <h3 style="color: #991b1b; margin: 0 0 10px 0; font-size: 16px; font-weight: 600;">Reason for Rejection:</h3>
                 <p style="color: #7f1d1d; margin: 0; line-height: 1.6; font-size: 15px;">${tutorData.adminNotes}</p>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
 
               <p style="color: #475569; line-height: 1.8; font-size: 16px;">
                 Please address the issues mentioned above and try applying for this subject again, or ensure your documents meet our requirements.
@@ -296,7 +313,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send subject rejection email:', error);
+      console.error("Failed to send subject rejection email:", error);
       return false;
     }
   }
@@ -312,10 +329,11 @@ export class EmailService {
     totalAmount: number;
   }): Promise<boolean> {
     try {
-      const durationLabel = data.duration === 1 ? '1 hour' : `${data.duration} hours`;
+      const durationLabel =
+        data.duration === 1 ? "1 hour" : `${data.duration} hours`;
       const mailOptions = {
         to: data.tuteeEmail,
-        subject: '✅ Booking Approved — Please Proceed to Payment',
+        subject: "✅ Booking Approved — Please Proceed to Payment",
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #0ea5e9; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -357,7 +375,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send booking approval email:', error);
+      console.error("Failed to send booking approval email:", error);
       return false;
     }
   }
@@ -374,8 +392,8 @@ export class EmailService {
   }): Promise<boolean> {
     try {
       const dashboardLink = data.isReceiverTutor
-        ? 'https://tutorfriends.online/tutor-dashboard/sessions'
-        : 'https://tutorfriends.online/tutee-dashboard/upcoming-sessions';
+        ? "https://tutorfriends.online/tutor-dashboard/sessions"
+        : "https://tutorfriends.online/tutee-dashboard/upcoming-sessions";
       const mailOptions = {
         to: data.receiverEmail,
         subject: `📅 Reschedule Requested — ${data.subject}`,
@@ -398,7 +416,7 @@ export class EmailService {
                   <tr><td style="padding: 6px 0; color: #78350f;">Proposed by</td><td style="padding: 6px 0; font-weight: 600;">${data.proposerName}</td></tr>
                   <tr><td style="padding: 6px 0; color: #78350f;">New Date</td><td style="padding: 6px 0; font-weight: 600;">${data.proposedDate}</td></tr>
                   <tr><td style="padding: 6px 0; color: #78350f;">New Time</td><td style="padding: 6px 0; font-weight: 600;">${data.proposedTime}</td></tr>
-                  ${data.reason ? `<tr><td style="padding: 6px 0; color: #78350f; vertical-align: top;">Reason</td><td style="padding: 6px 0; font-style: italic; color: #92400e;">"${data.reason}"</td></tr>` : ''}
+                  ${data.reason ? `<tr><td style="padding: 6px 0; color: #78350f; vertical-align: top;">Reason</td><td style="padding: 6px 0; font-style: italic; color: #92400e;">"${data.reason}"</td></tr>` : ""}
                 </table>
               </div>
               <div style="text-align: center; margin: 30px 0;">
@@ -416,7 +434,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send reschedule proposal email:', error);
+      console.error("Failed to send reschedule proposal email:", error);
       return false;
     }
   }
@@ -432,8 +450,8 @@ export class EmailService {
   }): Promise<boolean> {
     try {
       const dashboardLink = data.isProposerTutor
-        ? 'https://tutorfriends.online/tutor-dashboard/sessions'
-        : 'https://tutorfriends.online/tutee-dashboard/upcoming-sessions';
+        ? "https://tutorfriends.online/tutor-dashboard/sessions"
+        : "https://tutorfriends.online/tutee-dashboard/upcoming-sessions";
       return await this.sendEmail({
         to: data.proposerEmail,
         subject: `✅ Reschedule Approved — ${data.subject}`,
@@ -469,7 +487,7 @@ export class EmailService {
         `,
       });
     } catch (error) {
-      console.error('Failed to send reschedule approved email:', error);
+      console.error("Failed to send reschedule approved email:", error);
       return false;
     }
   }
@@ -483,8 +501,8 @@ export class EmailService {
   }): Promise<boolean> {
     try {
       const dashboardLink = data.isProposerTutor
-        ? 'https://tutorfriends.online/tutor-dashboard/sessions'
-        : 'https://tutorfriends.online/tutee-dashboard/upcoming-sessions';
+        ? "https://tutorfriends.online/tutor-dashboard/sessions"
+        : "https://tutorfriends.online/tutee-dashboard/upcoming-sessions";
       return await this.sendEmail({
         to: data.proposerEmail,
         subject: `❌ Reschedule Declined — ${data.subject}`,
@@ -516,7 +534,7 @@ export class EmailService {
         `,
       });
     } catch (error) {
-      console.error('Failed to send reschedule declined email:', error);
+      console.error("Failed to send reschedule declined email:", error);
       return false;
     }
   }
@@ -531,10 +549,11 @@ export class EmailService {
     duration: number;
   }): Promise<boolean> {
     try {
-      const durationLabel = data.duration === 1 ? '1 hour' : `${data.duration} hours`;
+      const durationLabel =
+        data.duration === 1 ? "1 hour" : `${data.duration} hours`;
       const mailOptions = {
         to: data.tutorEmail,
-        subject: '📩 New Booking Request — Action Required',
+        subject: "📩 New Booking Request — Action Required",
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #6366f1; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -572,7 +591,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send new booking request email:', error);
+      console.error("Failed to send new booking request email:", error);
       return false;
     }
   }
@@ -587,10 +606,11 @@ export class EmailService {
     duration: number;
   }): Promise<boolean> {
     try {
-      const durationLabel = data.duration === 1 ? '1 hour' : `${data.duration} hours`;
+      const durationLabel =
+        data.duration === 1 ? "1 hour" : `${data.duration} hours`;
       const mailOptions = {
         to: data.tuteeEmail,
-        subject: '❌ Booking Request Declined',
+        subject: "❌ Booking Request Declined",
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #ef4444; padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -630,7 +650,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send booking declined email:', error);
+      console.error("Failed to send booking declined email:", error);
       return false;
     }
   }
@@ -643,20 +663,21 @@ export class EmailService {
     date: string;
     time: string;
     duration: number;
-    action: 'approved' | 'declined';
+    action: "approved" | "declined";
   }): Promise<boolean> {
     try {
-      const durationLabel = data.duration === 1 ? '1 hour' : `${data.duration} hours`;
-      const isApproved = data.action === 'approved';
-      const headerColor = isApproved ? '#10b981' : '#ef4444';
-      const actionLabel = isApproved ? 'Approved' : 'Declined';
-      const actionEmoji = isApproved ? '✅' : '❌';
-      const bodyBg = isApproved ? '#ecfdf5' : '#fef2f2';
-      const bodyBorder = isApproved ? '#6ee7b7' : '#fecaca';
-      const labelColor = isApproved ? '#065f46' : '#991b1b';
+      const durationLabel =
+        data.duration === 1 ? "1 hour" : `${data.duration} hours`;
+      const isApproved = data.action === "approved";
+      const headerColor = isApproved ? "#10b981" : "#ef4444";
+      const actionLabel = isApproved ? "Approved" : "Declined";
+      const actionEmoji = isApproved ? "✅" : "❌";
+      const bodyBg = isApproved ? "#ecfdf5" : "#fef2f2";
+      const bodyBorder = isApproved ? "#6ee7b7" : "#fecaca";
+      const labelColor = isApproved ? "#065f46" : "#991b1b";
       const subText = isApproved
-        ? 'The student will be notified to proceed with payment.'
-        : 'The student has been notified of the decision.';
+        ? "The student will be notified to proceed with payment."
+        : "The student has been notified of the decision.";
       const mailOptions = {
         to: data.tutorEmail,
         subject: `${actionEmoji} Booking ${actionLabel} — ${data.subject}`,
@@ -695,7 +716,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send booking action confirmation email:', error);
+      console.error("Failed to send booking action confirmation email:", error);
       return false;
     }
   }
@@ -707,8 +728,8 @@ export class EmailService {
   }): Promise<boolean> {
     try {
       const mailOptions = {
-        to: 'jactechnologies7@gmail.com',
-        subject: 'New User Registration Alert',
+        to: "jactechnologies7@gmail.com",
+        subject: "New User Registration Alert",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="background-color: #3b82f6; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -732,7 +753,7 @@ export class EmailService {
       };
       return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('Failed to send registration notification email:', error);
+      console.error("Failed to send registration notification email:", error);
       return false;
     }
   }

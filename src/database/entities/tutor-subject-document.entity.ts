@@ -1,13 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { TutorSubject } from './tutor-subject.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
+import { TutorSubject } from "./tutor-subject.entity";
 
-@Entity('tutor_subject_documents')
+@Entity("tutor_subject_documents")
 export class TutorSubjectDocument {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => TutorSubject, tutorSubject => tutorSubject.documents)
-  @JoinColumn({ name: 'tutor_subject_id' })
+  @ManyToOne(() => TutorSubject, (tutorSubject) => tutorSubject.documents)
+  @JoinColumn({ name: "tutor_subject_id" })
   tutorSubject: TutorSubject;
 
   @Column()
@@ -19,6 +25,6 @@ export class TutorSubjectDocument {
   @Column()
   file_type: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   created_at: Date;
 }

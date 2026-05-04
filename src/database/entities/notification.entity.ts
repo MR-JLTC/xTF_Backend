@@ -1,9 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { User } from './user.entity';
-import { Session } from './session.entity';
-import { BookingRequest } from './booking-request.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from "typeorm";
+import { User } from "./user.entity";
+import { Session } from "./session.entity";
+import { BookingRequest } from "./booking-request.entity";
 
-@Entity('notifications')
+@Entity("notifications")
 export class Notification {
   @PrimaryGeneratedColumn()
   notification_id: number;
@@ -16,14 +23,14 @@ export class Notification {
   receiver_id?: number;
 
   @Column()
-  userType: 'tutor' | 'tutee' | 'admin';
+  userType: "tutor" | "tutee" | "admin";
 
   @ManyToOne(() => Session, { nullable: true })
-  @JoinColumn({ name: 'session_id' })
+  @JoinColumn({ name: "session_id" })
   session: Session;
 
   @ManyToOne(() => BookingRequest, { nullable: true })
-  @JoinColumn({ name: 'booking_id' })
+  @JoinColumn({ name: "booking_id" })
   booking: BookingRequest;
 
   @Column()

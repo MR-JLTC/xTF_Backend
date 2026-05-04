@@ -1,26 +1,34 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany, ManyToOne } from 'typeorm';
-import { User } from './user.entity';
-import { TutorDocument } from './tutor-document.entity';
-import { TutorSubject } from './tutor-subject.entity';
-import { TutorAvailability } from './tutor-availability.entity';
-import { Session } from './session.entity';
-import { Payment } from './payment.entity';
-import { SubjectApplication } from './subject-application.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToOne,
+  JoinColumn,
+  OneToMany,
+  ManyToOne,
+} from "typeorm";
+import { User } from "./user.entity";
+import { TutorDocument } from "./tutor-document.entity";
+import { TutorSubject } from "./tutor-subject.entity";
+import { TutorAvailability } from "./tutor-availability.entity";
+import { Session } from "./session.entity";
+import { Payment } from "./payment.entity";
+import { SubjectApplication } from "./subject-application.entity";
 // AvailabilityChangeRequest entity removed
-import { BookingRequest } from './booking-request.entity';
-import { University } from './university.entity';
-import { Course } from './course.entity';
+import { BookingRequest } from "./booking-request.entity";
+import { University } from "./university.entity";
+import { Course } from "./course.entity";
 
-@Entity('tutors')
+@Entity("tutors")
 export class Tutor {
   @PrimaryGeneratedColumn()
   tutor_id: number;
 
-  @OneToOne(() => User, user => user.tutor_profile)
-  @JoinColumn({ name: 'user_id' })
+  @OneToOne(() => User, (user) => user.tutor_profile)
+  @JoinColumn({ name: "user_id" })
   user: User;
 
-  @Column('text')
+  @Column("text")
   bio: string;
 
   @Column({ nullable: true })
@@ -38,32 +46,32 @@ export class Tutor {
   @Column({ nullable: true })
   year_level: number; // Changed to number
 
-  @Column({ nullable: true, type: 'decimal', precision: 10, scale: 2 })
+  @Column({ nullable: true, type: "decimal", precision: 10, scale: 2 })
   session_rate_per_hour: number;
 
   @ManyToOne(() => University, (university) => university.tutors)
-  @JoinColumn({ name: 'university_id' })
+  @JoinColumn({ name: "university_id" })
   university: University;
 
   @ManyToOne(() => Course, (course) => course.tutors)
-  @JoinColumn({ name: 'course_id' })
+  @JoinColumn({ name: "course_id" })
   course: Course;
 
   @Column({
-    type: 'enum',
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending',
+    type: "enum",
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
   })
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
 
   @Column({
-    type: 'enum',
-    enum: ['online', 'offline'],
+    type: "enum",
+    enum: ["online", "offline"],
     nullable: true,
   })
-  activity_status?: 'online' | 'offline';
+  activity_status?: "online" | "offline";
 
-  @Column({ name: 'admin_notes', type: 'text', nullable: true })
+  @Column({ name: "admin_notes", type: "text", nullable: true })
   admin_notes: string;
 
   @OneToMany(() => TutorDocument, (doc) => doc.tutor)
@@ -71,7 +79,7 @@ export class Tutor {
 
   @OneToMany(() => TutorSubject, (tutorSubject) => tutorSubject.tutor)
   subjects: TutorSubject[];
-  
+
   @OneToMany(() => TutorAvailability, (availability) => availability.tutor)
   availabilities: TutorAvailability[];
 

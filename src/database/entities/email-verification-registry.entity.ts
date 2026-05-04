@@ -1,7 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  Index,
+} from "typeorm";
 
-@Entity('email_verification_registry')
-@Index(['email', 'user_type'], { unique: true })
+@Entity("email_verification_registry")
+@Index(["email", "user_type"], { unique: true })
 export class EmailVerificationRegistry {
   @PrimaryGeneratedColumn()
   registry_id: number;
@@ -10,15 +16,15 @@ export class EmailVerificationRegistry {
   email: string;
 
   @Column({
-    type: 'enum',
-    enum: ['tutor', 'tutee', 'admin'],
+    type: "enum",
+    enum: ["tutor", "tutee", "admin"],
   })
-  user_type: 'tutor' | 'tutee' | 'admin';
+  user_type: "tutor" | "tutee" | "admin";
 
   @Column({ nullable: true })
   verification_code: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: "timestamp", nullable: true })
   verification_expires: Date;
 
   @Column({ default: false })

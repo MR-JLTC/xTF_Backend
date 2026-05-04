@@ -1,42 +1,42 @@
-import { Module, Controller, Get } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { UniversitiesModule } from './universities/universities.module';
-import { CoursesModule } from './courses/courses.module';
-import { TutorsModule } from './tutors/tutors.module';
-import { PaymentsModule } from './payments/payments.module';
-import { DashboardModule } from './dashboard/dashboard.module';
-import { EmailModule } from './email/email.module';
-import * as entities from './database/entities';
-import { LandingModule } from './landing/landing.module';
-import { SubjectsModule } from './subjects/subjects.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { ReschedulesModule } from './reschedules/reschedules.module';
-import { SupabaseModule } from './supabase/supabase.module';
-import { DebugController } from './debug/debug.controller';
-import { ChatModule } from './chat/chat.module';
+import { Module, Controller, Get } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { ScheduleModule } from "@nestjs/schedule";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { ConfigModule } from "@nestjs/config";
+import { AuthModule } from "./auth/auth.module";
+import { UsersModule } from "./users/users.module";
+import { UniversitiesModule } from "./universities/universities.module";
+import { CoursesModule } from "./courses/courses.module";
+import { TutorsModule } from "./tutors/tutors.module";
+import { PaymentsModule } from "./payments/payments.module";
+import { DashboardModule } from "./dashboard/dashboard.module";
+import { EmailModule } from "./email/email.module";
+import * as entities from "./database/entities";
+import { LandingModule } from "./landing/landing.module";
+import { SubjectsModule } from "./subjects/subjects.module";
+import { NotificationsModule } from "./notifications/notifications.module";
+import { ReschedulesModule } from "./reschedules/reschedules.module";
+import { SupabaseModule } from "./supabase/supabase.module";
+import { DebugController } from "./debug/debug.controller";
+import { ChatModule } from "./chat/chat.module";
 
 @Controller()
 export class AppController {
-  @Get('server-status')
+  @Get("server-status")
   getRoot() {
     return {
-      message: 'TutorFriends API is running!',
-      version: '1.0.0',
+      message: "TutorFriends API is running!",
+      version: "1.0.0",
       endpoints: {
-        auth: '/api/auth',
-        courses: '/api/courses',
-        universities: '/api/universities',
-        tutors: '/api/tutors',
-        payments: '/api/payments',
-        dashboard: '/api/dashboard',
-        email: '/api/email'
-      }
+        auth: "/api/auth",
+        courses: "/api/courses",
+        universities: "/api/universities",
+        tutors: "/api/tutors",
+        payments: "/api/payments",
+        dashboard: "/api/dashboard",
+        email: "/api/email",
+      },
     };
   }
 }
@@ -47,19 +47,23 @@ export class AppController {
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      type: 'postgres',
+      type: "postgres",
       url: process.env.DATABASE_URL,
       entities: Object.values(entities),
-      synchronize: process.env.DB_SYNC === 'true' || process.env.NODE_ENV !== 'production', // Synchronize if explicitly enabled or in dev
-      ssl: process.env.NODE_ENV === 'production',
-      extra: process.env.NODE_ENV === 'production'
-        ? { ssl: { rejectUnauthorized: false } }
-        : {},
+      synchronize:
+        process.env.DB_SYNC === "true" || process.env.NODE_ENV !== "production", // Synchronize if explicitly enabled or in dev
+      ssl: process.env.NODE_ENV === "production",
+      extra:
+        process.env.NODE_ENV === "production"
+          ? { ssl: { rejectUnauthorized: false } }
+          : {},
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 200,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 200,
+      },
+    ]),
     ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
@@ -84,4 +88,4 @@ export class AppController {
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,14 +1,24 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToOne, OneToMany, Index } from 'typeorm';
-import { University } from './university.entity';
-import { Course } from './course.entity';
-import { Admin } from './admin.entity';
-import { Student } from './student.entity';
-import { Tutor } from './tutor.entity';
-import { BookingRequest } from './booking-request.entity';
-import { PasswordResetToken } from './password-reset-token.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToOne,
+  OneToMany,
+  Index,
+} from "typeorm";
+import { University } from "./university.entity";
+import { Course } from "./course.entity";
+import { Admin } from "./admin.entity";
+import { Student } from "./student.entity";
+import { Tutor } from "./tutor.entity";
+import { BookingRequest } from "./booking-request.entity";
+import { PasswordResetToken } from "./password-reset-token.entity";
 
-@Entity('users')
-@Index(['email', 'user_type'], { unique: true })
+@Entity("users")
+@Index(["email", "user_type"], { unique: true })
 export class User {
   @PrimaryGeneratedColumn()
   user_id: number;
@@ -23,18 +33,18 @@ export class User {
   password?: string;
 
   @Column({
-    type: 'enum',
-    enum: ['tutor', 'tutee', 'admin', 'student'],
+    type: "enum",
+    enum: ["tutor", "tutee", "admin", "student"],
     nullable: true,
   })
-  user_type: 'tutor' | 'tutee' | 'admin' | 'student';
+  user_type: "tutor" | "tutee" | "admin" | "student";
 
   @Column({
-    type: 'enum',
-    enum: ['active', 'inactive', 'pending_verification'],
+    type: "enum",
+    enum: ["active", "inactive", "pending_verification"],
     nullable: true,
   })
-  status: 'active' | 'inactive' | 'pending_verification';
+  status: "active" | "inactive" | "pending_verification";
 
   @CreateDateColumn()
   created_at: Date;

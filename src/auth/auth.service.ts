@@ -1,11 +1,15 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-import { LoginDto, RegisterDto } from './auth.dto';
-import { EmailVerificationService } from './email-verification.service';
-import { TutorsService } from '../tutors/tutors.service';
-import { EmailService } from '../email/email.service';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from "@nestjs/common";
+import { UsersService } from "../users/users.service";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcrypt";
+import { LoginDto, RegisterDto } from "./auth.dto";
+import { EmailVerificationService } from "./email-verification.service";
+import { TutorsService } from "../tutors/tutors.service";
+import { EmailService } from "../email/email.service";
 
 @Injectable()
 export class AuthService {
@@ -15,27 +19,31 @@ export class AuthService {
     private emailVerificationService: EmailVerificationService,
     private tutorsService: TutorsService,
     private emailService: EmailService,
-  ) { }
+  ) {}
 
-  async validateUser(email: string, pass: string, targetUserType?: string): Promise<any> {
+  async validateUser(
+    email: string,
+    pass: string,
+    targetUserType?: string,
+  ): Promise<any> {
     const lowerEmail = email.toLowerCase();
 
-    console.log('\n=== VALIDATE USER DEBUG ===');
-    console.log('Email:', lowerEmail);
-    console.log('Target Type:', targetUserType);
+    console.log("\n=== VALIDATE USER DEBUG ===");
+    console.log("Email:", lowerEmail);
+    console.log("Target Type:", targetUserType);
 
     // Normalize target user type
     let normalizedTargetType = targetUserType;
-    if (targetUserType === 'tutee' || targetUserType === 'student') {
-      normalizedTargetType = 'student'; // Backend uses 'student' for tutees
+    if (targetUserType === "tutee" || targetUserType === "student") {
+      normalizedTargetType = "student"; // Backend uses 'student' for tutees
     }
 
     // Find all users with this email (can have multiple if user has different roles)
     const users = await this.usersService.findAllByEmail(lowerEmail);
-    console.log('Users found in database:', users.length);
+    console.log("Users found in database:", users.length);
 
     if (users.length === 0) {
-      console.log('\n❌ No user found with this email');
+      console.log("\n❌ No user found with this email");
       return null;
     }
 
@@ -47,20 +55,23 @@ export class AuthService {
         if (b.user_type === targetUserType) return 1;
 
         // 2. Alias match (student <-> tutee)
-        const isStudentOrTutee = (type: string) => type === 'student' || type === 'tutee';
+        const isStudentOrTutee = (type: string) =>
+          type === "student" || type === "tutee";
         if (isStudentOrTutee(targetUserType)) {
-          if (isStudentOrTutee(a.user_type) && !isStudentOrTutee(b.user_type)) return -1;
-          if (!isStudentOrTutee(a.user_type) && isStudentOrTutee(b.user_type)) return 1;
+          if (isStudentOrTutee(a.user_type) && !isStudentOrTutee(b.user_type))
+            return -1;
+          if (!isStudentOrTutee(a.user_type) && isStudentOrTutee(b.user_type))
+            return 1;
         }
       }
       return 0;
     });
 
     for (const user of sortedUsers) {
-      console.log('\nChecking account:', {
+      console.log("\nChecking account:", {
         user_id: user.user_id,
         user_type: user.user_type,
-        status: user.status
+        status: user.status,
       });
 
       if (!pass || !user.password) continue;
@@ -79,51 +90,69 @@ export class AuthService {
 
         if (passwordMatch) {
           const { password, ...result } = user;
-          console.log('\n✅ User validation successful for account type:', user.user_type);
+          console.log(
+            "\n✅ User validation successful for account type:",
+            user.user_type,
+          );
           return result;
         }
       } catch (error) {
-        console.error('\n❌ Error during password comparison:', error);
+        console.error("\n❌ Error during password comparison:", error);
       }
     }
 
-    console.log('\n❌ User validation failed (no matching password found for any associated account)');
+    console.log(
+      "\n❌ User validation failed (no matching password found for any associated account)",
+    );
     return null;
   }
 
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
     }
     // Block login if account is inactive
-    if ((user as any).status === 'inactive') {
-      throw new UnauthorizedException('Your account is inactive. Please contact an administrator.');
+    if ((user as any).status === "inactive") {
+      throw new UnauthorizedException(
+        "Your account is inactive. Please contact an administrator.",
+      );
     }
 
     // Check if the user is an admin
     const isAdmin = await this.usersService.isAdmin(user.user_id);
     if (!isAdmin) {
-      throw new UnauthorizedException('Access denied. Only admins can log in.');
+      throw new UnauthorizedException("Access denied. Only admins can log in.");
     }
 
-    const payload = { email: user.email, sub: user.user_id, name: user.name, role: 'admin' };
+    const payload = {
+      email: user.email,
+      sub: user.user_id,
+      name: user.name,
+      role: "admin",
+    };
     return {
-      user: { ...user, role: 'admin' },
+      user: { ...user, role: "admin" },
       accessToken: this.jwtService.sign(payload),
     };
   }
 
   async loginTutorTutee(loginDto: LoginDto) {
-    console.log('=== TUTOR/TUTEE LOGIN DEBUG ===');
-    console.log('Email:', loginDto.email);
-    console.log('Target User Type:', loginDto.user_type);
+    console.log("=== TUTOR/TUTEE LOGIN DEBUG ===");
+    console.log("Email:", loginDto.email);
+    console.log("Target User Type:", loginDto.user_type);
 
     // 1. If user_type is specified, try to validate that specific account
     if (loginDto.user_type) {
-      const user = await this.validateUser(loginDto.email, loginDto.password, loginDto.user_type);
+      const user = await this.validateUser(
+        loginDto.email,
+        loginDto.password,
+        loginDto.user_type,
+      );
       if (!user) {
-        throw new UnauthorizedException('Invalid credentials for this account type');
+        throw new UnauthorizedException(
+          "Invalid credentials for this account type",
+        );
       }
       return this.generateLoginResponse(user);
     }
@@ -131,15 +160,19 @@ export class AuthService {
     // 2. If no user_type specified, check for multiple potential accounts
     console.log(`[DEBUG] Finding users for email: ${loginDto.email}`);
     const allUsers = await this.usersService.findAllByEmail(loginDto.email);
-    console.log(`[DEBUG] Found ${allUsers.length} users in DB for email ${loginDto.email}`);
+    console.log(
+      `[DEBUG] Found ${allUsers.length} users in DB for email ${loginDto.email}`,
+    );
 
     const validUsers = [];
 
     for (const user of allUsers) {
-      console.log(`[DEBUG] Checking User ID: ${user.user_id}, Type: ${user.user_type}, Has Password: ${!!user.password}`);
+      console.log(
+        `[DEBUG] Checking User ID: ${user.user_id}, Type: ${user.user_type}, Has Password: ${!!user.password}`,
+      );
 
       // Skip admin accounts for this endpoint
-      if (user.user_type === 'admin') {
+      if (user.user_type === "admin") {
         console.log(`[DEBUG] Skipping admin user ${user.user_id}`);
         continue;
       }
@@ -150,14 +183,21 @@ export class AuthService {
         continue;
       }
 
-      let passwordMatch = await bcrypt.compare(loginDto.password, user.password);
-      console.log(`[DEBUG] Password match for user ${user.user_id}: ${passwordMatch}`);
+      let passwordMatch = await bcrypt.compare(
+        loginDto.password,
+        user.password,
+      );
+      console.log(
+        `[DEBUG] Password match for user ${user.user_id}: ${passwordMatch}`,
+      );
 
       if (!passwordMatch) {
         // Try double hash fallback if needed (legacy support)
         const doubleHashed = await bcrypt.hash(loginDto.password, 10);
         passwordMatch = await bcrypt.compare(doubleHashed, user.password);
-        console.log(`[DEBUG] Double-hash match for user ${user.user_id}: ${passwordMatch}`);
+        console.log(
+          `[DEBUG] Double-hash match for user ${user.user_id}: ${passwordMatch}`,
+        );
       }
 
       if (passwordMatch) {
@@ -167,18 +207,20 @@ export class AuthService {
     }
 
     if (validUsers.length === 0) {
-      console.log(`[DEBUG] No valid users found. Throwing UnauthorizedException.`);
-      throw new UnauthorizedException('Invalid credentials');
+      console.log(
+        `[DEBUG] No valid users found. Throwing UnauthorizedException.`,
+      );
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     // A. Multiple accounts found -> Return list for user selection
     if (validUsers.length > 1) {
       return {
         multiple_accounts: true,
-        accounts: validUsers.map(u => ({
-          user_type: u.user_type === 'student' ? 'tutee' : u.user_type, // Normalize student->tutee
-          name: u.name
-        }))
+        accounts: validUsers.map((u) => ({
+          user_type: u.user_type === "student" ? "tutee" : u.user_type, // Normalize student->tutee
+          name: u.name,
+        })),
       };
     }
 
@@ -188,40 +230,43 @@ export class AuthService {
 
   private async generateLoginResponse(user: any) {
     // Block login if account is inactive
-    if (user.status === 'inactive') {
-      throw new UnauthorizedException('Your account is inactive. Please contact an administrator.');
+    if (user.status === "inactive") {
+      throw new UnauthorizedException(
+        "Your account is inactive. Please contact an administrator.",
+      );
     }
 
     // Map student/tutee to the correct role for frontend
     let userType = user.user_type;
-    if (userType === 'student' || userType === 'tutee') {
-      userType = 'student'; // Normalize both to 'student' for frontend token, but frontend might expect 'tutee' role string in response?
+    if (userType === "student" || userType === "tutee") {
+      userType = "student"; // Normalize both to 'student' for frontend token, but frontend might expect 'tutee' role string in response?
       // Actually, looking at previous code, it returned role: userType where userType was normalized to 'student' for token
       // But let's keep consistency.
     }
 
     // If user is a tutor, set online status to 'online'
-    if (user.user_type === 'tutor') {
+    if (user.user_type === "tutor") {
       try {
-        await this.tutorsService.updateOnlineStatus(user.user_id, 'online');
+        await this.tutorsService.updateOnlineStatus(user.user_id, "online");
       } catch (err) {
-        console.warn('Failed to update tutor online status:', err);
+        console.warn("Failed to update tutor online status:", err);
       }
     }
 
     // Consistent role string for frontend routing
-    const roleForToken = (userType === 'student' || userType === 'tutee') ? 'student' : userType;
-    // For the "role" property in the returned user object, the frontend switch case uses 'tutee' or 'tutor'. 
-    // The previous code returned `role: userType` where userType was 'student'. 
-    // Wait, the UnifiedLoginPage switch(role) has case 'tutee'. 
+    const roleForToken =
+      userType === "student" || userType === "tutee" ? "student" : userType;
+    // For the "role" property in the returned user object, the frontend switch case uses 'tutee' or 'tutor'.
+    // The previous code returned `role: userType` where userType was 'student'.
+    // Wait, the UnifiedLoginPage switch(role) has case 'tutee'.
     // If we return 'student', the switch default case will trigger error!
-    // Let's check previous code: 
+    // Let's check previous code:
     // if (userType === 'student' || userType === 'tutee') userType = 'student';
     // ... role: userType ...
     // So it was returning 'student'.
-    // Let's re-read UnifiedLoginPage.tsx... 
+    // Let's re-read UnifiedLoginPage.tsx...
     // switch(role) { case 'tutee': ... case 'tutor': ... default: Error }
-    // So if backend returns 'student', frontend fails! 
+    // So if backend returns 'student', frontend fails!
     // !!! CRITICAL FINDING !!!
     // Previous code:
     // let userType = user.user_type;
@@ -234,7 +279,7 @@ export class AuthService {
     // Let's look at UnifiedLoginPage.tsx again in my memory or tools.
     // Line 121: case 'tutee':
     // Line 125: case 'tutor':
-    // Line 117: const role = result as string; 
+    // Line 117: const role = result as string;
     // Wait, `result` is the return value of `loginTutorTutee`.
     // `loginTutorTutee` returns `{ user: { ... }, accessToken: ... }`.
     // The `useAuth` hook `loginTutorTutee` probably extracts the role?
@@ -242,12 +287,23 @@ export class AuthService {
     // However, to be safe and match the "tutee" case in frontend, I should probably return 'tutee' if it is a student/tutee.
 
     // Let's normalize to what the frontend expects: 'tutee' or 'tutor'.
-    const frontendRole = (user.user_type === 'student' || user.user_type === 'tutee') ? 'tutee' : user.user_type;
+    const frontendRole =
+      user.user_type === "student" || user.user_type === "tutee"
+        ? "tutee"
+        : user.user_type;
 
     // Token payload usually needs standard roles. keeping 'student' for token might be important for guards.
-    const tokenRole = (user.user_type === 'student' || user.user_type === 'tutee') ? 'student' : user.user_type;
+    const tokenRole =
+      user.user_type === "student" || user.user_type === "tutee"
+        ? "student"
+        : user.user_type;
 
-    const payload = { email: user.email, sub: user.user_id, name: user.name, role: tokenRole };
+    const payload = {
+      email: user.email,
+      sub: user.user_id,
+      name: user.name,
+      role: tokenRole,
+    };
 
     return {
       user: { ...user, role: frontendRole }, // Return 'tutee' for frontend routing match
@@ -255,20 +311,25 @@ export class AuthService {
     };
   }
 
-  private async determineUserType(userId: number): Promise<'student' | 'tutor'> {
+  private async determineUserType(
+    userId: number,
+  ): Promise<"student" | "tutor"> {
     // Check if user has tutor profile
     const tutorProfile = await this.usersService.findTutorProfile(userId);
-    console.log(`Determining user type for user_id ${userId}:`, tutorProfile ? 'tutor' : 'student');
+    console.log(
+      `Determining user type for user_id ${userId}:`,
+      tutorProfile ? "tutor" : "student",
+    );
     if (tutorProfile) {
-      return 'tutor';
+      return "tutor";
     }
     // Default to student if not a tutor
-    return 'student';
+    return "student";
   }
 
   async register(registerDto: RegisterDto) {
-    console.log('=== REGISTRATION DEBUG ===');
-    console.log('Register DTO:', registerDto);
+    console.log("=== REGISTRATION DEBUG ===");
+    console.log("Register DTO:", registerDto);
 
     // Normalize email to lowercase
     registerDto.email = registerDto.email.toLowerCase();
@@ -278,62 +339,91 @@ export class AuthService {
     const verificationUserType = registerDto.user_type;
 
     // Normalize user_type: frontend sends 'tutee', backend uses 'student'
-    if (registerDto.user_type === 'tutee') {
-      registerDto.user_type = 'student';
+    if (registerDto.user_type === "tutee") {
+      registerDto.user_type = "student";
     }
 
     // Check if user with same email and user_type already exists
-    const existingUserWithType = await this.usersService.findOneByEmailAndType(registerDto.email, registerDto.user_type);
+    const existingUserWithType = await this.usersService.findOneByEmailAndType(
+      registerDto.email,
+      registerDto.user_type,
+    );
     if (existingUserWithType) {
-      throw new BadRequestException(`An account with this email is already registered as a ${registerDto.user_type}.`);
+      throw new BadRequestException(
+        `An account with this email is already registered as a ${registerDto.user_type}.`,
+      );
     }
 
     // Check if email has been verified for the given user type
     // Use the ORIGINAL user type (verificationUserType) because the verification entry
     // was created with 'tutee' (from frontend), not 'student'.
-    const emailVerificationStatus = await this.emailVerificationService.getEmailVerificationStatus(registerDto.email, verificationUserType as 'tutor' | 'tutee' | 'admin');
-    console.log('Email verification status:', emailVerificationStatus);
+    const emailVerificationStatus =
+      await this.emailVerificationService.getEmailVerificationStatus(
+        registerDto.email,
+        verificationUserType as "tutor" | "tutee" | "admin",
+      );
+    console.log("Email verification status:", emailVerificationStatus);
 
     if (!emailVerificationStatus.is_verified) {
-      throw new BadRequestException('Email address not verified. Please complete email verification first.');
+      throw new BadRequestException(
+        "Email address not verified. Please complete email verification first.",
+      );
     }
 
-    if (registerDto.user_type === 'admin') {
+    if (registerDto.user_type === "admin") {
       const adminExists = await this.usersService.hasAdmin();
       if (adminExists) {
-        throw new BadRequestException('An admin account already exists. Please log in instead.');
+        throw new BadRequestException(
+          "An admin account already exists. Please log in instead.",
+        );
       }
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     let user;
-    if (registerDto.user_type === 'admin') {
-      user = await this.usersService.createAdmin({ ...registerDto, password: hashedPassword });
-    } else if (registerDto.user_type === 'student') {
-      user = await this.usersService.createStudent({ ...registerDto, password: hashedPassword });
-    } else if (registerDto.user_type === 'tutor') {
-      user = await this.usersService.createTutor({ ...registerDto, password: hashedPassword });
+    if (registerDto.user_type === "admin") {
+      user = await this.usersService.createAdmin({
+        ...registerDto,
+        password: hashedPassword,
+      });
+    } else if (registerDto.user_type === "student") {
+      user = await this.usersService.createStudent({
+        ...registerDto,
+        password: hashedPassword,
+      });
+    } else if (registerDto.user_type === "tutor") {
+      user = await this.usersService.createTutor({
+        ...registerDto,
+        password: hashedPassword,
+      });
     } else {
-      throw new BadRequestException('Invalid user type provided.');
+      throw new BadRequestException("Invalid user type provided.");
     }
 
-    console.log('User created:', user);
-    console.log('User ID:', user.user_id);
+    console.log("User created:", user);
+    console.log("User ID:", user.user_id);
 
-    const payload = { email: user.email, sub: user.user_id, name: user.name, user_type: user.user_type };
+    const payload = {
+      email: user.email,
+      sub: user.user_id,
+      name: user.name,
+      user_type: user.user_type,
+    };
     const accessToken = this.jwtService.sign(payload);
 
-    console.log('JWT Payload:', payload);
-    console.log('Access Token generated:', !!accessToken);
+    console.log("JWT Payload:", payload);
+    console.log("Access Token generated:", !!accessToken);
 
     // Send notification to admin
-    this.emailService.sendRegistrationNotification({
-      name: user.name,
-      email: user.email,
-      userType: user.user_type,
-    }).catch(err => console.error('Failed to send admin notification:', err));
+    this.emailService
+      .sendRegistrationNotification({
+        name: user.name,
+        email: user.email,
+        userType: user.user_type,
+      })
+      .catch((err) => console.error("Failed to send admin notification:", err));
 
-    console.log('=== END REGISTRATION DEBUG ===');
+    console.log("=== END REGISTRATION DEBUG ===");
 
     return {
       user,
@@ -341,22 +431,43 @@ export class AuthService {
     };
   }
 
-  async registerStudent(body: { name: string; email: string; password: string; university_id: number; course_id?: number; course_name?: string; year_level: number }) {
+  async registerStudent(body: {
+    name: string;
+    email: string;
+    password: string;
+    university_id: number;
+    course_id?: number;
+    course_name?: string;
+    year_level: number;
+  }) {
     // This method is now effectively redundant if `register` handles all types.
     // For now, leaving it as is, but could be removed.
     // Check if user with same email and user_type already exists
-    const existingStudent = await this.usersService.findOneByEmailAndType(body.email, 'student');
-    const existingTutee = await this.usersService.findOneByEmailAndType(body.email, 'tutee');
+    const existingStudent = await this.usersService.findOneByEmailAndType(
+      body.email,
+      "student",
+    );
+    const existingTutee = await this.usersService.findOneByEmailAndType(
+      body.email,
+      "tutee",
+    );
 
     if (existingStudent || existingTutee) {
-      throw new BadRequestException('A student account with this email already exists');
+      throw new BadRequestException(
+        "A student account with this email already exists",
+      );
     }
 
     const user = await this.usersService.createStudent(body);
 
-    const payload = { email: user.email, sub: user.user_id, name: user.name, role: 'student' };
+    const payload = {
+      email: user.email,
+      sub: user.user_id,
+      name: user.name,
+      role: "student",
+    };
     return {
-      user: { ...user, role: 'student' },
+      user: { ...user, role: "student" },
       accessToken: this.jwtService.sign(payload),
     };
   }

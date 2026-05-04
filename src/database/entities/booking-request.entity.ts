@@ -1,99 +1,110 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { Tutor } from './tutor.entity';
-import { User } from './user.entity';
-import { Payment } from './payment.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from "typeorm";
+import { Tutor } from "./tutor.entity";
+import { User } from "./user.entity";
+import { Payment } from "./payment.entity";
 
-@Entity('booking_requests')
+@Entity("booking_requests")
 export class BookingRequest {
   @PrimaryGeneratedColumn()
   id: number;
 
   tutor_id: number;
 
-  @ManyToOne(() => Tutor, tutor => tutor.bookingRequests)
-  @JoinColumn({ name: 'tutor_id' })
+  @ManyToOne(() => Tutor, (tutor) => tutor.bookingRequests)
+  @JoinColumn({ name: "tutor_id" })
   tutor: Tutor;
 
-  @ManyToOne(() => User, user => user.bookingRequests)
-  @JoinColumn({ name: 'student_id' })
+  @ManyToOne(() => User, (user) => user.bookingRequests)
+  @JoinColumn({ name: "student_id" })
   student: User;
 
   @Column()
   subject: string;
 
-  @Column({ type: 'date' })
+  @Column({ type: "date" })
   date: Date;
 
   @Column()
   time: string;
 
-  @Column({ type: 'decimal', precision: 3, scale: 1 })
+  @Column({ type: "decimal", precision: 3, scale: 1 })
   duration: number;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: [
-      'pending',
-      'accepted',
-      'declined',
-      'awaiting_payment',
-      'payment_pending',
-      'admin_payment_pending',
-      'payment_rejected',
-      'payment_approved',
-      'awaiting_confirmation',
-      'upcoming',
-      'completed',
-      'cancelled',
-      'reschedule_confirmation',
-      'reschedule_approved'
+      "pending",
+      "accepted",
+      "declined",
+      "awaiting_payment",
+      "payment_pending",
+      "admin_payment_pending",
+      "payment_rejected",
+      "payment_approved",
+      "awaiting_confirmation",
+      "upcoming",
+      "completed",
+      "cancelled",
+      "reschedule_confirmation",
+      "reschedule_approved",
     ],
-    default: 'pending',
+    default: "pending",
   })
   status:
-    | 'pending'
-    | 'accepted'
-    | 'declined'
-    | 'awaiting_payment'
-    | 'payment_pending'
-    | 'admin_payment_pending'
-    | 'payment_rejected'
-    | 'payment_approved'
-    | 'awaiting_confirmation'
-    | 'upcoming'
-    | 'completed'
-    | 'cancelled'
-    | 'reschedule_confirmation'
-    | 'reschedule_approved';
+    | "pending"
+    | "accepted"
+    | "declined"
+    | "awaiting_payment"
+    | "payment_pending"
+    | "admin_payment_pending"
+    | "payment_rejected"
+    | "payment_approved"
+    | "awaiting_confirmation"
+    | "upcoming"
+    | "completed"
+    | "cancelled"
+    | "reschedule_confirmation"
+    | "reschedule_approved";
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   payment_proof: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   session_proof_url?: string;
 
-    @Column({ type: 'timestamp', nullable: true })
-    tutor_marked_done_at?: Date;
+  @Column({ type: "timestamp", nullable: true })
+  tutor_marked_done_at?: Date;
 
-    @Column({ type: 'timestamp', nullable: true })
-    tutee_marked_done_at?: Date;
+  @Column({ type: "timestamp", nullable: true })
+  tutee_marked_done_at?: Date;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   student_notes: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
   created_at: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: "timestamp",
+    default: () => "CURRENT_TIMESTAMP",
+    onUpdate: "CURRENT_TIMESTAMP",
+  })
   updated_at: Date;
 
-  @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })
+  @Column({ type: "decimal", precision: 2, scale: 1, nullable: true })
   tutee_rating?: number;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   tutee_comment?: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: "timestamp", nullable: true })
   tutee_feedback_at?: Date;
 
   @OneToMany(() => Payment, (payment) => payment.bookingRequest)

@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../database/entities/user.entity';
-import { PasswordResetToken } from '../database/entities/password-reset-token.entity';
-import * as bcrypt from 'bcrypt';
-import * as nodemailer from 'nodemailer';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { User } from "../database/entities/user.entity";
+import { PasswordResetToken } from "../database/entities/password-reset-token.entity";
+import * as bcrypt from "bcrypt";
+import * as nodemailer from "nodemailer";
 
 @Injectable()
 export class ChangePasswordService {
@@ -15,21 +20,31 @@ export class ChangePasswordService {
     private passwordResetTokenRepository: Repository<PasswordResetToken>,
   ) {}
 
-  async requestChangePassword(userId: number, currentPassword: string): Promise<{ message: string }> {
+  async requestChangePassword(
+    userId: number,
+    currentPassword: string,
+  ): Promise<{ message: string }> {
     // Find user by ID
-    const user = await this.userRepository.findOne({ where: { user_id: userId } });
+    const user = await this.userRepository.findOne({
+      where: { user_id: userId },
+    });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
     if (!isCurrentPasswordValid) {
-      throw new UnauthorizedException('Current password is incorrect');
+      throw new UnauthorizedException("Current password is incorrect");
     }
 
     // Generate 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000,
+    ).toString();
 
     // Set expiry date to 15 minutes from now
     const expiryDate = new Date();
@@ -38,7 +53,7 @@ export class ChangePasswordService {
     // Invalidate any existing tokens for this user
     await this.passwordResetTokenRepository.update(
       { user_id: user.user_id, is_used: false },
-      { is_used: true }
+      { is_used: true },
     );
 
     // Create new password change token
@@ -52,30 +67,45 @@ export class ChangePasswordService {
     await this.passwordResetTokenRepository.save(passwordChangeToken);
 
     // Send verification code via email
-    console.log(`Attempting to send password change verification email to: ${user.email}`);
-    const emailSent = await this.sendChangePasswordEmail(user.name, user.email, verificationCode);
-    
+    console.log(
+      `Attempting to send password change verification email to: ${user.email}`,
+    );
+    const emailSent = await this.sendChangePasswordEmail(
+      user.name,
+      user.email,
+      verificationCode,
+    );
+
     if (!emailSent) {
-      console.error(`Failed to send password change verification email to: ${user.email}`);
-      throw new BadRequestException('Failed to send verification code. Please check your email configuration and try again.');
+      console.error(
+        `Failed to send password change verification email to: ${user.email}`,
+      );
+      throw new BadRequestException(
+        "Failed to send verification code. Please check your email configuration and try again.",
+      );
     }
-    
-    console.log(`Password change verification email sent successfully to: ${user.email}`);
+
+    console.log(
+      `Password change verification email sent successfully to: ${user.email}`,
+    );
 
     return {
-      message: 'Verification code sent to your email address. Please check your inbox and spam folder.'
+      message:
+        "Verification code sent to your email address. Please check your inbox and spam folder.",
     };
   }
 
   async verifyCodeAndChangePassword(
     userId: number,
     code: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<{ message: string }> {
     // Find user by ID
-    const user = await this.userRepository.findOne({ where: { user_id: userId } });
+    const user = await this.userRepository.findOne({
+      where: { user_id: userId },
+    });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     // Find valid token
@@ -88,12 +118,14 @@ export class ChangePasswordService {
     });
 
     if (!token) {
-      throw new BadRequestException('Invalid or expired verification code');
+      throw new BadRequestException("Invalid or expired verification code");
     }
 
     // Check if token is expired
     if (new Date() > token.expiry_date) {
-      throw new BadRequestException('Verification code has expired. Please request a new one.');
+      throw new BadRequestException(
+        "Verification code has expired. Please request a new one.",
+      );
     }
 
     // Hash the new password
@@ -111,27 +143,31 @@ export class ChangePasswordService {
     });
 
     return {
-      message: 'Password has been successfully changed. Please log in again with your new password.'
+      message:
+        "Password has been successfully changed. Please log in again with your new password.",
     };
   }
 
   private async sendChangePasswordEmail(
     name: string,
     email: string,
-    verificationCode: string
+    verificationCode: string,
   ): Promise<boolean> {
     try {
       // Create a new transporter for this service
-      const gmailUser = process.env.GMAIL_USER || 'johnemmanuel.devera@bisu.edu.ph';
+      const gmailUser =
+        process.env.GMAIL_USER || "johnemmanuel.devera@bisu.edu.ph";
       const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
 
       if (!gmailAppPassword) {
-        console.error('GMAIL_APP_PASSWORD is not set. Cannot send password change verification email.');
+        console.error(
+          "GMAIL_APP_PASSWORD is not set. Cannot send password change verification email.",
+        );
         return false;
       }
 
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
+        host: "smtp.gmail.com",
         port: 465,
         secure: true,
         auth: {
@@ -143,7 +179,7 @@ export class ChangePasswordService {
       const mailOptions = {
         from: `"TutorLink" <${gmailUser}>`,
         to: email,
-        subject: '🔐 Password Change Verification Code',
+        subject: "🔐 Password Change Verification Code",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc;">
             <div style="background-color: #0ea5e9; padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -192,16 +228,18 @@ export class ChangePasswordService {
       };
 
       const result = await transporter.sendMail(mailOptions);
-      console.log(`Password change verification email sent successfully to ${email}`);
-      console.log('Message ID:', result.messageId);
+      console.log(
+        `Password change verification email sent successfully to ${email}`,
+      );
+      console.log("Message ID:", result.messageId);
       return true;
     } catch (error) {
-      console.error('Error sending password change verification email:', error);
-      console.error('Error details:', {
+      console.error("Error sending password change verification email:", error);
+      console.error("Error details:", {
         message: error.message,
         code: error.code,
         command: error.command,
-        response: error.response
+        response: error.response,
       });
       return false;
     }
