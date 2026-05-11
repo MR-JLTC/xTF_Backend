@@ -1,36 +1,34 @@
-'use strict';
-
-const cron = require('node-cron');
-const axios = require('axios');
+import * as cron from "node-cron";
+import axios from "axios";
+import { INestApplication } from "@nestjs/common";
 
 /**
  * Registers the /health endpoint on the given Express-compatible app instance
  * and starts a self-ping cron job (production only) to keep the Render free-tier
  * server awake.
  *
- * @param {import('express').Application} app  - The NestJS/Express app instance
- * @param {number|string} port                 - The port the server is listening on
+ * @param app  - The NestJS app instance
+ * @param port - The port the server is listening on
  */
-function keepAlive(app, port) {
+function keepAlive(app: INestApplication, port: number | string): void {
   // ─── Health Endpoint ────────────────────────────────────────────────────────
   // Registered BEFORE the global prefix so it is accessible at GET /health
-  app.getHttpAdapter().get('/health', (req, res) => {
+  app.getHttpAdapter().get("/health", (req: any, res: any) => {
     res.json({
-      status: 'ok',
+      status: "ok",
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
     });
   });
 
   // ─── Self-Ping Cron Job (production only) ───────────────────────────────────
-  if (process.env.NODE_ENV !== 'production') return;
+  if (process.env.NODE_ENV !== "production") return;
 
-  const baseUrl =
-    process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+  const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
   const healthUrl = `${baseUrl}/health`;
 
   // Run every 14 minutes: "*/14 * * * *"
-  cron.schedule('*/14 * * * *', async () => {
+  cron.schedule("*/14 * * * *", async () => {
     const timestamp = new Date().toISOString();
     console.log(`[KeepAlive] 🔄 Sending keep-alive ping to ${healthUrl}`);
     try {
@@ -39,16 +37,14 @@ function keepAlive(app, port) {
       console.log(
         `[KeepAlive] ✅ Ping successful — ${timestamp} | Status: ${status} | Uptime: ${uptime}s`,
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error(
         `[KeepAlive] ❌ Ping failed — ${timestamp} | Error: ${err.message}`,
       );
     }
   });
 
-  console.log(
-    '[KeepAlive] Cron job initialized - pinging every 14 minutes',
-  );
+  console.log("[KeepAlive] Cron job initialized - pinging every 14 minutes");
 }
 
-module.exports = keepAlive;
+export = keepAlive;
