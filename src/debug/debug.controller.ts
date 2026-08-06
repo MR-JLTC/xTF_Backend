@@ -1,8 +1,10 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, UseGuards } from "@nestjs/common";
 import * as net from "net";
 import { URL } from "url";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 
 @Controller("debug")
+@UseGuards(JwtAuthGuard)
 export class DebugController {
   @Get("db-check")
   async checkDbConnection() {

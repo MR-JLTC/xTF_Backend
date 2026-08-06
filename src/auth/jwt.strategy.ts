@@ -14,21 +14,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    console.log("=== JWT VALIDATION DEBUG ===");
-    console.log("JWT Payload:", payload);
-
     // This payload is the decoded JWT
     const user = await this.usersService.findOneById(payload.sub);
-    console.log("User found:", !!user);
-    console.log("User ID from payload:", payload.sub);
 
     if (!user) {
-      console.log("User not found, throwing UnauthorizedException");
       throw new UnauthorizedException();
     }
-
-    console.log("JWT validation successful");
-    console.log("=== END JWT VALIDATION DEBUG ===");
 
     // The returned value will be attached to the request object as `req.user`
     // Use `user_id` to match the rest of the codebase which expects req.user.user_id

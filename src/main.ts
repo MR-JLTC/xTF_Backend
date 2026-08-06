@@ -57,8 +57,7 @@ async function bootstrap() {
 
   // Fallback redirect for missing tutor documents (files uploaded to Supabase but path stored as local)
   const supabaseBucket = process.env.SUPABASE_BUCKET || "tutorfriends-uploads";
-  const supabaseFallbackUrl =
-    process.env.SUPABASE_URL || "https://lvoimpgeoslbfnlaudci.supabase.co";
+  const supabaseFallbackUrl = process.env.SUPABASE_URL;
   app.use("/tutor_documents", (req: any, res: any, next: any) => {
     if (req.method !== "GET") return next();
     const filePath = req.path.replace(/^\//, "");

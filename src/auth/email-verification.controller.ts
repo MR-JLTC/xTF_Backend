@@ -6,9 +6,11 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from "@nestjs/common";
 import { IsEmail, IsNotEmpty, IsString } from "class-validator";
 import { EmailVerificationService } from "./email-verification.service";
+import { JwtAuthGuard } from "./jwt-auth.guard";
 
 export class SendVerificationCodeDto {
   @IsNotEmpty({ message: "Email is required" })
@@ -146,6 +148,7 @@ export class EmailVerificationController {
   }
 
   @Post("test-email")
+  @UseGuards(JwtAuthGuard)
   async testEmail(@Body("email") email: string) {
     try {
       console.log("=== TEST EMAIL REQUEST ===");
@@ -169,6 +172,7 @@ export class EmailVerificationController {
   }
 
   @Get("check-network")
+  @UseGuards(JwtAuthGuard)
   async checkNetwork() {
     const net = require("net");
     const ports = [587, 465, 25];

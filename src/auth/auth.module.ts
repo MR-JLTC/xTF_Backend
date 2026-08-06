@@ -6,7 +6,6 @@ import { PasswordResetService } from "./password-reset.service";
 import { PasswordResetController } from "./password-reset.controller";
 import { ChangePasswordService } from "./change-password.service";
 import { ChangePasswordController } from "./change-password.controller";
-import { TestPasswordResetController } from "./test-password-reset.controller";
 import { EmailVerificationService } from "./email-verification.service";
 import { EmailVerificationController } from "./email-verification.controller";
 import { UsersModule } from "../users/users.module";
@@ -40,7 +39,6 @@ import { EmailModule } from "../email/email.module";
     AuthController,
     PasswordResetController,
     ChangePasswordController,
-    TestPasswordResetController,
     EmailVerificationController,
   ],
   providers: [

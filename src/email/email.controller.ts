@@ -4,9 +4,11 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from "@nestjs/common";
 import { IsEmail, IsNotEmpty, IsString, MinLength } from "class-validator";
 import { EmailService } from "./email.service";
+import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 
 export class ContactDto {
   @IsString()
@@ -77,6 +79,7 @@ export class EmailController {
   }
 
   @Post("test")
+  @UseGuards(JwtAuthGuard)
   async sendTestEmail(@Body() body: { email: string }) {
     try {
       if (!body.email) {

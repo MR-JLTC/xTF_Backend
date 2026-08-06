@@ -10,16 +10,31 @@ export class SupabaseService {
 
   constructor(private configService: ConfigService) {
     const supabaseUrl = this.configService.get<string>("SUPABASE_URL");
-    const supabaseKey =
-      this.configService.get<string>("SUPABASE_KEY") ||
-      this.configService.get<string>("SUPABASE_SERVICE_ROLE_KEY");
+
+    // Prioritize service_role key for server-side operations (bypasses RLS).
+    // The anon key is only safe for client-side use WITH RLS enabled.
+    const serviceRoleKey = this.configService.get<string>(
+      "SUPABASE_SERVICE_ROLE_KEY",
+    );
+    const anonKey = this.configService.get<string>("SUPABASE_KEY");
+    const supabaseKey = serviceRoleKey || anonKey;
+
+    if (anonKey && !serviceRoleKey) {
+      this.logger.warn(
+        "⚠️ Using SUPABASE_KEY (anon key) instead of SUPABASE_SERVICE_ROLE_KEY. " +
+          "Server-side operations may fail if RLS is enabled. " +
+          "Set SUPABASE_SERVICE_ROLE_KEY in your environment variables.",
+      );
+    }
+
     this.bucketName =
       this.configService.get<string>("SUPABASE_BUCKET") ||
       "tutorfriends-uploads";
 
     if (!supabaseUrl || !supabaseKey) {
       this.logger.error(
-        "Supabase credentials not found in environment variables (SUPABASE_URL, SUPABASE_KEY)",
+        "Supabase credentials not found in environment variables " +
+          "(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY)",
       );
       // Not throwing error to allow app to start, but uploads will fail
     } else {
